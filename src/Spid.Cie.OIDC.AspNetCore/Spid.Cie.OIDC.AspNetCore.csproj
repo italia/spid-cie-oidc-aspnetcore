@@ -1,0 +1,79 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+	<TargetFrameworks>net6.0;net5.0;netcoreapp3.1</TargetFrameworks>
+	<LangVersion>latest</LangVersion>
+	<Description>Spid/Cie OIDC Federation AspNetCore SDK</Description>
+	<Authors>Daniele Giallonardo</Authors>
+	<AssemblyName>Spid.Cie.OIDC.AspNetCore</AssemblyName>
+	<RootNamespace>Spid.Cie.OIDC.AspNetCore</RootNamespace>
+	<PackageId>Spid.Cie.OIDC.AspNetCore</PackageId>
+	<PackageTags>spid;cie;aspnetcore;authentication;oidc</PackageTags>
+	<PackageProjectUrl>https://github.com/italia/spid-cie-oidc-aspnetcore</PackageProjectUrl>
+	<PackageIcon>spid-nuget.png</PackageIcon>
+	<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+	<PackageVersion>0.1.0</PackageVersion>
+	<Version>0.1.0</Version>
+	<AssemblyVersion>0.1.0</AssemblyVersion>
+	<FileVersion>0.1.0</FileVersion>
+	<InformationalVersion>0.1.0</InformationalVersion>
+	<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+  </PropertyGroup>
+
+  <ItemGroup>
+	<None Include="Mvc\Resources\spid-nuget.png" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
+	<None Remove="Mvc\Resources\cie-button.png" />
+	<None Remove="Mvc\Resources\spid-ico-circle-bb.png" />
+	<None Remove="Mvc\Resources\spid.css" />
+	<None Remove="Mvc\Resources\spid.js" />
+  </ItemGroup>
+
+  <ItemGroup>
+	<EmbeddedResource Include="Mvc\Resources\cie-button.png" />
+	<EmbeddedResource Include="Mvc\Resources\spid-nuget.png" />
+	<EmbeddedResource Include="Mvc\Resources\spid.css" />
+	<EmbeddedResource Include="Mvc\Resources\spid.js" />
+	<EmbeddedResource Include="Mvc\Resources\spid-ico-circle-bb.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+	<PackageReference Include="IdentityModel" Version="6.0.0" />
+	<PackageReference Include="JWT" Version="8.9.0" />
+	<PackageReference Include="Microsoft.AspNetCore.Authentication" Version="2.2.0" />
+	<PackageReference Include="Microsoft.AspNetCore.Mvc.ViewFeatures" Version="2.2.0" />
+	<PackageReference Include="Microsoft.AspNetCore.Razor" Version="2.2.0" />
+	<PackageReference Include="Microsoft.AspNetCore.Razor.Language" Version="6.0.3" />
+	<PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="6.0.0" />
+	<PackageReference Include="Microsoft.Extensions.Http" Version="6.0.0" />
+	<PackageReference Include="Microsoft.Extensions.Identity.Core" Version="6.0.3" />
+  </ItemGroup>
+
+	<ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="6.0.3" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(TargetFramework)' == 'net5.0'">
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="5.0.14" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp3.1'">
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="3.1.22" />
+	</ItemGroup>
+
+	<ItemGroup>
+	<Compile Update="Resources\ErrorLocalization.Designer.cs">
+	  <DesignTime>True</DesignTime>
+	  <AutoGen>True</AutoGen>
+	  <DependentUpon>ErrorLocalization.resx</DependentUpon>
+	</Compile>
+  </ItemGroup>
+  <ItemGroup>
+	<EmbeddedResource Update="Resources\ErrorLocalization.resx">
+	  <Generator>ResXFileCodeGenerator</Generator>
+	  <LastGenOutput>ErrorLocalization.Designer.cs</LastGenOutput>
+	</EmbeddedResource>
+  </ItemGroup>
+</Project>
