@@ -63,10 +63,9 @@ __automatic_client_registration__ and the adoption of the trust marks as mandato
 
 - SPID and CIE OpenID Connect Relying Party
 - OIDC Federation 1.0
-  - Automatic client registration
+  - Automatic OPs discovery 
   - Trust chain storage and discovery
-  - Federation 
-    - RP: build trust chains for all the available OPs
+  - Build trust chains for all the available OPs
 - Multitenancy, a single service can configure many RPs
 - Bootstrap Italia Design templates
 
