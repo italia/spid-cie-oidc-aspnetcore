@@ -3,22 +3,23 @@ using JWT.Builder;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
+using Spid.Cie.OIDC.AspNetCore.Configuration;
 using Spid.Cie.OIDC.AspNetCore.Logging;
-using Spid.Cie.OIDC.AspNetCore.Models;
 using Spid.Cie.OIDC.AspNetCore.Services;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Spid.Cie.OIDC.AspNetCore.Events;
 
-internal class SpidEvents : OpenIdConnectEvents
+internal class SpidCieEvents : OpenIdConnectEvents
 {
     private readonly IOptionsMonitor<SpidCieOptions> _spidOptions;
     private readonly ILogPersister _logPersister;
     private readonly IRelyingPartySelector _rpSelector;
     private readonly IIdentityProviderSelector _idpSelector;
 
-    public SpidEvents(IOptionsMonitor<SpidCieOptions> spidOptions,
+    public SpidCieEvents(IOptionsMonitor<SpidCieOptions> spidOptions,
         ILogPersister logPersister,
         IIdentityProviderSelector idpSelector,
         IRelyingPartySelector rpSelector)
@@ -36,9 +37,8 @@ internal class SpidEvents : OpenIdConnectEvents
         var relyingParty = await _rpSelector.GetSelectedRelyingParty()
             ?? throw new System.Exception("No selected RelyingParty was found");
 
-        context.ProtocolMessage.IssuerAddress = identityProvider.SingleSignOnServiceUrl;
         context.ProtocolMessage.ClientId = relyingParty.ClientId;
-        context.ProtocolMessage.AcrValues = identityProvider.SupportedAcrValues;
+        context.ProtocolMessage.AcrValues = identityProvider.SupportedAcrValues.FirstOrDefault(r => r.Equals(relyingParty.AcrValue, System.StringComparison.CurrentCultureIgnoreCase));
         context.ProtocolMessage.SetParameter("request", GenerateJWTRequest(context.ProtocolMessage));
 
         await base.RedirectToIdentityProvider(context);

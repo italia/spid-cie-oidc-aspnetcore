@@ -1,7 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Options;
+using Spid.Cie.OIDC.AspNetCore.Configuration;
 using Spid.Cie.OIDC.AspNetCore.Events;
 using Spid.Cie.OIDC.AspNetCore.Logging;
 using Spid.Cie.OIDC.AspNetCore.Models;
@@ -27,22 +30,25 @@ public static class ApplicationBuilderExtensions
 
         internalBuilder.Services.Configure(configureOptions);
         internalBuilder.Services.AddHttpContextAccessor();
-        internalBuilder.Services.TryAddScoped<SpidEvents>();
+        internalBuilder.Services.TryAddScoped<SpidCieEvents>();
         internalBuilder.Services.TryAddScoped<ILogPersister, DefaultLogPersister>();
         internalBuilder.Services.TryAddScoped<IIdentityProvidersRetriever, IdentityProvidersRetriever>();
         internalBuilder.Services.TryAddScoped<IIdentityProviderSelector, IdentityProviderSelector>();
         internalBuilder.Services.TryAddScoped<IRelyingPartiesRetriever, DefaultRelyingPartiesRetriever>();
         internalBuilder.Services.TryAddScoped<IRelyingPartySelector, DefaultRelyingPartySelector>();
+        internalBuilder.Services.AddSingleton<IOptionsMonitor<OpenIdConnectOptions>, OpenIdConnectOptionsProvider>();
+        internalBuilder.Services.AddSingleton<IConfigureOptions<OpenIdConnectOptions>, OpenIdConnectOptionsInitializer>();
 
-        builder.AddOpenIdConnect(Defaults.AuthenticationScheme, options =>
+        builder.AddOpenIdConnect(SpidCieDefaults.AuthenticationScheme, options =>
         {
-            options.ResponseType = Defaults.ResponseType;
-            options.Scope.Add(Defaults.OpenIdScope);
-            options.Prompt = Defaults.Prompt;
+            options.ResponseType = SpidCieDefaults.ResponseType;
+            options.Scope.Add(SpidCieDefaults.OpenIdScope);
+            options.Prompt = SpidCieDefaults.Prompt;
             options.UsePkce = true;
             options.GetClaimsFromUserInfoEndpoint = true;
-            options.Events.OnRedirectToIdentityProvider = (context) => context.HttpContext.RequestServices.GetRequiredService<SpidEvents>().OnRedirectToIdentityProvider(context);
+            options.Events.OnRedirectToIdentityProvider = (context) => context.HttpContext.RequestServices.GetRequiredService<SpidCieEvents>().OnRedirectToIdentityProvider(context);
         });
+
         return internalBuilder;
     }
 

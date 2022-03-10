@@ -3,7 +3,7 @@
 /// <summary>
 /// Default values related to Spid authentication handler
 /// </summary>
-internal sealed class Defaults
+internal sealed class SpidCieDefaults
 {
     /// <summary>
     /// The default authentication type used when registering the SpidHandler.

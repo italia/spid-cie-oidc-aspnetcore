@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Options;
+using Spid.Cie.OIDC.AspNetCore.Configuration;
 using Spid.Cie.OIDC.AspNetCore.Models;
 using System.Linq;
 using System.Threading.Tasks;

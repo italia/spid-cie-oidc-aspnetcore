@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Razor.TagHelpers;
 using Microsoft.Extensions.Options;
-using Spid.Cie.OIDC.AspNetCore.Models;
+using Spid.Cie.OIDC.AspNetCore.Configuration;
 using Spid.Cie.OIDC.AspNetCore.Services;
 using System;
 using System.Collections.Generic;

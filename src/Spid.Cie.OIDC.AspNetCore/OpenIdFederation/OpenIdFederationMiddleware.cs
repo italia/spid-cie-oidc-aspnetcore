@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
-using Spid.Cie.OIDC.AspNetCore.Models;
+using Spid.Cie.OIDC.AspNetCore.Configuration;
 using System.Threading.Tasks;
 
 namespace Spid.Cie.OIDC.AspNetCore.OpenIdFederation;

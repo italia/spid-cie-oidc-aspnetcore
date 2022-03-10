@@ -19,11 +19,11 @@ internal class IdentityProviderSelector : IIdentityProviderSelector
     public async Task<IdentityProvider> GetSelectedIdentityProvider()
     {
         var identityProviders = await _retriever.GetIdentityProviders();
-        var idpName = _httpContextAccessor.HttpContext.Request.Query["idp"];
-        if (string.IsNullOrWhiteSpace(idpName))
+        var provider = _httpContextAccessor.HttpContext.Request.Query["provider"];
+        if (string.IsNullOrWhiteSpace(provider))
         {
-            throw new System.Exception("No 'idp' querystring parameter found in the Challenge Url");
+            throw new System.Exception("No 'provider' querystring parameter found in the Challenge Url");
         }
-        return identityProviders.FirstOrDefault(idp => idp.Name.Equals(idpName, System.StringComparison.InvariantCultureIgnoreCase));
+        return identityProviders.FirstOrDefault(idp => idp.Name.Equals(provider, System.StringComparison.InvariantCultureIgnoreCase));
     }
 }
