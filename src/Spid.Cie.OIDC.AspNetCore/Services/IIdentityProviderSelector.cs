@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace Spid.Cie.OIDC.AspNetCore.Services;
 
-public interface IIdentityProviderSelector
+internal interface IIdentityProviderSelector
 {
     Task<IdentityProvider> GetSelectedIdentityProvider();
 }

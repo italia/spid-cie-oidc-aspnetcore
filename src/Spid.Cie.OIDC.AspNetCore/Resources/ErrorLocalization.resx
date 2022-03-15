@@ -123,6 +123,12 @@
   <data name="FileReadError" xml:space="preserve">
     <value>Error reading file: {fileName}</value>
   </data>
+  <data name="IdentityProviderNotFound" xml:space="preserve">
+    <value>The specified IdentityProvider was found</value>
+  </data>
+  <data name="InvalidClaimType" xml:space="preserve">
+    <value>Invalid ClaimType</value>
+  </data>
   <data name="KeyCreationAndLoadFailed" xml:space="preserve">
     <value>Failed to create and load new keys</value>
   </data>
@@ -131,5 +137,14 @@
   </data>
   <data name="KeyLockFailed" xml:space="preserve">
     <value>Failed to obtain new key lock</value>
+  </data>
+  <data name="NoSigningKeyFound" xml:space="preserve">
+    <value>No signing key was found in the OpenIdCore JWKS</value>
+  </data>
+  <data name="ProviderQueryStringParameterNotFound" xml:space="preserve">
+    <value>No 'provider' querystring parameter found in the Challenge Url</value>
+  </data>
+  <data name="RelyingPartyNotFound" xml:space="preserve">
+    <value>No selected RelyingParty was found</value>
   </data>
 </root>

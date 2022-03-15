@@ -1,17 +1,21 @@
-﻿namespace Spid.Cie.OIDC.AspNetCore.Models
+﻿using System.Collections.Generic;
+
+namespace Spid.Cie.OIDC.AspNetCore.Models;
+
+public abstract class IdentityProvider
 {
-    public sealed class IdentityProvider
-    {
-        public string Name { get; set; }
-        public IdentityProviderType Type { get; set; }
-        public string OrganizationName { get; set; }
-        public string OrganizationDisplayName { get; set; }
-        public string OrganizationUrlMetadata { get; set; }
-        public string OrganizationUrl { get; set; }
-        public string OrganizationLogoUrl { get; set; }
-        public string SingleSignOnServiceUrl { get; set; }
-        public string SingleSignOutServiceUrl { get; set; }
-        public int SecurityLevel { get; set; }
-        public string SupportedAcrValues { get; set; }
-    }
+    public string Name { get; set; }
+    public abstract IdentityProviderType Type { get; }
+    public string OrganizationName { get; set; }
+    public string OrganizationDisplayName { get; set; }
+    public string MetadataAddress { get; set; }
+    public string OrganizationUrl { get; set; }
+    public string OrganizationLogoUrl { get; set; }
+    public string[] SupportedAcrValues { get; set; }
+
+    internal IdPEntityConfiguration EntityConfiguration { get; set; }
+
+    public abstract string GetAcrValue(SecurityLevel securityLevel);
+
+    public abstract IEnumerable<string> FilterRequestedClaims(ClaimTypes[] requestedClaims);
 }

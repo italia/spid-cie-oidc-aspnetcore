@@ -10,6 +10,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Spid.Cie.OIDC.AspNetCore", "Spid.Cie.OIDC.AspNetCore\Spid.Cie.OIDC.AspNetCore.csproj", "{D6CA9F9E-BB5F-497F-8469-F730DEB856E0}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Spid.Cie.OIDC.AspNetCore.Tests", "Spid.Cie.OIDC.AspNetCore.Tests\Spid.Cie.OIDC.AspNetCore.Tests.csproj", "{E1B644DF-BC6F-4840-9BA5-3995EA50B57C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -20,6 +22,10 @@ Global
 		{D6CA9F9E-BB5F-497F-8469-F730DEB856E0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D6CA9F9E-BB5F-497F-8469-F730DEB856E0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D6CA9F9E-BB5F-497F-8469-F730DEB856E0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E1B644DF-BC6F-4840-9BA5-3995EA50B57C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E1B644DF-BC6F-4840-9BA5-3995EA50B57C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E1B644DF-BC6F-4840-9BA5-3995EA50B57C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E1B644DF-BC6F-4840-9BA5-3995EA50B57C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

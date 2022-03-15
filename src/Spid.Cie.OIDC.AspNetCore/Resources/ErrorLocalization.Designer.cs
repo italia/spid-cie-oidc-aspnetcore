@@ -79,6 +79,24 @@ namespace Spid.Cie.OIDC.AspNetCore.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The specified IdentityProvider was found.
+        /// </summary>
+        internal static string IdentityProviderNotFound {
+            get {
+                return ResourceManager.GetString("IdentityProviderNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid ClaimType.
+        /// </summary>
+        internal static string InvalidClaimType {
+            get {
+                return ResourceManager.GetString("InvalidClaimType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed to create and load new keys.
         /// </summary>
         internal static string KeyCreationAndLoadFailed {
@@ -102,6 +120,33 @@ namespace Spid.Cie.OIDC.AspNetCore.Resources {
         internal static string KeyLockFailed {
             get {
                 return ResourceManager.GetString("KeyLockFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No signing key was found in the OpenIdCore JWKS.
+        /// </summary>
+        internal static string NoSigningKeyFound {
+            get {
+                return ResourceManager.GetString("NoSigningKeyFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No &apos;provider&apos; querystring parameter found in the Challenge Url.
+        /// </summary>
+        internal static string ProviderQueryStringParameterNotFound {
+            get {
+                return ResourceManager.GetString("ProviderQueryStringParameterNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No selected RelyingParty was found.
+        /// </summary>
+        internal static string RelyingPartyNotFound {
+            get {
+                return ResourceManager.GetString("RelyingPartyNotFound", resourceCulture);
             }
         }
     }

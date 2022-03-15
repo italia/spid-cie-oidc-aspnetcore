@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Razor.TagHelpers;
 using Microsoft.Extensions.Options;
-using Spid.Cie.OIDC.AspNetCore.Models;
+using Spid.Cie.OIDC.AspNetCore.Configuration;
 using Spid.Cie.OIDC.AspNetCore.Services;
 using System;
 using System.Collections.Generic;
@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Spid.Cie.OIDC.AspNetCore.Mvc;
 
-public class SpidProvidersTagHelper : TagHelper
+public class SpidButtonTagHelper : TagHelper
 {
     private static string _serializedCircleImage;
     private static readonly object _lockobj = new object();
@@ -27,7 +27,7 @@ public class SpidProvidersTagHelper : TagHelper
     readonly IUrlHelper _urlHelper;
     private readonly IIdentityProvidersRetriever _idpRetriever;
 
-    public SpidProvidersTagHelper(IOptionsSnapshot<SpidCieOptions> options, IUrlHelper urlHelper, IIdentityProvidersRetriever idpRetriever)
+    public SpidButtonTagHelper(IOptionsSnapshot<SpidCieOptions> options, IUrlHelper urlHelper, IIdentityProvidersRetriever idpRetriever)
     {
         _options = options.Value;
         _urlHelper = urlHelper;
@@ -91,7 +91,7 @@ public class SpidProvidersTagHelper : TagHelper
             itemContainer.Attributes.Add("data-idp", idp.Name);
 
             var item = new TagBuilder("a");
-            item.Attributes.Add("href", $"{ChallengeUrl}{(ChallengeUrl.Contains("?") ? "&" : "?")}idp={idp.Name}");
+            item.Attributes.Add("href", $"{ChallengeUrl}{(ChallengeUrl.Contains("?") ? "&" : "?")}provider={idp.Name}");
 
             var span = new TagBuilder("span");
             span.AddCssClass("spid-sr-only");
@@ -99,7 +99,7 @@ public class SpidProvidersTagHelper : TagHelper
 
             var img = new TagBuilder("img");
             img.Attributes.Add("src", idp.OrganizationLogoUrl);
-            img.Attributes.Add("alt", idp.Name);
+            img.Attributes.Add("alt", idp.OrganizationDisplayName);
             span.InnerHtml.Append(idp.OrganizationDisplayName);
 
             item.InnerHtml.AppendHtml(span).AppendHtml(img);
