@@ -6,5 +6,5 @@ namespace Spid.Cie.OIDC.AspNetCore.Services;
 
 public interface IRelyingPartiesRetriever
 {
-    Task<List<RelyingParty>> GetRelyingParties();
+    Task<IEnumerable<RelyingParty>> GetRelyingParties();
 }

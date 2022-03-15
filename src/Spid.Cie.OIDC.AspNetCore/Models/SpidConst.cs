@@ -7,6 +7,7 @@ internal class SpidConst
     internal const string SpidL1 = $"{SpidLevelBaseURI}{nameof(SpidL1)}";
     internal const string SpidL2 = $"{SpidLevelBaseURI}{nameof(SpidL2)}";
     internal const string SpidL3 = $"{SpidLevelBaseURI}{nameof(SpidL3)}";
+    internal const string DefaultAcr = SpidL2;
 
     internal const string AttributesBaseURI = "https://attributes.spid.gov.it/";
 
