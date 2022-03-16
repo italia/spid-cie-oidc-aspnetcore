@@ -33,6 +33,8 @@ public sealed class SpidCieDefaults
 
     public const string OpenIdScope = "openid";
 
+    public const string OfflineScope = "offline_access";
+
     public const string Prompt = "consent login";
 
     public const string JWKGeneratorPath = "generatejwk";
@@ -93,11 +95,19 @@ public sealed class SpidCieDefaults
 
     public const string Jti = "jti";
 
-    public const string ClientAssertionType = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer";
+    public const string ClientAssertion = "client_assertion";
+
+    public const string ClientAssertionType = "client_assertion_type";
+
+    public const string ClientAssertionTypeValue = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer";
+
+    public const string Token = "token";
 
     public const string IdPSelectorKey = "provider";
 
     public const string RPSelectorKey = "clientId";
 
     public const string DummyUrl = "https://dummy.org";
+
+    public const string RevocationEndpoint = "revocation_endpoint";
 }

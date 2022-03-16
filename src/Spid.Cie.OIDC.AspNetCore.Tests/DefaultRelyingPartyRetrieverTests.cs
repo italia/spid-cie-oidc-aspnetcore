@@ -11,7 +11,7 @@ public class DefaultRelyingPartyRetrieverTests
 
     public DefaultRelyingPartyRetrieverTests()
     {
-        this._retriever = new DefaultRelyingPartiesRetriever();
+        this._retriever = new DefaultRelyingPartiesRetriever(new Mocks.MockOptionsMonitorSpidCieOptions());
     }
 
     [Fact]
@@ -19,6 +19,6 @@ public class DefaultRelyingPartyRetrieverTests
     {
         var rp = await _retriever.GetRelyingParties();
         Assert.NotNull(rp);
-        Assert.True(rp.Count() == 0);
+        Assert.True(rp.Count() != 0);
     }
 }

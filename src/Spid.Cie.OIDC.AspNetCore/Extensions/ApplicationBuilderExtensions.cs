@@ -42,11 +42,16 @@ public static class ApplicationBuilderExtensions
                 options.ResponseType = SpidCieDefaults.ResponseType;
                 options.Scope.Clear();
                 options.Scope.Add(SpidCieDefaults.OpenIdScope);
+                options.Scope.Add(SpidCieDefaults.OfflineScope);
                 options.Prompt = SpidCieDefaults.Prompt;
                 options.UsePkce = true;
                 options.GetClaimsFromUserInfoEndpoint = true;
                 options.Events.OnMessageReceived = context => context.HttpContext.RequestServices.GetRequiredService<SpidCieEvents>().MessageReceived(context);
                 options.Events.OnAuthorizationCodeReceived = context => context.HttpContext.RequestServices.GetRequiredService<SpidCieEvents>().AuthorizationCodeReceived(context);
+
+                options.ClaimActions.MapAll();
+                options.ClaimActions.Remove(System.Security.Claims.ClaimTypes.Name);
+                options.ClaimActions.Remove(System.Security.Claims.ClaimTypes.Role);
             });
 
         var internalBuilder = builder.Services.AddSpidCieOIDCBuilder();

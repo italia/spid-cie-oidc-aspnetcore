@@ -119,6 +119,7 @@ internal class SpidCieEvents : OpenIdConnectEvents
 
         context.Options.TokenValidationParameters = new TokenValidationParameters
         {
+            NameClaimType = SpidCieDefaults.Sub,
             ClockSkew = TimeSpan.FromMinutes(5),
             IssuerSigningKeys = identityProvider.EntityConfiguration.Metadata.OpenIdProvider.JsonWebKeySet?.Keys?.ToArray()
                 ?? identityProvider.EntityConfiguration.JWKS?.Keys.Select(k => new Microsoft.IdentityModel.Tokens.JsonWebKey(JsonSerializer.Serialize(k))),
@@ -136,7 +137,6 @@ internal class SpidCieEvents : OpenIdConnectEvents
 
     public override async Task AuthorizationCodeReceived(AuthorizationCodeReceivedContext context)
     {
-        context.TokenEndpointRequest.ClientAssertionType = SpidCieDefaults.ClientAssertionType;
         var identityProvider = await _idpSelector.GetSelectedIdentityProvider()
             ?? throw new System.Exception(ErrorLocalization.IdentityProviderNotFound);
         var relyingParty = await _rpSelector.GetSelectedRelyingParty()
@@ -148,6 +148,7 @@ internal class SpidCieEvents : OpenIdConnectEvents
         {
             RSA rsa = key.GetRSAKey();
 
+            context.TokenEndpointRequest.ClientAssertionType = SpidCieDefaults.ClientAssertionTypeValue;
             context.TokenEndpointRequest.ClientAssertion = CryptoHelpers.CreateJWT(rsa,
                 new Dictionary<string, object>() {
                     { SpidCieDefaults.Kid, key.Kid },

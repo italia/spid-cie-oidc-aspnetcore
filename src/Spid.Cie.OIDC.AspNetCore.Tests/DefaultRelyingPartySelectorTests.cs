@@ -12,8 +12,8 @@ public class DefaultRelyingPartySelectorTests
     public DefaultRelyingPartySelectorTests()
     {
         var _options = new MockOptionsMonitorSpidCieOptions();
-        var _retriever = new MockRelyingPartiesRetriever();
-        _selector = new DefaultRelyingPartySelector(_options, _retriever);
+        var _retriever = new DefaultRelyingPartiesRetriever(_options);
+        _selector = new DefaultRelyingPartySelector(_retriever);
     }
 
     [Fact]

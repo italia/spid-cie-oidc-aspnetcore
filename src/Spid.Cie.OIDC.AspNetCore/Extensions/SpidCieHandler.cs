@@ -7,11 +7,15 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.Net.Http.Headers;
 using Spid.Cie.OIDC.AspNetCore.Events;
+using Spid.Cie.OIDC.AspNetCore.Helpers;
 using Spid.Cie.OIDC.AspNetCore.Logging;
+using Spid.Cie.OIDC.AspNetCore.Models;
 using Spid.Cie.OIDC.AspNetCore.Services;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
+using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Encodings.Web;
@@ -26,8 +30,8 @@ internal class SpidCieHandler : OpenIdConnectHandler
     private const string HeaderValueEpocDate = "Thu, 01 Jan 1970 00:00:00 GMT";
     private readonly ILogPersister _logPersister;
     private readonly SpidCieEvents _events;
-    private readonly IRelyingPartySelector _rpSelector;
-    private readonly IIdentityProviderSelector _idpSelector;
+    private readonly IIdentityProvidersRetriever _idpRetriever;
+    private readonly IRelyingPartiesRetriever _rpRetriever;
 
     public SpidCieHandler(IOptionsMonitor<OpenIdConnectOptions> options,
             ILoggerFactory logger,
@@ -35,11 +39,15 @@ internal class SpidCieHandler : OpenIdConnectHandler
             UrlEncoder encoder,
             ISystemClock clock,
             ILogPersister logPersister,
+            IIdentityProvidersRetriever idpRetriever,
+            IRelyingPartiesRetriever rpRetriever,
             SpidCieEvents events)
         : base(options, logger, htmlEncoder, encoder, clock)
     {
         _logPersister = logPersister;
         _events = events;
+        _idpRetriever = idpRetriever;
+        _rpRetriever = rpRetriever;
         Events = events;
     }
 
@@ -170,6 +178,11 @@ internal class SpidCieHandler : OpenIdConnectHandler
         throw new NotImplementedException($"An unsupported authentication method has been configured: {Options.AuthenticationMethod}");
     }
 
+    protected override Task<HandleRequestResult> HandleRemoteAuthenticateAsync()
+    {
+        return base.HandleRemoteAuthenticateAsync();
+    }
+
     private void WriteNonceCookie(string nonce)
     {
         if (string.IsNullOrEmpty(nonce))
@@ -183,5 +196,82 @@ internal class SpidCieHandler : OpenIdConnectHandler
             Options.NonceCookie.Name + Options.StringDataFormat.Protect(nonce),
             NonceProperty,
             cookieOptions);
+    }
+
+    public override async Task SignOutAsync(AuthenticationProperties properties)
+    {
+        var accessToken = await Context.GetTokenAsync(Options.SignOutScheme, OpenIdConnectParameterNames.AccessToken);
+        if (!string.IsNullOrWhiteSpace(accessToken))
+        {
+            await RevokeToken(accessToken);
+        }
+
+        var refreshToken = await Context.GetTokenAsync(Options.SignOutScheme, OpenIdConnectParameterNames.RefreshToken);
+        if (!string.IsNullOrWhiteSpace(refreshToken))
+        {
+            await RevokeToken(refreshToken);
+        }
+
+        await Context.SignOutAsync(Options.SignOutScheme);
+        Response.Redirect(properties.RedirectUri);
+    }
+
+    private async Task RevokeToken(string accessToken)
+    {
+        var issuer = Context.User.FindFirst(SpidCieDefaults.Iss)?.Value;
+        if (!string.IsNullOrWhiteSpace(issuer))
+        {
+            var idps = await _idpRetriever.GetIdentityProviders();
+            var idp = idps.FirstOrDefault(i => i.EntityConfiguration.Issuer.Equals(issuer));
+            if (idp != null)
+            {
+                var revocationEndpoint = idp.EntityConfiguration.Metadata.OpenIdProvider.AdditionalData[SpidCieDefaults.RevocationEndpoint] as string;
+                if (!string.IsNullOrWhiteSpace(revocationEndpoint))
+                {
+                    var clientId = Context.User.FindFirst(SpidCieDefaults.Aud)?.Value;
+                    if (!string.IsNullOrWhiteSpace(clientId))
+                    {
+                        var rps = await _rpRetriever.GetRelyingParties();
+                        var rp = rps.FirstOrDefault(r => r.ClientId.Equals(clientId));
+                        if (rp != null)
+                        {
+                            var keySet = rp.OpenIdCoreJWKs;
+                            var key = keySet?.Keys?.FirstOrDefault();
+                            if (key is not null)
+                            {
+                                RSA rsa = key.GetRSAKey();
+                                var requestMessage = new HttpRequestMessage(HttpMethod.Post, revocationEndpoint)
+                                {
+                                    Version = Backchannel.DefaultRequestVersion,
+                                    Content = new FormUrlEncodedContent(new Dictionary<string, string>()
+                                    {
+                                        { SpidCieDefaults.ClientId, clientId },
+                                        { SpidCieDefaults.ClientAssertionType, SpidCieDefaults.ClientAssertionTypeValue },
+                                        { SpidCieDefaults.Token, accessToken },
+                                        { SpidCieDefaults.ClientAssertion, CryptoHelpers.CreateJWT(rsa,
+                                            new Dictionary<string, object>() {
+                                                { SpidCieDefaults.Kid, key.Kid },
+                                                { SpidCieDefaults.Typ, SpidCieDefaults.TypValue }
+                                            },
+                                            new Dictionary<string, object>() {
+                                                { SpidCieDefaults.Iss, clientId },
+                                                { SpidCieDefaults.Sub, clientId },
+                                                { SpidCieDefaults.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds() },
+                                                { SpidCieDefaults.Exp, DateTimeOffset.UtcNow.AddMinutes(SpidCieDefaults.EntityConfigurationExpirationInMinutes).ToUnixTimeSeconds() },
+                                                { SpidCieDefaults.Aud, new string[] { revocationEndpoint } },
+                                                { SpidCieDefaults.Jti, Guid.NewGuid().ToString() }
+                                            })
+                                        }
+                                    })
+                                };
+                                var responseMessage = await Backchannel.SendAsync(requestMessage, Context.RequestAborted);
+                                responseMessage.EnsureSuccessStatusCode();
+                                var revokeResponse = await responseMessage.Content.ReadAsStringAsync();
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
