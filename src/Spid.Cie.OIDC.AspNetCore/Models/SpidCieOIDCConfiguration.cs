@@ -3,6 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace Spid.Cie.OIDC.AspNetCore.Models;
 
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 internal class RequestAuthenticationMethodsSupported
 {
     [JsonPropertyName("ar")]
@@ -19,10 +20,10 @@ internal sealed class RPMetadata_SpidCieOIDCConfiguration
 internal sealed class RP_SpidCieOIDCConfiguration
 {
     [JsonPropertyName("client_registration_types")]
-    public string[] ClientRegistrationTypes { get; set; } = new[] { SpidCieDefaults.RPClientRegistrationType };
+    public string[] ClientRegistrationTypes { get; set; } = new[] { SpidCieConst.RPClientRegistrationType };
 
     [JsonPropertyName("application_type")]
-    public string ApplicationType { get; set; } = SpidCieDefaults.RPApplicationType;
+    public string ApplicationType { get; set; } = SpidCieConst.RPApplicationType;
 
     [JsonPropertyName("client_name")]
     public string ClientName { get; set; }
@@ -43,7 +44,7 @@ internal sealed class RP_SpidCieOIDCConfiguration
     public string[] ResponseTypes { get; set; }
 
     [JsonPropertyName("subject_type")]
-    public string SubjectType { get; set; } = SpidCieDefaults.RPSubjectType;
+    public string SubjectType { get; set; } = SpidCieConst.RPSubjectType;
 
 }
 
@@ -81,3 +82,4 @@ internal class JsonWebKey
     public string dq { get; set; }
     public string qi { get; set; }
 }
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.

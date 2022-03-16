@@ -4,7 +4,7 @@ internal static class StringHelpers
 {
     public static string EnsureTrailingSlash(this string url)
     {
-        if (url != null && !url.EndsWith("/"))
+        if (!url.EndsWith("/"))
         {
             return url + "/";
         }
@@ -14,7 +14,7 @@ internal static class StringHelpers
 
     public static string RemoveLeadingSlash(this string url)
     {
-        if (url != null && url.StartsWith("/"))
+        if (url.StartsWith("/"))
         {
             url = url.Substring(1);
         }

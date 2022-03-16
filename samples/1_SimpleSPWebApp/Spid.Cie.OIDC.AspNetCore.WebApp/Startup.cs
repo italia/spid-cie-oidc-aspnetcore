@@ -27,7 +27,7 @@ public class Startup
             {
                 o.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
                 o.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-                o.DefaultChallengeScheme = SpidCieDefaults.AuthenticationScheme;
+                o.DefaultChallengeScheme = SpidCieConst.AuthenticationScheme;
             })
             .AddCookie()
             .AddSpidCieOIDC(o =>

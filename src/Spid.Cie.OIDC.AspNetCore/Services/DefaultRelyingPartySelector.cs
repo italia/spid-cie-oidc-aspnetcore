@@ -13,6 +13,6 @@ internal class DefaultRelyingPartySelector : IRelyingPartySelector
         _retriever = retriever;
     }
 
-    public async Task<RelyingParty> GetSelectedRelyingParty()
+    public async Task<RelyingParty?> GetSelectedRelyingParty()
         => (await _retriever.GetRelyingParties()).FirstOrDefault();
 }

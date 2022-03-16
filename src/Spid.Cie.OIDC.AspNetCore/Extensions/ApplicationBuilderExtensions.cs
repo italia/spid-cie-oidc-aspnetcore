@@ -1,9 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
-using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
@@ -32,23 +29,24 @@ public static class ApplicationBuilderExtensions
     public static ISpidCieOIDCBuilder AddSpidCieOIDC(this AuthenticationBuilder builder, Action<SpidCieOptions> configureOptions)
     {
         builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IPostConfigureOptions<OpenIdConnectOptions>, OpenIdConnectPostConfigureOptions>());
-        builder.AddRemoteScheme<OpenIdConnectOptions, SpidCieHandler>(SpidCieDefaults.AuthenticationScheme, SpidCieDefaults.AuthenticationScheme,
+        builder.AddRemoteScheme<OpenIdConnectOptions, SpidCieHandler>(SpidCieConst.AuthenticationScheme, SpidCieConst.AuthenticationScheme,
             options =>
             {
-                options.ClientId = SpidCieDefaults.DummyUrl;
-                options.MetadataAddress = SpidCieDefaults.DummyUrl;
+                options.ClientId = SpidCieConst.DummyUrl;
+                options.MetadataAddress = SpidCieConst.DummyUrl;
                 options.SaveTokens = true;
-                options.ResponseMode = null;
-                options.ResponseType = SpidCieDefaults.ResponseType;
-                options.Scope.Clear();
-                options.Scope.Add(SpidCieDefaults.OpenIdScope);
-                //options.Scope.Add(SpidCieDefaults.OfflineScope);
-                options.Prompt = SpidCieDefaults.Prompt;
+                options.ResponseMode = string.Empty;
+                options.ResponseType = SpidCieConst.ResponseType;
+                options.Prompt = SpidCieConst.Prompt;
                 options.UsePkce = true;
                 options.GetClaimsFromUserInfoEndpoint = true;
+                options.AuthenticationMethod = OpenIdConnectRedirectBehavior.RedirectGet;
+
+                options.Scope.Clear();
+                options.Scope.Add(SpidCieConst.OpenIdScope);
+
                 options.Events.OnMessageReceived = context => context.HttpContext.RequestServices.GetRequiredService<SpidCieEvents>().MessageReceived(context);
                 options.Events.OnAuthorizationCodeReceived = context => context.HttpContext.RequestServices.GetRequiredService<SpidCieEvents>().AuthorizationCodeReceived(context);
-                options.AuthenticationMethod = OpenIdConnectRedirectBehavior.RedirectGet;
 
                 options.ClaimActions.MapAll();
                 options.ClaimActions.Remove(System.Security.Claims.ClaimTypes.Name);
@@ -59,13 +57,9 @@ public static class ApplicationBuilderExtensions
 
         internalBuilder.Services.Configure(configureOptions);
         internalBuilder.Services.AddHttpContextAccessor();
-        internalBuilder.Services.AddHttpClient();
-        internalBuilder.Services.TryAdd(ServiceDescriptor.Singleton<IActionContextAccessor, ActionContextAccessor>());
-        internalBuilder.Services.TryAddScoped(delegate (IServiceProvider factory)
-        {
-            ActionContext actionContext = factory.GetService<IActionContextAccessor>()!.ActionContext;
-            return factory.GetService<IUrlHelperFactory>()!.GetUrlHelper(actionContext);
-        });
+        internalBuilder.Services.TryAddScoped<CustomHttpClientHandler>();
+        internalBuilder.Services.AddHttpClient("SpidCieBackchannel")
+            .ConfigurePrimaryHttpMessageHandler(srv => (srv.GetService(typeof(CustomHttpClientHandler)) as CustomHttpClientHandler)!);
 
         internalBuilder.Services.TryAddScoped<SpidCieEvents>();
         internalBuilder.Services.TryAddScoped<ILogPersister, DefaultLogPersister>();
@@ -76,8 +70,6 @@ public static class ApplicationBuilderExtensions
 
         internalBuilder.Services.TryAddScoped<IOptionsMonitor<OpenIdConnectOptions>, OpenIdConnectOptionsProvider>();
         internalBuilder.Services.TryAddScoped<IConfigurationManager<OpenIdConnectConfiguration>, ConfigurationManager>();
-
-        internalBuilder.Services.TryAddScoped<CustomHttpClientHandler>();
 
         return internalBuilder;
     }

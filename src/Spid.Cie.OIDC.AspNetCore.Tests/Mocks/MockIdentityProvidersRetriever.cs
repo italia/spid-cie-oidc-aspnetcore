@@ -21,7 +21,7 @@ internal class MockIdentityProvidersRetriever : IIdentityProvidersRetriever
             ? Enumerable.Empty<IdentityProvider>()
             : await Task.FromResult(new List<IdentityProvider>() {
                     new SpidIdentityProvider(){
-                        Name = "MockIdP"
+                        Uri = "MockIdP"
                     }
                 });
     }

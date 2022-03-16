@@ -24,7 +24,7 @@ internal class JWKGeneratorMiddleware
 
     public async Task Invoke(HttpContext context)
     {
-        if (!context.Request.Path.Value.EndsWith(SpidCieDefaults.JWKGeneratorPath, StringComparison.InvariantCultureIgnoreCase))
+        if (!context.Request.Path.Value!.EndsWith(SpidCieConst.JWKGeneratorPath, StringComparison.InvariantCultureIgnoreCase))
         {
             await _next(context);
             return;
@@ -43,7 +43,7 @@ internal class JWKGeneratorMiddleware
             PublicJwk = JsonSerializer.Serialize(publicJwk, _options)
         }, _options);
 
-        context.Response.ContentType = SpidCieDefaults.JWKGeneratorContentType;
+        context.Response.ContentType = SpidCieConst.JWKGeneratorContentType;
         await context.Response.WriteAsync(json);
         await context.Response.Body.FlushAsync();
     }

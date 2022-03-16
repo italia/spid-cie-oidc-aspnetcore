@@ -4,14 +4,14 @@ using System.Linq;
 
 namespace Spid.Cie.OIDC.AspNetCore.Models;
 
-public sealed class SpidIdentityProvider : IdentityProvider
+internal sealed class SpidIdentityProvider : IdentityProvider
 {
     internal SpidIdentityProvider()
     {
 
     }
 
-    public override IdentityProviderType Type { get => IdentityProviderType.SPID; }
+    internal override IdentityProviderType Type { get => IdentityProviderType.SPID; }
 
     public override IEnumerable<string> FilterRequestedClaims(ClaimTypes[] requestedClaims)
     {
@@ -44,12 +44,6 @@ public sealed class SpidIdentityProvider : IdentityProvider
                 nameof(ClaimTypes.DomicileProvince) => SpidConst.domicileProvince,
                 nameof(ClaimTypes.DomicileNation) => SpidConst.domicileNation,
                 nameof(ClaimTypes.PhoneNumber) => SpidConst.mobilePhone,
-                nameof(ClaimTypes.DocumentDetails) => null,
-                nameof(ClaimTypes.EmailVerified) => null,
-                nameof(ClaimTypes.IdANPR) => null,
-                nameof(ClaimTypes.EDeliveryService) => null,
-                nameof(ClaimTypes.PhoneNumberVerified) => null,
-                nameof(ClaimTypes.PhysicalPhoneNumber) => null,
                 _ => null,
             };
             if (!string.IsNullOrWhiteSpace(mappedClaim))

@@ -6,6 +6,7 @@ namespace Spid.Cie.OIDC.AspNetCore.Models;
 
 public sealed class RelyingParty
 {
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
     public string ClientId { get; set; }
     public string ClientName { get; set; }
     public SecurityLevel SecurityLevel { get; set; }
@@ -18,6 +19,7 @@ public sealed class RelyingParty
     public bool LongSessionsEnabled { get; set; }
     public string[] RedirectUris { get; set; }
     public ClaimTypes[] RequestedClaims { get; set; }
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
     internal RPEntityConfiguration EntityConfiguration
     {
@@ -25,7 +27,7 @@ public sealed class RelyingParty
         {
             return new RPEntityConfiguration()
             {
-                ExpiresOn = DateTimeOffset.UtcNow.AddMinutes(SpidCieDefaults.EntityConfigurationExpirationInMinutes),
+                ExpiresOn = DateTimeOffset.UtcNow.AddMinutes(SpidCieConst.EntityConfigurationExpirationInMinutes),
                 IssuedAt = DateTimeOffset.UtcNow,
                 AuthorityHints = AuthorityHints,
                 Issuer = Issuer,
@@ -39,11 +41,11 @@ public sealed class RelyingParty
                         ClientName = ClientName,
                         Contacts = Contacts,
                         GrantTypes = LongSessionsEnabled
-                            ? new[] { SpidCieDefaults.AuthorizationCode, SpidCieDefaults.RefreshToken }
-                            : new[] { SpidCieDefaults.AuthorizationCode },
+                            ? new[] { SpidCieConst.AuthorizationCode, SpidCieConst.RefreshToken }
+                            : new[] { SpidCieConst.AuthorizationCode },
                         JWKS = OpenIdCoreJWKs.GetJWKS(),
                         RedirectUris = RedirectUris,
-                        ResponseTypes = new[] { SpidCieDefaults.ResponseType }
+                        ResponseTypes = new[] { SpidCieConst.ResponseType }
                     }
                 }
             };

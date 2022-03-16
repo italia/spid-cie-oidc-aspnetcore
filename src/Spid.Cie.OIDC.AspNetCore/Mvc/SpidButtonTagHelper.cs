@@ -11,6 +11,7 @@ namespace Spid.Cie.OIDC.AspNetCore.Mvc;
 
 public class SpidButtonTagHelper : TagHelper
 {
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
     private static string _serializedCircleImage;
     private static readonly object _lockobj = new object();
 
@@ -30,9 +31,9 @@ public class SpidButtonTagHelper : TagHelper
 
     public SpidButtonSize Size { get; set; } = SpidButtonSize.Medium;
 
-    public string CircleImagePath { get; set; }
-
     public string ChallengeUrl { get; set; }
+
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
     public override async Task ProcessAsync(TagHelperContext context, TagHelperOutput output)
     {
@@ -79,10 +80,10 @@ public class SpidButtonTagHelper : TagHelper
         {
             var itemContainer = new TagBuilder("li");
             itemContainer.AddCssClass("spid-idp-button-link");
-            itemContainer.Attributes.Add("data-idp", idp.Name);
+            itemContainer.Attributes.Add("data-idp", idp.Uri);
 
             var item = new TagBuilder("a");
-            item.Attributes.Add("href", $"{ChallengeUrl}{(ChallengeUrl.Contains("?") ? "&" : "?")}provider={idp.Name}");
+            item.Attributes.Add("href", $"{ChallengeUrl}{(ChallengeUrl.Contains("?") ? "&" : "?")}provider={idp.Uri}");
 
             var span = new TagBuilder("span");
             span.AddCssClass("spid-sr-only");
@@ -109,16 +110,11 @@ public class SpidButtonTagHelper : TagHelper
             {
                 if (_serializedCircleImage == null)
                 {
-
-                    using (var resourceStream = GetType().Assembly.GetManifestResourceStream("Spid.Cie.OIDC.AspNetCore.Mvc.Resources.spid-ico-circle-bb.svg"))
-                    {
-                        using (var writer = new MemoryStream())
-                        {
-                            resourceStream.CopyTo(writer);
-                            writer.Seek(0, SeekOrigin.Begin);
-                            _serializedCircleImage = Encoding.UTF8.GetString(writer.ToArray());
-                        }
-                    }
+                    using var resourceStream = GetType().Assembly.GetManifestResourceStream("Spid.Cie.OIDC.AspNetCore.Mvc.Resources.spid-ico-circle-bb.svg");
+                    using var writer = new MemoryStream();
+                    resourceStream!.CopyTo(writer);
+                    writer.Seek(0, SeekOrigin.Begin);
+                    _serializedCircleImage = Encoding.UTF8.GetString(writer.ToArray());
                 }
             }
         }

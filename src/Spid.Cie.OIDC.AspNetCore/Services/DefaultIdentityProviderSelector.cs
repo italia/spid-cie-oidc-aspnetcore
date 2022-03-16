@@ -16,14 +16,14 @@ internal class DefaultIdentityProviderSelector : IIdentityProviderSelector
         _httpContextAccessor = httpContextAccessor;
     }
 
-    public async Task<IdentityProvider> GetSelectedIdentityProvider()
+    public async Task<IdentityProvider?> GetSelectedIdentityProvider()
     {
         var identityProviders = await _retriever.GetIdentityProviders();
-        var provider = (string)_httpContextAccessor.HttpContext.Request.Query[SpidCieDefaults.IdPSelectorKey]
-            ?? (string)_httpContextAccessor.HttpContext.Items[SpidCieDefaults.IdPSelectorKey];
+        var provider = (string?)_httpContextAccessor.HttpContext!.Request.Query[SpidCieConst.IdPSelectorKey]
+            ?? (string?)_httpContextAccessor.HttpContext!.Items[SpidCieConst.IdPSelectorKey];
         if (!string.IsNullOrWhiteSpace(provider))
         {
-            return identityProviders.FirstOrDefault(idp => idp.Name.Equals(provider, System.StringComparison.InvariantCultureIgnoreCase));
+            return identityProviders.FirstOrDefault(idp => idp.Uri.Equals(provider, System.StringComparison.InvariantCultureIgnoreCase));
         }
         return default;
     }

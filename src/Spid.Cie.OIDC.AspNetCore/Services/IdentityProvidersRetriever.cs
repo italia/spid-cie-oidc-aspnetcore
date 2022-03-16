@@ -1,6 +1,8 @@
-﻿using Microsoft.IdentityModel.Protocols.OpenIdConnect;
+﻿using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json.Linq;
+using Spid.Cie.OIDC.AspNetCore.Configuration;
 using Spid.Cie.OIDC.AspNetCore.Helpers;
 using Spid.Cie.OIDC.AspNetCore.Models;
 using System.Collections.Generic;
@@ -14,39 +16,46 @@ namespace Spid.Cie.OIDC.AspNetCore.Services;
 internal class IdentityProvidersRetriever : IIdentityProvidersRetriever
 {
     private readonly HttpClient _client;
+    private readonly IOptionsMonitor<SpidCieOptions> _options;
 
-    public IdentityProvidersRetriever(HttpClient client)
+    public IdentityProvidersRetriever(IOptionsMonitor<SpidCieOptions> options, HttpClient client)
     {
         _client = client;
+        _options = options;
     }
 
     public async Task<IEnumerable<IdentityProvider>> GetIdentityProviders()
     {
         List<IdentityProvider> result = new();
 
-        var urlsString = await _client.GetStringAsync("http://127.0.0.1:8000/list/?type=openid_provider");
+        var urlsString = await _client.GetStringAsync($"{_options.CurrentValue.TrustAnchorUrl.EnsureTrailingSlash()}{SpidCieConst.OPListPath}");
         var urls = JsonSerializer.Deserialize<IEnumerable<string>>(urlsString);
-        foreach (var url in urls)
+        foreach (var url in urls ?? Enumerable.Empty<string>())
         {
-            var metadataAddress = $"{url.EnsureTrailingSlash()}{SpidCieDefaults.EntityConfigurationPath}";
+            var metadataAddress = $"{url.EnsureTrailingSlash()}{SpidCieConst.EntityConfigurationPath}";
             var jwt = await _client.GetStringAsync(metadataAddress);
-            var decodedJwt = jwt.DecodeJWT();
-            var conf = System.Text.Json.JsonSerializer.Deserialize<IdPEntityConfiguration>(decodedJwt);
-            conf.Metadata.OpenIdProvider = OpenIdConnectConfiguration.Create(JObject.Parse(decodedJwt)["metadata"]["openid_provider"].ToString());
-            conf.Metadata.OpenIdProvider.JsonWebKeySet = JsonWebKeySet.Create(JObject.Parse(decodedJwt)["metadata"]["openid_provider"]["jwks"].ToString());
-            result.Add(new SpidIdentityProvider()
+            if (!string.IsNullOrWhiteSpace(jwt))
             {
-                EntityConfiguration = conf,
-                MetadataAddress = metadataAddress,
-                Name = conf.Metadata.OpenIdProvider.AdditionalData["op_uri"] as string,
-                OrganizationDisplayName = conf.Metadata.OpenIdProvider.AdditionalData["op_name"] as string,
-                OrganizationUrl = conf.Metadata.OpenIdProvider.AdditionalData["op_uri"] as string,
-                OrganizationLogoUrl = conf.Metadata.OpenIdProvider.AdditionalData["logo_uri"] as string,
-                OrganizationName = conf.Metadata.OpenIdProvider.AdditionalData["organization_name"] as string,
-                SupportedAcrValues = conf.Metadata.OpenIdProvider.AcrValuesSupported.ToArray(),
-            });
+                var decodedJwt = jwt.DecodeJWT();
+                var conf = JsonSerializer.Deserialize<IdPEntityConfiguration>(decodedJwt);
+                if (conf != null)
+                {
+                    conf.Metadata.OpenIdProvider = OpenIdConnectConfiguration.Create(JObject.Parse(decodedJwt)["metadata"]["openid_provider"].ToString());
+                    conf.Metadata.OpenIdProvider.JsonWebKeySet = JsonWebKeySet.Create(JObject.Parse(decodedJwt)["metadata"]["openid_provider"]["jwks"].ToString());
+                    result.Add(new SpidIdentityProvider()
+                    {
+                        EntityConfiguration = conf,
+                        Uri = conf.Metadata.OpenIdProvider.AdditionalData["op_uri"] as string ?? string.Empty,
+                        OrganizationDisplayName = conf.Metadata.OpenIdProvider.AdditionalData["op_name"] as string ?? string.Empty,
+                        OrganizationUrl = conf.Metadata.OpenIdProvider.AdditionalData["op_uri"] as string ?? string.Empty,
+                        OrganizationLogoUrl = conf.Metadata.OpenIdProvider.AdditionalData["logo_uri"] as string ?? string.Empty,
+                        OrganizationName = conf.Metadata.OpenIdProvider.AdditionalData["organization_name"] as string ?? string.Empty,
+                        SupportedAcrValues = conf.Metadata.OpenIdProvider.AcrValuesSupported.ToArray(),
+                    });
+                }
+            }
         }
 
-        return await Task.FromResult(result);
+        return result;
     }
 }

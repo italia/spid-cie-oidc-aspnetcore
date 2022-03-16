@@ -7,6 +7,10 @@ namespace Spid.Cie.OIDC.AspNetCore.Configuration;
 
 public sealed class SpidCieOptions
 {
+    public string TrustAnchorUrl { get; set; } = "http://127.0.0.1:8000/";
+
+    public bool RequestRefreshToken { get; set; } = false;
+
     public List<RelyingParty> RelyingParties { get; set; } = new List<RelyingParty>();
 
     /// <summary>
@@ -16,6 +20,6 @@ public sealed class SpidCieOptions
     /// <returns></returns>
     public void LoadFromConfiguration(IConfiguration configuration)
     {
-        var conf = OptionsHelper.CreateFromConfiguration(configuration);
+        var conf = OptionsHelpers.CreateFromConfiguration(configuration);
     }
 }

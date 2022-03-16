@@ -3,7 +3,7 @@ using Spid.Cie.OIDC.AspNetCore.Models;
 
 namespace Spid.Cie.OIDC.AspNetCore.Helpers;
 
-internal static class OptionsHelper
+internal static class OptionsHelpers
 {
     internal static SpidCieConfiguration CreateFromConfiguration(IConfiguration configuration)
     {

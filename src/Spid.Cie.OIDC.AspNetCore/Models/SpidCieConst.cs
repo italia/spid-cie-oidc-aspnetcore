@@ -3,7 +3,7 @@
 /// <summary>
 /// Default values related to Spid authentication handler
 /// </summary>
-public sealed class SpidCieDefaults
+public sealed class SpidCieConst
 {
     /// <summary>
     /// The default authentication type used when registering the SpidHandler.
@@ -40,6 +40,8 @@ public sealed class SpidCieDefaults
     public const string JWKGeneratorPath = "generatejwk";
 
     public const string JWKGeneratorContentType = "application/json";
+
+    public const string OPListPath = "list/?type=openid_provider";
 
     public const string EntityConfigurationPath = ".well-known/openid-federation";
 

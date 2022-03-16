@@ -5,6 +5,7 @@ namespace Spid.Cie.OIDC.AspNetCore.Models;
 
 internal class EntityConfiguration
 {
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
     [JsonPropertyName("iss")]
     public string Issuer { get; set; }
 
@@ -39,4 +40,5 @@ internal class EntityConfiguration
 
     [JsonPropertyName("jwks")]
     public JWKS JWKS { get; set; }
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 }

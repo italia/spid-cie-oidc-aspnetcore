@@ -26,7 +26,6 @@ internal class SpidCieHandler : OpenIdConnectHandler
 {
     private OpenIdConnectConfiguration? _configuration;
     private const string NonceProperty = "N";
-    private const string HeaderValueEpocDate = "Thu, 01 Jan 1970 00:00:00 GMT";
     private readonly ILogPersister _logPersister;
     private readonly SpidCieEvents _events;
     private readonly IIdentityProvidersRetriever _idpRetriever;
@@ -177,7 +176,7 @@ internal class SpidCieHandler : OpenIdConnectHandler
             cookieOptions);
     }
 
-    public override async Task SignOutAsync(AuthenticationProperties properties)
+    public override async Task SignOutAsync(AuthenticationProperties? properties)
     {
         var accessToken = await Context.GetTokenAsync(Options.SignOutScheme, OpenIdConnectParameterNames.AccessToken);
         if (!string.IsNullOrWhiteSpace(accessToken))
@@ -192,22 +191,22 @@ internal class SpidCieHandler : OpenIdConnectHandler
         }
 
         await Context.SignOutAsync(Options.SignOutScheme);
-        Response.Redirect(properties.RedirectUri);
+        Response.Redirect(properties?.RedirectUri ?? Options.SignedOutRedirectUri);
     }
 
     private async Task RevokeToken(string accessToken)
     {
-        var issuer = Context.User.FindFirst(SpidCieDefaults.Iss)?.Value;
+        var issuer = Context.User.FindFirst(SpidCieConst.Iss)?.Value;
         if (!string.IsNullOrWhiteSpace(issuer))
         {
             var idps = await _idpRetriever.GetIdentityProviders();
             var idp = idps.FirstOrDefault(i => i.EntityConfiguration.Issuer.Equals(issuer));
             if (idp != null)
             {
-                var revocationEndpoint = idp.EntityConfiguration.Metadata.OpenIdProvider.AdditionalData[SpidCieDefaults.RevocationEndpoint] as string;
+                var revocationEndpoint = idp.EntityConfiguration.Metadata.OpenIdProvider.AdditionalData[SpidCieConst.RevocationEndpoint] as string;
                 if (!string.IsNullOrWhiteSpace(revocationEndpoint))
                 {
-                    var clientId = Context.User.FindFirst(SpidCieDefaults.Aud)?.Value;
+                    var clientId = Context.User.FindFirst(SpidCieConst.Aud)?.Value;
                     if (!string.IsNullOrWhiteSpace(clientId))
                     {
                         var rps = await _rpRetriever.GetRelyingParties();
@@ -218,27 +217,28 @@ internal class SpidCieHandler : OpenIdConnectHandler
                             var key = keySet?.Keys?.FirstOrDefault();
                             if (key is not null)
                             {
-                                RSA rsa = key.GetRSAKey();
+                                (RSA publicKey, RSA privateKey) = key.GetRSAKeys();
                                 var requestMessage = new HttpRequestMessage(HttpMethod.Post, revocationEndpoint)
                                 {
                                     Version = Backchannel.DefaultRequestVersion,
-                                    Content = new FormUrlEncodedContent(new Dictionary<string, string>()
+                                    Content = new FormUrlEncodedContent((IEnumerable<KeyValuePair<string?, string?>>)new Dictionary<string, string>()
                                     {
-                                        { SpidCieDefaults.ClientId, clientId },
-                                        { SpidCieDefaults.ClientAssertionType, SpidCieDefaults.ClientAssertionTypeValue },
-                                        { SpidCieDefaults.Token, accessToken },
-                                        { SpidCieDefaults.ClientAssertion, CryptoHelpers.CreateJWT(rsa,
+                                        { SpidCieConst.ClientId, clientId },
+                                        { SpidCieConst.ClientAssertionType, SpidCieConst.ClientAssertionTypeValue },
+                                        { SpidCieConst.Token, accessToken },
+                                        { SpidCieConst.ClientAssertion, CryptoHelpers.CreateJWT(publicKey,
+                                            privateKey,
                                             new Dictionary<string, object>() {
-                                                { SpidCieDefaults.Kid, key.Kid },
-                                                { SpidCieDefaults.Typ, SpidCieDefaults.TypValue }
+                                                { SpidCieConst.Kid, key.Kid },
+                                                { SpidCieConst.Typ, SpidCieConst.TypValue }
                                             },
                                             new Dictionary<string, object>() {
-                                                { SpidCieDefaults.Iss, clientId },
-                                                { SpidCieDefaults.Sub, clientId },
-                                                { SpidCieDefaults.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds() },
-                                                { SpidCieDefaults.Exp, DateTimeOffset.UtcNow.AddMinutes(SpidCieDefaults.EntityConfigurationExpirationInMinutes).ToUnixTimeSeconds() },
-                                                { SpidCieDefaults.Aud, new string[] { revocationEndpoint } },
-                                                { SpidCieDefaults.Jti, Guid.NewGuid().ToString() }
+                                                { SpidCieConst.Iss, clientId },
+                                                { SpidCieConst.Sub, clientId },
+                                                { SpidCieConst.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds() },
+                                                { SpidCieConst.Exp, DateTimeOffset.UtcNow.AddMinutes(SpidCieConst.EntityConfigurationExpirationInMinutes).ToUnixTimeSeconds() },
+                                                { SpidCieConst.Aud, new string[] { revocationEndpoint } },
+                                                { SpidCieConst.Jti, Guid.NewGuid().ToString() }
                                             })
                                         }
                                     })

@@ -4,9 +4,9 @@ using System.Linq;
 
 namespace Spid.Cie.OIDC.AspNetCore.Models;
 
-public sealed class CieIdentityProvider : IdentityProvider
+internal sealed class CieIdentityProvider : IdentityProvider
 {
-    public override IdentityProviderType Type { get => IdentityProviderType.CIE; }
+    internal override IdentityProviderType Type { get => IdentityProviderType.CIE; }
 
     public override IEnumerable<string> FilterRequestedClaims(ClaimTypes[] requestedClaims)
     {
@@ -19,25 +19,10 @@ public sealed class CieIdentityProvider : IdentityProvider
                 nameof(ClaimTypes.FamilyName) => CieConst.family_name,
                 nameof(ClaimTypes.FiscalNumber) => CieConst.fiscal_number,
                 nameof(ClaimTypes.Email) => CieConst.email,
-                nameof(ClaimTypes.DigitalAddress) => null,
-                nameof(ClaimTypes.Mail) => null,
                 nameof(ClaimTypes.Address) => CieConst.address,
-                nameof(ClaimTypes.CompanyName) => null,
-                nameof(ClaimTypes.CountyOfBirth) => null,
                 nameof(ClaimTypes.DateOfBirth) => CieConst.birthdate,
-                nameof(ClaimTypes.ExpirationDate) => null,
                 nameof(ClaimTypes.Gender) => CieConst.gender,
-                nameof(ClaimTypes.IdCard) => null,
-                nameof(ClaimTypes.IvaCode) => null,
                 nameof(ClaimTypes.PlaceOfBirth) => CieConst.place_of_birth,
-                nameof(ClaimTypes.RegisteredOffice) => null,
-                nameof(ClaimTypes.SpidCode) => null,
-                nameof(ClaimTypes.CompanyFiscalNumber) => null,
-                nameof(ClaimTypes.DomicileStreetAddress) => null,
-                nameof(ClaimTypes.DomicilePostalCode) => null,
-                nameof(ClaimTypes.DomicileMunicipality) => null,
-                nameof(ClaimTypes.DomicileProvince) => null,
-                nameof(ClaimTypes.DomicileNation) => null,
                 nameof(ClaimTypes.PhoneNumber) => CieConst.phone_number,
                 nameof(ClaimTypes.DocumentDetails) => CieConst.document_details,
                 nameof(ClaimTypes.EmailVerified) => CieConst.email_verified,

@@ -23,18 +23,21 @@ internal class OpenIdConnectOptionsProvider : IOptionsMonitor<OpenIdConnectOptio
     private readonly IIdentityProviderSelector _idpSelector;
     private readonly IConfigurationManager<OpenIdConnectConfiguration> _configurationManager;
     private readonly CustomHttpClientHandler _httpClientHandler;
+    private readonly IHttpClientFactory _httpClientFactory;
 
     public OpenIdConnectOptionsProvider(
         IOptionsFactory<OpenIdConnectOptions> optionsFactory,
         IIdentityProviderSelector idpSelector,
         IConfigurationManager<OpenIdConnectConfiguration> configurationManager,
-        CustomHttpClientHandler httpClientHandler)
+        CustomHttpClientHandler httpClientHandler,
+        IHttpClientFactory httpClientFactory)
     {
         _cache = new ConcurrentDictionary<string, Lazy<OpenIdConnectOptions>>();
         _optionsFactory = optionsFactory;
         _idpSelector = idpSelector;
         _configurationManager = configurationManager;
         _httpClientHandler = httpClientHandler;
+        _httpClientFactory = httpClientFactory;
     }
 
     public OpenIdConnectOptions CurrentValue => Get(Options.DefaultName);
@@ -43,16 +46,16 @@ internal class OpenIdConnectOptionsProvider : IOptionsMonitor<OpenIdConnectOptio
     {
         var provider = Task.Run(async () => await _idpSelector.GetSelectedIdentityProvider()).Result;
         var options = _cache.GetOrAdd(name, _ => new Lazy<OpenIdConnectOptions>(() => _optionsFactory.Create(name))).Value;
-        if (name.Equals(SpidCieDefaults.AuthenticationScheme))
+        if (name.Equals(SpidCieConst.AuthenticationScheme))
         {
             options.ConfigurationManager = _configurationManager;
             options.BackchannelHttpHandler = _httpClientHandler;
-            options.Backchannel = new HttpClient(_httpClientHandler);
+            options.Backchannel = _httpClientFactory.CreateClient("SpidCieBackchannel");
         }
         return options;
     }
 
-    public IDisposable OnChange(Action<OpenIdConnectOptions, string> listener) => null;
+    public IDisposable OnChange(Action<OpenIdConnectOptions, string> listener) => throw new NotImplementedException();
 }
 
 
@@ -66,19 +69,25 @@ internal class CustomHttpClientHandler : HttpClientHandler
 
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
-        var provider = await _rpSelector.GetSelectedRelyingParty();
         var response = await base.SendAsync(request, cancellationToken);
-        if (response.Content.Headers.ContentType.MediaType == "application/jose")
+        if (response.Content.Headers.ContentType?.MediaType == "application/jose")
         {
-            var token = await response.Content.ReadAsStringAsync();
-            var key = provider.OpenIdCoreJWKs?.Keys?.FirstOrDefault();
-            RSA rsa = key.GetRSAKey();
+            var provider = await _rpSelector.GetSelectedRelyingParty();
+            if (provider is not null)
+            {
+                var token = await response.Content.ReadAsStringAsync();
+                var key = provider.OpenIdCoreJWKs?.Keys?.FirstOrDefault();
+                if (key is not null)
+                {
+                    (_, RSA privateKey) = key.GetRSAKeys();
 
-            var decodedToken = token.DecodeJose(rsa).DecodeJWT();
+                    var decodedToken = token.DecodeJose(privateKey).DecodeJWT();
 
-            var httpResponse = new HttpResponseMessage(System.Net.HttpStatusCode.OK);
-            httpResponse.Content = new StringContent(decodedToken, Encoding.UTF8, "application/json");
-            return httpResponse;
+                    var httpResponse = new HttpResponseMessage(System.Net.HttpStatusCode.OK);
+                    httpResponse.Content = new StringContent(decodedToken, Encoding.UTF8, "application/json");
+                    return httpResponse;
+                }
+            }
         }
         return response;
     }

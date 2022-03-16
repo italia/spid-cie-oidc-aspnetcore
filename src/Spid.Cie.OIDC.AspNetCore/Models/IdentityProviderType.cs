@@ -1,6 +1,6 @@
 ﻿namespace Spid.Cie.OIDC.AspNetCore.Models;
 
-public enum IdentityProviderType
+internal enum IdentityProviderType
 {
     SPID,
     CIE

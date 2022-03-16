@@ -26,7 +26,7 @@ internal class RPOpenIdFederationMiddleware
 
     public async Task Invoke(HttpContext context, IRelyingPartySelector rpSelector)
     {
-        if (!context.Request.Path.Value.EndsWith(SpidCieDefaults.EntityConfigurationPath, StringComparison.InvariantCultureIgnoreCase))
+        if (!context.Request.Path.Value!.EndsWith(SpidCieConst.EntityConfigurationPath, StringComparison.InvariantCultureIgnoreCase))
         {
             await _next(context);
             return;
@@ -35,13 +35,13 @@ internal class RPOpenIdFederationMiddleware
         var rp = await rpSelector.GetSelectedRelyingParty();
         if (rp != null)
         {
-            var key = rp?.OpenIdFederationJWKs.Keys?.FirstOrDefault();
+            var key = rp.OpenIdFederationJWKs.Keys?.FirstOrDefault();
             if (key is not null)
             {
                 var entityConfiguration = rp.EntityConfiguration;
                 string token = entityConfiguration.JWTEncode(key);
 
-                context.Response.ContentType = SpidCieDefaults.EntityConfigurationContentType;
+                context.Response.ContentType = SpidCieConst.EntityConfigurationContentType;
                 await context.Response.WriteAsync(token);
                 await context.Response.Body.FlushAsync();
                 return;

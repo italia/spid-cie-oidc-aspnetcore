@@ -5,5 +5,5 @@ namespace Spid.Cie.OIDC.AspNetCore.Services;
 
 public interface IRelyingPartySelector
 {
-    Task<RelyingParty> GetSelectedRelyingParty();
+    Task<RelyingParty?> GetSelectedRelyingParty();
 }

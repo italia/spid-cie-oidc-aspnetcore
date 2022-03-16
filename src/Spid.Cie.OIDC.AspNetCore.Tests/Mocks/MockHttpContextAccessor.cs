@@ -18,7 +18,7 @@ internal class MockHttpContextAccessor : IHttpContextAccessor
         {
             var context = new DefaultHttpContext();
             if (_hasQSValue)
-                context.Request.QueryString = context.Request.QueryString.Add(SpidCieDefaults.IdPSelectorKey, "MockIdP");
+                context.Request.QueryString = context.Request.QueryString.Add(SpidCieConst.IdPSelectorKey, "MockIdP");
             return context;
         }
         set => throw new System.NotImplementedException();

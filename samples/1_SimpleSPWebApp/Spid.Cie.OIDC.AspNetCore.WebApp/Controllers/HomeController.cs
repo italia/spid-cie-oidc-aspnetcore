@@ -34,12 +34,12 @@ public class HomeController : Controller
 
     public IActionResult Login()
     {
-        return Challenge(new AuthenticationProperties { RedirectUri = "/home/loggedin" }, SpidCieDefaults.AuthenticationScheme);
+        return Challenge(new AuthenticationProperties { RedirectUri = "/home/loggedin" }, SpidCieConst.AuthenticationScheme);
     }
 
     public IActionResult Logout()
     {
-        return SignOut(new AuthenticationProperties { RedirectUri = "/home/loggedout" }, SpidCieDefaults.AuthenticationScheme);
+        return SignOut(new AuthenticationProperties { RedirectUri = "/home/loggedout" }, SpidCieConst.AuthenticationScheme);
     }
 
     public IActionResult LoggedIn()

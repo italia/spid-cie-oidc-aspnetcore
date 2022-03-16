@@ -5,5 +5,5 @@ namespace Spid.Cie.OIDC.AspNetCore.Services;
 
 internal interface IIdentityProviderSelector
 {
-    Task<IdentityProvider> GetSelectedIdentityProvider();
+    Task<IdentityProvider?> GetSelectedIdentityProvider();
 }
