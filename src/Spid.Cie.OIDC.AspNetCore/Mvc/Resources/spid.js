@@ -6,16 +6,21 @@
             i.preventDefault(), i.stopPropagation()
         } else if (d !== n.target && t(n.target).hasClass("spid-idp-button-ignore")) return
         s(), r || d.hasClass("spid-idp-button-disabled") || (d.addClass("spid-idp-button-open"), o.data("spid-idp-button-trigger", d).show(), e(), o.trigger("show", { spidIDPButton: o, trigger: d }))
-    } function s(i) {
+    }
+
+    function s(i) {
         var s = i ? t(i.target).parents().addBack() : null
         if (s && s.is(".spid-idp-button")) {
             if (!s.is(".spid-idp-button-menu")) return
             if (!s.is("A")) return
-        } t(document).find(".spid-idp-button:visible").each(function () {
+        }
+        t(document).find(".spid-idp-button:visible").each(function () {
             var i = t(this)
             i.hide().removeData("spid-idp-button-trigger").trigger("hide", { spidIDPButton: i })
         }), t(document).find(".spid-idp-button-open").removeClass("spid-idp-button-open")
-    } function e() {
+    }
+
+    function e() {
         var i = t(".spid-idp-button:visible").eq(0), s = i.data("spid-idp-button-trigger"), e = s ? parseInt(s.attr("data-horizontal-offset") || 0, 10) : null, n = s ? parseInt(s.attr("data-vertical-offset") || 0, 10) : null
         0 !== i.length && s && (i.hasClass("spid-idp-button-relative") ? i.css({ left: i.hasClass("spid-idp-button-anchor-right") ? s.position().left - (i.outerWidth(!0) - s.outerWidth(!0)) - parseInt(s.css("margin-right"), 10) + e : s.position().left + parseInt(s.css("margin-left"), 10) + e, top: s.position().top + s.outerHeight(!0) - parseInt(s.css("margin-top"), 10) + n }) : i.css({ left: i.hasClass("spid-idp-button-anchor-right") ? s.offset().left - (i.outerWidth() - s.outerWidth()) + e : s.offset().left + e, top: s.offset().top + s.outerHeight() + n }))
     } t.extend(t.fn, {
@@ -31,3 +36,76 @@
         }
     }), t(document).on("click.spid-idp-button", "[spid-idp-button]", i), t(document).on("click.spid-idp-button", s), t(window).on("resize", e)
 }(jQuery)
+
+$(document).ready(function () {
+    var rootList = $("#spid-idp-list-small-root-get");
+    var idpList = rootList.children(".spid-idp-button-link");
+    var lnkList = rootList.children(".spid-idp-support-link");
+    while (idpList.length) {
+        rootList.append(idpList.splice(Math.floor(Math.random() * idpList.length), 1)[0]);
+    }
+    rootList.append(lnkList);
+});
+$(document).ready(function () {
+    var rootList = $("#spid-idp-list-medium-root-get");
+    var idpList = rootList.children(".spid-idp-button-link");
+    var lnkList = rootList.children(".spid-idp-support-link");
+    while (idpList.length) {
+        rootList.append(idpList.splice(Math.floor(Math.random() * idpList.length), 1)[0]);
+    }
+    rootList.append(lnkList);
+});
+$(document).ready(function () {
+    var rootList = $("#spid-idp-list-large-root-get");
+    var idpList = rootList.children(".spid-idp-button-link");
+    var lnkList = rootList.children(".spid-idp-support-link");
+    while (idpList.length) {
+        rootList.append(idpList.splice(Math.floor(Math.random() * idpList.length), 1)[0]);
+    }
+    rootList.append(lnkList);
+});
+$(document).ready(function () {
+    var rootList = $("#spid-idp-list-xlarge-root-get");
+    var idpList = rootList.children(".spid-idp-button-link");
+    var lnkList = rootList.children(".spid-idp-support-link");
+    while (idpList.length) {
+        rootList.append(idpList.splice(Math.floor(Math.random() * idpList.length), 1)[0]);
+    }
+    rootList.append(lnkList);
+});
+$(document).ready(function () {
+    var rootList = $("#spid-idp-list-small-root-post");
+    var idpList = rootList.children(".spid-idp-button-link");
+    var lnkList = rootList.children(".spid-idp-support-link");
+    while (idpList.length) {
+        rootList.append(idpList.splice(Math.floor(Math.random() * idpList.length), 1)[0]);
+    }
+    rootList.append(lnkList);
+});
+$(document).ready(function () {
+    var rootList = $("#spid-idp-list-medium-root-post");
+    var idpList = rootList.children(".spid-idp-button-link");
+    var lnkList = rootList.children(".spid-idp-support-link");
+    while (idpList.length) {
+        rootList.append(idpList.splice(Math.floor(Math.random() * idpList.length), 1)[0]);
+    }
+    rootList.append(lnkList);
+});
+$(document).ready(function () {
+    var rootList = $("#spid-idp-list-large-root-post");
+    var idpList = rootList.children(".spid-idp-button-link");
+    var lnkList = rootList.children(".spid-idp-support-link");
+    while (idpList.length) {
+        rootList.append(idpList.splice(Math.floor(Math.random() * idpList.length), 1)[0]);
+    }
+    rootList.append(lnkList);
+});
+$(document).ready(function () {
+    var rootList = $("#spid-idp-list-xlarge-root-post");
+    var idpList = rootList.children(".spid-idp-button-link");
+    var lnkList = rootList.children(".spid-idp-support-link");
+    while (idpList.length) {
+        rootList.append(idpList.splice(Math.floor(Math.random() * idpList.length), 1)[0]);
+    }
+    rootList.append(lnkList);
+});

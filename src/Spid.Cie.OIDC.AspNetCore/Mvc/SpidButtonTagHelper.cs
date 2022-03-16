@@ -1,12 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
+﻿using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Razor.TagHelpers;
-using Microsoft.Extensions.Options;
-using Spid.Cie.OIDC.AspNetCore.Configuration;
 using Spid.Cie.OIDC.AspNetCore.Services;
-using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace Spid.Cie.OIDC.AspNetCore.Mvc;
@@ -23,14 +21,10 @@ public class SpidButtonTagHelper : TagHelper
         { SpidButtonSize.Large, ("l", "large") },
         { SpidButtonSize.ExtraLarge, ("xl", "xlarge") }
     };
-    readonly SpidCieOptions _options;
-    readonly IUrlHelper _urlHelper;
     private readonly IIdentityProvidersRetriever _idpRetriever;
 
-    public SpidButtonTagHelper(IOptionsSnapshot<SpidCieOptions> options, IUrlHelper urlHelper, IIdentityProvidersRetriever idpRetriever)
+    public SpidButtonTagHelper(IIdentityProvidersRetriever idpRetriever)
     {
-        _options = options.Value;
-        _urlHelper = urlHelper;
         _idpRetriever = idpRetriever;
     }
 
@@ -52,24 +46,21 @@ public class SpidButtonTagHelper : TagHelper
         var spanIcon = new TagBuilder("span");
         spanIcon.AddCssClass("italia-it-button-icon");
 
-        var imgIcon = new TagBuilder("img");
-        imgIcon.Attributes.Add("src", string.IsNullOrWhiteSpace(CircleImagePath) ? GetSerializedCircleImage() : _urlHelper.Content(CircleImagePath));
-        imgIcon.Attributes.Add("alt", string.Empty);
-        spanIcon.AddCssClass("italia-it-button-icon");
-        spanIcon.InnerHtml.AppendHtml(imgIcon);
+        spanIcon.InnerHtml.AppendHtml(GetSerializedCircleImage());
 
         var spanText = new TagBuilder("span");
         spanText.AddCssClass("italia-it-button-text");
-        spanText.InnerHtml.Append("Entra con SPID");
+        spanText.InnerHtml.AppendHtml("Entra con SPID");
 
         var a = new TagBuilder("a");
+        a.AddCssClass($"italia-it-button italia-it-button-size-{_classNames[Size].ShortClassName} button-spid");
         a.Attributes.Add("href", "javascript:;");
-        a.Attributes.Add("class", $"italia-it-button italia-it-button-size-{_classNames[Size].ShortClassName} button-spid");
         a.Attributes.Add("spid-idp-button", $"#spid-idp-button-{_classNames[Size].LongClassName}-get");
         a.Attributes.Add("aria-haspopup", "true");
         a.Attributes.Add("aria-expanded", "false");
 
-        a.InnerHtml.AppendHtml(spanIcon).AppendHtml(spanText);
+        a.InnerHtml.AppendHtml(spanIcon);
+        a.InnerHtml.AppendHtml(spanText);
         return await Task.FromResult(a);
     }
 
@@ -84,7 +75,7 @@ public class SpidButtonTagHelper : TagHelper
         listContainer.AddCssClass("spid-idp-button-menu");
 
         var identityProviders = await _idpRetriever.GetIdentityProviders();
-        foreach (var idp in identityProviders)
+        foreach (var idp in identityProviders.Where(i => i.Type == Models.IdentityProviderType.SPID))
         {
             var itemContainer = new TagBuilder("li");
             itemContainer.AddCssClass("spid-idp-button-link");
@@ -119,13 +110,13 @@ public class SpidButtonTagHelper : TagHelper
                 if (_serializedCircleImage == null)
                 {
 
-                    using (var resourceStream = GetType().Assembly.GetManifestResourceStream("Spid.Cie.OIDC.AspNetCore.Mvc.Resources.spid-ico-circle-bb.png"))
+                    using (var resourceStream = GetType().Assembly.GetManifestResourceStream("Spid.Cie.OIDC.AspNetCore.Mvc.Resources.spid-ico-circle-bb.svg"))
                     {
                         using (var writer = new MemoryStream())
                         {
                             resourceStream.CopyTo(writer);
                             writer.Seek(0, SeekOrigin.Begin);
-                            _serializedCircleImage = $"data:image/png;base64,{Convert.ToBase64String(writer.ToArray())}";
+                            _serializedCircleImage = Encoding.UTF8.GetString(writer.ToArray());
                         }
                     }
                 }

@@ -1,11 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
+﻿using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Razor.TagHelpers;
-using Microsoft.Extensions.Options;
-using Spid.Cie.OIDC.AspNetCore.Configuration;
-using System;
+using Spid.Cie.OIDC.AspNetCore.Services;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace Spid.Cie.OIDC.AspNetCore.Mvc
 {
@@ -13,22 +13,19 @@ namespace Spid.Cie.OIDC.AspNetCore.Mvc
     {
         private static string _buttonImage;
         private static readonly object _lockobj = new object();
-        private static readonly Dictionary<CieButtonSize, string> _classNames = new()
+        private static readonly Dictionary<CieButtonSize, (string ShortClassName, string LongClassName)> _classNames = new()
         {
-            { CieButtonSize.Small, "150" },
-            { CieButtonSize.Medium, "220" },
-            { CieButtonSize.Large, "280" },
-            { CieButtonSize.ExtraLarge, "340" }
+            { CieButtonSize.Small, ("s", "small") },
+            { CieButtonSize.Medium, ("m", "medium") },
+            { CieButtonSize.Large, ("l", "large") },
+            { CieButtonSize.ExtraLarge, ("xl", "xlarge") }
         };
 
+        private readonly IIdentityProvidersRetriever _idpRetriever;
 
-        readonly IUrlHelper _urlHelper;
-        readonly SpidCieOptions _options;
-
-        public CieButtonTagHelper(IOptionsSnapshot<SpidCieOptions> options, IUrlHelper urlHelper)
+        public CieButtonTagHelper(IIdentityProvidersRetriever idpRetriever)
         {
-            _options = options.Value;
-            _urlHelper = urlHelper;
+            _idpRetriever = idpRetriever;
         }
 
         public CieButtonSize Size { get; set; }
@@ -37,26 +34,35 @@ namespace Spid.Cie.OIDC.AspNetCore.Mvc
 
         public string ChallengeUrl { get; set; }
 
-        public override void Process(TagHelperContext context, TagHelperOutput output)
+        public override async Task ProcessAsync(TagHelperContext context, TagHelperOutput output)
         {
             output.TagName = "div";
-            output.Content.AppendHtml(CreateHeader());
+            output.Content.AppendHtml(await CreateHeaderAsync());
         }
 
-        private TagBuilder CreateHeader()
+        private async Task<TagBuilder> CreateHeaderAsync()
         {
             var spanIcon = new TagBuilder("span");
+            spanIcon.AddCssClass("italia-it-button-icon");
 
-            var imgIcon = new TagBuilder("img");
-            imgIcon.Attributes.Add("src", string.IsNullOrWhiteSpace(CircleImagePath) ? GetSerializedButtonImage() : _urlHelper.Content(CircleImagePath));
-            imgIcon.Attributes.Add("alt", "Entra con CIE");
-            imgIcon.Attributes.Add("style", $"width: {_classNames[Size]}px;");
-            spanIcon.InnerHtml.AppendHtml(imgIcon);
+            spanIcon.InnerHtml.AppendHtml(GetSerializedButtonImage());
+
+            var spanText = new TagBuilder("span");
+            spanText.AddCssClass("italia-it-button-text");
+            spanText.InnerHtml.AppendHtml("Entra con CIE");
+
+            var identityProviders = await _idpRetriever.GetIdentityProviders();
+            var idp = identityProviders.FirstOrDefault(p => p.Type == Models.IdentityProviderType.CIE);
 
             var a = new TagBuilder("a");
-            a.Attributes.Add("href", ChallengeUrl);
+            if (idp != null)
+                a.Attributes.Add("href", $"{ChallengeUrl}{(ChallengeUrl.Contains("?") ? "&" : "?")}provider={idp.Name}");
+            else
+                a.Attributes.Add("style", "pointer-events: none;");
+            a.AddCssClass($"italia-it-button italia-it-button-size-{_classNames[Size].ShortClassName} button-cie");
 
             a.InnerHtml.AppendHtml(spanIcon);
+            a.InnerHtml.AppendHtml(spanText);
             return a;
         }
 
@@ -68,14 +74,13 @@ namespace Spid.Cie.OIDC.AspNetCore.Mvc
                 {
                     if (_buttonImage == null)
                     {
-
-                        using (var resourceStream = GetType().Assembly.GetManifestResourceStream("Spid.Cie.OIDC.AspNetCore.Mvc.Resources.cie-button.png"))
+                        using (var resourceStream = GetType().Assembly.GetManifestResourceStream("Spid.Cie.OIDC.AspNetCore.Mvc.Resources.cie-ico-circle-bb.svg"))
                         {
                             using (var writer = new MemoryStream())
                             {
                                 resourceStream.CopyTo(writer);
                                 writer.Seek(0, SeekOrigin.Begin);
-                                _buttonImage = $"data:image/png;base64,{Convert.ToBase64String(writer.ToArray())}";
+                                _buttonImage = Encoding.UTF8.GetString(writer.ToArray());
                             }
                         }
                     }

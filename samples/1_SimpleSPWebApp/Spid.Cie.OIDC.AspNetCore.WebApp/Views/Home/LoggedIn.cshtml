@@ -1,0 +1,12 @@
+﻿@{
+	ViewData["Title"] = "Logged in";
+}
+<h1>@ViewData["Title"]</h1>
+
+<p>Hey @User.Identity.Name you are loggedin</p>
+
+@foreach (var claim in User.Claims)
+{
+	<p>@claim.Type - @claim.Value</p>
+}
+

@@ -25,18 +25,18 @@
   </ItemGroup>
 
   <ItemGroup>
-	<None Remove="Mvc\Resources\cie-button.png" />
-	<None Remove="Mvc\Resources\spid-ico-circle-bb.png" />
+	<None Remove="Mvc\Resources\cie-ico-circle-bb.svg" />
+	<None Remove="Mvc\Resources\spid-ico-circle-bb.svg" />
 	<None Remove="Mvc\Resources\spid.css" />
 	<None Remove="Mvc\Resources\spid.js" />
   </ItemGroup>
 
   <ItemGroup>
-	<EmbeddedResource Include="Mvc\Resources\cie-button.png" />
+	<EmbeddedResource Include="Mvc\Resources\cie-ico-circle-bb.svg" />
+	<EmbeddedResource Include="Mvc\Resources\spid-ico-circle-bb.svg" />
 	<EmbeddedResource Include="Mvc\Resources\spid-nuget.png" />
 	<EmbeddedResource Include="Mvc\Resources\spid.css" />
 	<EmbeddedResource Include="Mvc\Resources\spid.js" />
-	<EmbeddedResource Include="Mvc\Resources\spid-ico-circle-bb.png" />
   </ItemGroup>
 
   <ItemGroup>

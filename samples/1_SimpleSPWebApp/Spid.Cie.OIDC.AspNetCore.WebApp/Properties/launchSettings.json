@@ -1,0 +1,17 @@
+﻿{
+  "profiles": {
+    "Spid.Cie.OIDC.AspNetCore.WebApp": {
+      "commandName": "Project",
+      "dotnetRunMessages": "true",
+      "launchBrowser": true,
+      //"launchUrl": "https://127.0.0.1:5001/.well-known/openid-federation",
+      //"launchUrl": "https://127.0.0.1:5001/generatejwk",
+      "launchUrl": "http://127.0.0.1:5000/",
+      "applicationUrl": "https://127.0.0.1:5001;http://127.0.0.1:5000",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_HOSTINGSTARTUPASSEMBLIES": "Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation"
+      }
+    }
+  }
+}

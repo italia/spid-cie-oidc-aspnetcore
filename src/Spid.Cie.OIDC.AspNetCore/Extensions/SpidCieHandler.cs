@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
-using Microsoft.Net.Http.Headers;
 using Spid.Cie.OIDC.AspNetCore.Events;
 using Spid.Cie.OIDC.AspNetCore.Helpers;
 using Spid.Cie.OIDC.AspNetCore.Logging;
@@ -152,30 +151,10 @@ internal class SpidCieHandler : OpenIdConnectHandler
             throw new InvalidOperationException("Cannot redirect to the authorization endpoint, the configuration may be missing or invalid.");
         }
 
-        if (Options.AuthenticationMethod == OpenIdConnectRedirectBehavior.RedirectGet)
-        {
-            var redirectUri = message.CreateAuthenticationRequestUrl();
+        var redirectUri = message.CreateAuthenticationRequestUrl();
 
-            Response.Redirect(redirectUri);
-            return;
-        }
-        else if (Options.AuthenticationMethod == OpenIdConnectRedirectBehavior.FormPost)
-        {
-            var content = message.BuildFormPost();
-            var buffer = Encoding.UTF8.GetBytes(content);
-
-            Response.ContentLength = buffer.Length;
-            Response.ContentType = "text/html;charset=UTF-8";
-
-            Response.Headers[HeaderNames.CacheControl] = "no-cache, no-store";
-            Response.Headers[HeaderNames.Pragma] = "no-cache";
-            Response.Headers[HeaderNames.Expires] = HeaderValueEpocDate;
-
-            await Response.Body.WriteAsync(buffer);
-            return;
-        }
-
-        throw new NotImplementedException($"An unsupported authentication method has been configured: {Options.AuthenticationMethod}");
+        Response.Redirect(redirectUri);
+        return;
     }
 
     protected override Task<HandleRequestResult> HandleRemoteAuthenticateAsync()

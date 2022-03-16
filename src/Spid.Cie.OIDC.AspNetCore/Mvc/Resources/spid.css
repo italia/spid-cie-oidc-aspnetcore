@@ -5,17 +5,19 @@
     position: relative;
     padding: 0;
     color: #FFF;
-    font-family: "Titillium Web",HelveticaNeue,Helvetica Neue,Helvetica,Arial,Lucida Grande,sans-serif;
+    font-family: "Titillium Web", HelveticaNeue, Helvetica Neue, Helvetica, Arial, Lucida Grande, sans-serif;
     font-weight: 600;
     line-height: 1em;
     text-decoration: none;
     border: 0;
     text-align: center;
     cursor: pointer;
-    overflow: hidden
+    overflow: hidden;
+    border-radius: 15px;
 }
 
-.italia-it-button-icon, .italia-it-button-text {
+.italia-it-button-icon,
+.italia-it-button-text {
     display: block;
     float: left
 }
@@ -23,7 +25,7 @@
 .italia-it-button-icon {
     margin: 0 -.4em 0 0;
     padding: 0.6em .8em .5em;
-    border-right: rgba(255,255,255,0.1) 0.1em solid
+    border-right: rgba(255, 255, 255, 0.1) 0.1em solid
 }
 
 .italia-it-button-text {
@@ -44,7 +46,8 @@ svg {
 
 .italia-it-button-size-s {
     font-size: 10px;
-    width: 150px
+    width: 150px;
+    border-radius: 5px;
 }
 
     .italia-it-button-size-s > span img {
@@ -55,7 +58,8 @@ svg {
 
 .italia-it-button-size-m {
     font-size: 15px;
-    width: 220px
+    width: 220px;
+    border-radius: 0px;
 }
 
     .italia-it-button-size-m > span img {
@@ -76,8 +80,8 @@ svg {
     }
 
 .italia-it-button-size-xl {
-    font-size: 25px;
-    width: 340px
+    font-size: 24px;
+    width: 340px;
 }
 
     .italia-it-button-size-xl > span img {
@@ -105,31 +109,56 @@ svg {
         color: #036
     }
 
+.button-cie {
+    background-color: #4c5c6c;
+    color: #FFF
+}
+
+    .button-cie svg {
+        fill: #FFF
+    }
+
+    .button-cie:hover {
+        background-color: #414c58;
+        color: #FFF
+    }
+
+    .button-cie:active {
+        background-color: #394046;
+        color: #036
+    }
+
 .spid-idp-button {
     position: absolute;
     z-index: 1039;
     display: none
 }
 
-    .spid-idp-button .spid-idp-button-menu, .spid-idp-button .spid-idp-button-panel {
+    .spid-idp-button .spid-idp-button-menu,
+    .spid-idp-button .spid-idp-button-panel {
         list-style: none;
         background: white;
         border: solid 1px #ddd;
-        box-shadow: 0 0 5px rgba(0,0,0,0.2);
+        box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
         overflow: visible;
         padding: 0;
         margin: 0
     }
 
-#spid-idp-button-small-get, #spid-idp-button-medium-get, #spid-idp-button-small-post, #spid-idp-button-medium-post {
+#spid-idp-button-small-get,
+#spid-idp-button-medium-get,
+#spid-idp-button-small-post,
+#spid-idp-button-medium-post {
     width: 230px
 }
 
-#spid-idp-button-large-get, #spid-idp-button-large-post {
+#spid-idp-button-large-get,
+#spid-idp-button-large-post {
     width: 270px
 }
 
-#spid-idp-button-xlarge-get, #spid-idp-button-xlarge-post {
+#spid-idp-button-xlarge-get,
+#spid-idp-button-xlarge-post {
     width: 330px
 }
 
@@ -173,7 +202,8 @@ svg {
         right: 10px
     }
 
-.spid-idp-button.spid-idp-button-scroll .spid-idp-button-menu, .spid-idp-button.spid-idp-button-scroll .spid-idp-button-panel {
+.spid-idp-button.spid-idp-button-scroll .spid-idp-button-menu,
+.spid-idp-button.spid-idp-button-scroll .spid-idp-button-panel {
     max-height: 180px;
     overflow: auto
 }
@@ -185,29 +215,32 @@ svg {
     line-height: 18px
 }
 
-    .spid-idp-button .spid-idp-button-menu li > a, .spid-idp-button .spid-idp-button-menu label {
+    .spid-idp-button .spid-idp-button-menu li > a,
+    .spid-idp-button .spid-idp-button-menu label {
         display: block;
-        font-family: "Titillium Web",HelveticaNeue,Helvetica Neue,Helvetica,Arial,Lucida Grande,sans-serif;
+        font-family: "Titillium Web", HelveticaNeue, Helvetica Neue, Helvetica, Arial, Lucida Grande, sans-serif;
         font-weight: 600;
         font-size: .9em;
-        color: #06C;
+        color: #3b61b6;
         text-decoration: underline;
         line-height: 18px;
         padding-top: 5px;
         white-space: nowrap;
-        border-bottom: 1px solid #ddd
+        border-bottom: 1px solid #ddd;
     }
 
-        .spid-idp-button .spid-idp-button-menu li > a:hover, .spid-idp-button .spid-idp-button-menu label:hover {
+        .spid-idp-button .spid-idp-button-menu li > a:hover,
+        .spid-idp-button .spid-idp-button-menu label:hover {
             color: #036;
             cursor: pointer;
             background-color: #F0F0F0
         }
 
         .spid-idp-button .spid-idp-button-menu li > a img {
-            height: 25px;
-            padding: 10px 0 10px 10px;
-            border: 0
+            height: 35px;
+            padding-bottom: 5px;
+            border: 0;
+            width: 100%;
         }
 
 .idp-button-idp-logo {
@@ -229,7 +262,7 @@ svg {
     .idp-button-idp-logo img {
         height: 25px;
         vertical-align: middle;
-        cursor: pointer
+        cursor: pointer;
     }
 
 .spid-top-menu-space-10 > a img {
@@ -255,6 +288,6 @@ svg {
     padding: 0;
     margin: -1px;
     overflow: hidden;
-    clip: rect(0,0,0,0);
+    clip: rect(0, 0, 0, 0);
     border: 0
 }

@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Razor.TagHelpers;
 using System.IO;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Spid.Cie.OIDC.AspNetCore.Mvc;
 
@@ -10,7 +11,7 @@ public class SpidJSTagHelper : TagHelper
     private static string _js;
     private static readonly object _lockobj = new object();
 
-    public override void Process(TagHelperContext context, TagHelperOutput output)
+    public override async Task ProcessAsync(TagHelperContext context, TagHelperOutput output)
     {
         if (_js == null)
         {
@@ -27,5 +28,7 @@ public class SpidJSTagHelper : TagHelper
         }
         output.Attributes.Remove(output.Attributes["spid"]);
         output.Content.AppendHtml(_js);
+
+        await Task.CompletedTask;
     }
 }
