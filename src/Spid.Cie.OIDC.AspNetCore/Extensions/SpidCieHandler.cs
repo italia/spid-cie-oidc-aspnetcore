@@ -179,12 +179,6 @@ internal class SpidCieHandler : OpenIdConnectHandler
             await RevokeToken(accessToken);
         }
 
-        var refreshToken = await Context.GetTokenAsync(Options.SignOutScheme, OpenIdConnectParameterNames.RefreshToken);
-        if (!string.IsNullOrWhiteSpace(refreshToken))
-        {
-            await RevokeToken(refreshToken);
-        }
-
         await Context.SignOutAsync(Options.SignOutScheme);
         Response.Redirect(properties?.RedirectUri ?? Options.SignedOutRedirectUri);
     }
