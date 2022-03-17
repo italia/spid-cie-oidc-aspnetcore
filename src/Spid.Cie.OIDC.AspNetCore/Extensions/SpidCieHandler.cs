@@ -156,11 +156,6 @@ internal class SpidCieHandler : OpenIdConnectHandler
         return;
     }
 
-    protected override Task<HandleRequestResult> HandleRemoteAuthenticateAsync()
-    {
-        return base.HandleRemoteAuthenticateAsync();
-    }
-
     private void WriteNonceCookie(string nonce)
     {
         if (string.IsNullOrEmpty(nonce))

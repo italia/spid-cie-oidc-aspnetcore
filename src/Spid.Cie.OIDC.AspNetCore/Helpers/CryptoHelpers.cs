@@ -31,8 +31,24 @@ internal static class CryptoHelpers
             InverseQ = WebEncoders.Base64UrlDecode(key.QI)
         }));
 
+    internal static RSA GetRSAPublicKey(this Models.JsonWebKey key)
+        => RSA.Create(new RSAParameters()
+        {
+            Modulus = WebEncoders.Base64UrlDecode(key.n),
+            Exponent = WebEncoders.Base64UrlDecode(key.e),
+        });
+
+    internal static string DecodeJWTHeader(this string jwt)
+        => JwtBuilder.Create().DecodeHeader(jwt);
+
     internal static string DecodeJWT(this string jwt)
         => JwtBuilder.Create().Decode(jwt);
+
+    internal static string ValidateJWTSignature(this string jwt, RSA publicKey)
+        => JwtBuilder.Create()
+            .WithAlgorithm(new RS256Algorithm(publicKey))
+            .MustVerifySignature()
+            .Decode(jwt);
 
     internal static string DecodeJose(this string jose, RSA privateKey)
         => Jose.JWT.Decode(jose, privateKey);

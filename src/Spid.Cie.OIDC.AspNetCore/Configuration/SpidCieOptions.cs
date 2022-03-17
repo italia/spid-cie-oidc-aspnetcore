@@ -13,6 +13,8 @@ public sealed class SpidCieOptions
 
     public List<RelyingParty> RelyingParties { get; set; } = new List<RelyingParty>();
 
+    public int IdentityProvidersCacheExpirationInMinutes { get; set; } = 10;
+
     /// <summary>
     /// Loads from configuration.
     /// </summary>

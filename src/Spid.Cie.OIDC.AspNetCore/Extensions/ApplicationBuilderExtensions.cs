@@ -67,6 +67,7 @@ public static class ApplicationBuilderExtensions
         internalBuilder.Services.TryAddScoped<IIdentityProviderSelector, DefaultIdentityProviderSelector>();
         internalBuilder.Services.TryAddScoped<IRelyingPartiesRetriever, DefaultRelyingPartiesRetriever>();
         internalBuilder.Services.TryAddScoped<IRelyingPartySelector, DefaultRelyingPartySelector>();
+        internalBuilder.Services.TryAddScoped<ITrustChainManager, TrustChainManager>();
 
         internalBuilder.Services.TryAddScoped<IOptionsMonitor<OpenIdConnectOptions>, OpenIdConnectOptionsProvider>();
         internalBuilder.Services.TryAddScoped<IConfigurationManager<OpenIdConnectConfiguration>, ConfigurationManager>();
