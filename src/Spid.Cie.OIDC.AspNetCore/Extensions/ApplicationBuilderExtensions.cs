@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authentication;
+﻿using IdentityModel.AspNetCore.AccessTokenManagement;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,6 +13,7 @@ using Spid.Cie.OIDC.AspNetCore.Logging;
 using Spid.Cie.OIDC.AspNetCore.Models;
 using Spid.Cie.OIDC.AspNetCore.OpenIdFederation;
 using Spid.Cie.OIDC.AspNetCore.Services;
+
 using System;
 
 namespace Spid.Cie.OIDC.AspNetCore.Extensions;
@@ -71,6 +73,9 @@ public static class ApplicationBuilderExtensions
 
         internalBuilder.Services.TryAddScoped<IOptionsMonitor<OpenIdConnectOptions>, OpenIdConnectOptionsProvider>();
         internalBuilder.Services.TryAddScoped<IConfigurationManager<OpenIdConnectConfiguration>, ConfigurationManager>();
+
+        internalBuilder.Services.AddAccessTokenManagement();
+        internalBuilder.Services.AddScoped<ITokenClientConfigurationService, AssertionConfigurationService>();
 
         return internalBuilder;
     }

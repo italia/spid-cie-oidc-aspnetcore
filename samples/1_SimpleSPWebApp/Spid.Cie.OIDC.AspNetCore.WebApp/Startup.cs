@@ -34,6 +34,7 @@ public class Startup
             {
                 o.LoadFromConfiguration(Configuration);
 
+                o.RequestRefreshToken = true;
                 o.RelyingParties = new System.Collections.Generic.List<RelyingParty>() {
                     new RelyingParty()
                     {

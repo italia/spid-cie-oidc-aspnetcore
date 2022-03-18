@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authentication;
+﻿using IdentityModel.Client;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.OAuth;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.WebUtilities;
@@ -14,7 +15,6 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Encodings.Web;
@@ -81,21 +81,20 @@ internal class SpidCieHandler : OpenIdConnectHandler
             Scope = string.Join(" ", properties.GetParameter<ICollection<string>>(OpenIdConnectParameterNames.Scope) ?? Options.Scope),
         };
 
-        if (Options.UsePkce && Options.ResponseType == OpenIdConnectResponseType.Code)
-        {
-            var bytes = new byte[32];
-            RandomNumberGenerator.Fill(bytes);
-            var codeVerifier = Microsoft.AspNetCore.Authentication.Base64UrlTextEncoder.Encode(bytes);
+        #region Pkce
+        var bytes = new byte[32];
+        RandomNumberGenerator.Fill(bytes);
+        var codeVerifier = Microsoft.AspNetCore.Authentication.Base64UrlTextEncoder.Encode(bytes);
 
-            properties.Items.Add(OAuthConstants.CodeVerifierKey, codeVerifier);
+        properties.Items.Add(OAuthConstants.CodeVerifierKey, codeVerifier);
 
-            using SHA256 sha = SHA256.Create();
-            var challengeBytes = sha.ComputeHash(Encoding.UTF8.GetBytes(codeVerifier));
-            var codeChallenge = WebEncoders.Base64UrlEncode(challengeBytes);
+        using SHA256 sha = SHA256.Create();
+        var challengeBytes = sha.ComputeHash(Encoding.UTF8.GetBytes(codeVerifier));
+        var codeChallenge = WebEncoders.Base64UrlEncode(challengeBytes);
 
-            message.Parameters.Add(OAuthConstants.CodeChallengeKey, codeChallenge);
-            message.Parameters.Add(OAuthConstants.CodeChallengeMethodKey, OAuthConstants.CodeChallengeMethodS256);
-        }
+        message.Parameters.Add(OAuthConstants.CodeChallengeKey, codeChallenge);
+        message.Parameters.Add(OAuthConstants.CodeChallengeMethodKey, OAuthConstants.CodeChallengeMethodS256);
+        #endregion
 
         var maxAge = properties.GetParameter<TimeSpan?>(OpenIdConnectParameterNames.MaxAge) ?? Options.MaxAge;
         if (maxAge.HasValue)
@@ -110,11 +109,8 @@ internal class SpidCieHandler : OpenIdConnectHandler
             message.ResponseMode = Options.ResponseMode;
         }
 
-        if (Options.ProtocolValidator.RequireNonce)
-        {
-            message.Nonce = Options.ProtocolValidator.GenerateNonce();
-            WriteNonceCookie(message.Nonce);
-        }
+        message.Nonce = Options.ProtocolValidator.GenerateNonce();
+        WriteNonceCookie(message.Nonce);
 
         GenerateCorrelationId(properties);
 
@@ -165,8 +161,7 @@ internal class SpidCieHandler : OpenIdConnectHandler
 
         var cookieOptions = Options.NonceCookie.Build(Context, Clock.UtcNow);
 
-        Response.Cookies.Append(
-            Options.NonceCookie.Name + Options.StringDataFormat.Protect(nonce),
+        Response.Cookies.Append(Options.NonceCookie.Name + Options.StringDataFormat.Protect(nonce),
             NonceProperty,
             cookieOptions);
     }
@@ -186,60 +181,73 @@ internal class SpidCieHandler : OpenIdConnectHandler
     private async Task RevokeToken(string accessToken)
     {
         var issuer = Context.User.FindFirst(SpidCieConst.Iss)?.Value;
-        if (!string.IsNullOrWhiteSpace(issuer))
+        if (string.IsNullOrWhiteSpace(issuer))
         {
-            var idps = await _idpRetriever.GetIdentityProviders();
-            var idp = idps.FirstOrDefault(i => i.EntityConfiguration.Issuer.Equals(issuer));
-            if (idp != null)
+            throw new InvalidOperationException("Current authenticated User doesn't have a 'sub' claim.");
+        }
+        var idps = await _idpRetriever.GetIdentityProviders();
+        var idp = idps.FirstOrDefault(i => i.EntityConfiguration.Issuer.Equals(issuer));
+        if (idp is null)
+        {
+            throw new InvalidOperationException($"No IdentityProvider found for the issuer {issuer}");
+        }
+        var clientId = Context.User.FindFirst(SpidCieConst.Aud)?.Value;
+        if (string.IsNullOrWhiteSpace(clientId))
+        {
+            throw new InvalidOperationException("Current authenticated User doesn't have an 'aud' claim.");
+        }
+        var rps = await _rpRetriever.GetRelyingParties();
+        var rp = rps.FirstOrDefault(r => r.ClientId.Equals(clientId));
+        if (rp is null)
+        {
+            throw new InvalidOperationException($"No RelyingParty found for the clientId {clientId}");
+        }
+        var keySet = rp.OpenIdCoreJWKs;
+        var key = keySet?.Keys?.FirstOrDefault();
+        if (key is null)
+        {
+            throw new InvalidOperationException($"No key found for the RelyingParty with clientId {clientId}");
+        }
+        (RSA publicKey, RSA privateKey) = key.GetRSAKeys();
+
+        var revocationEndpoint = idp.EntityConfiguration.Metadata.OpenIdProvider.AdditionalData[SpidCieConst.RevocationEndpoint] as string;
+        if (string.IsNullOrWhiteSpace(revocationEndpoint))
+        {
+            throw new InvalidOperationException($"No RevocationEndpoint specified in the EntityConfiguration of the IdentityProvider {issuer}");
+        }
+
+        var responseMessage = await Backchannel.RevokeTokenAsync(new TokenRevocationRequest()
+        {
+            ClientCredentialStyle = ClientCredentialStyle.PostBody,
+            Address = revocationEndpoint,
+            ClientId = clientId,
+            ClientAssertion = new ClientAssertion()
             {
-                var revocationEndpoint = idp.EntityConfiguration.Metadata.OpenIdProvider.AdditionalData[SpidCieConst.RevocationEndpoint] as string;
-                if (!string.IsNullOrWhiteSpace(revocationEndpoint))
-                {
-                    var clientId = Context.User.FindFirst(SpidCieConst.Aud)?.Value;
-                    if (!string.IsNullOrWhiteSpace(clientId))
-                    {
-                        var rps = await _rpRetriever.GetRelyingParties();
-                        var rp = rps.FirstOrDefault(r => r.ClientId.Equals(clientId));
-                        if (rp != null)
-                        {
-                            var keySet = rp.OpenIdCoreJWKs;
-                            var key = keySet?.Keys?.FirstOrDefault();
-                            if (key is not null)
-                            {
-                                (RSA publicKey, RSA privateKey) = key.GetRSAKeys();
-                                var requestMessage = new HttpRequestMessage(HttpMethod.Post, revocationEndpoint)
-                                {
-                                    Version = Backchannel.DefaultRequestVersion,
-                                    Content = new FormUrlEncodedContent((IEnumerable<KeyValuePair<string?, string?>>)new Dictionary<string, string>()
-                                    {
-                                        { SpidCieConst.ClientId, clientId },
-                                        { SpidCieConst.ClientAssertionType, SpidCieConst.ClientAssertionTypeValue },
-                                        { SpidCieConst.Token, accessToken },
-                                        { SpidCieConst.ClientAssertion, CryptoHelpers.CreateJWT(publicKey,
-                                            privateKey,
-                                            new Dictionary<string, object>() {
+                Type = SpidCieConst.ClientAssertionTypeValue,
+                Value = CryptoHelpers.CreateJWT(publicKey,
+                    privateKey,
+                    new Dictionary<string, object>() {
                                                 { SpidCieConst.Kid, key.Kid },
                                                 { SpidCieConst.Typ, SpidCieConst.TypValue }
-                                            },
-                                            new Dictionary<string, object>() {
+                    },
+                    new Dictionary<string, object>() {
                                                 { SpidCieConst.Iss, clientId },
                                                 { SpidCieConst.Sub, clientId },
                                                 { SpidCieConst.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds() },
                                                 { SpidCieConst.Exp, DateTimeOffset.UtcNow.AddMinutes(SpidCieConst.EntityConfigurationExpirationInMinutes).ToUnixTimeSeconds() },
                                                 { SpidCieConst.Aud, new string[] { revocationEndpoint } },
                                                 { SpidCieConst.Jti, Guid.NewGuid().ToString() }
-                                            })
-                                        }
-                                    })
-                                };
-                                var responseMessage = await Backchannel.SendAsync(requestMessage, Context.RequestAborted);
-                                responseMessage.EnsureSuccessStatusCode();
-                                var revokeResponse = await responseMessage.Content.ReadAsStringAsync();
-                            }
-                        }
-                    }
-                }
-            }
+                    })
+            },
+            Token = accessToken
+        });
+        if (responseMessage.HttpStatusCode != System.Net.HttpStatusCode.OK)
+        {
+            Logger.LogWarning($"AccessToken Revocation returned http status {responseMessage.HttpStatusCode}");
+        }
+        if (responseMessage.IsError)
+        {
+            Logger.LogWarning($"AccessToken Revocation returned Error {responseMessage.Error}");
         }
     }
 }
