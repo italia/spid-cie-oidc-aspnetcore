@@ -29,7 +29,7 @@ internal class RPOpenIdFederationMiddleware
         var rp = await rpSelector.GetSelectedRelyingParty();
         if (rp != null)
         {
-            var key = rp.OpenIdFederationJWKs.Keys?.FirstOrDefault();
+            var key = rp.OpenIdFederationJWKs?.Keys?.FirstOrDefault();
             if (key is not null)
             {
                 var entityConfiguration = GetEntityConfiguration(rp, cryptoService);

@@ -102,64 +102,39 @@ internal class TrustChainManager : ITrustChainManager
     {
         try
         {
-            if (string.IsNullOrWhiteSpace(url))
-            {
-                _logger.LogWarning("Url parameter is not defined");
-                return default;
-            }
-            var metadataAddress = $"{url.EnsureTrailingSlash()}{SpidCieConst.EntityConfigurationPath}";
+            Throw<Exception>.If(string.IsNullOrWhiteSpace(url), "Url parameter is not defined");
+
+            var metadataAddress = $"{url!.EnsureTrailingSlash()}{SpidCieConst.EntityConfigurationPath}";
             var jwt = await _httpClient.GetStringAsync(metadataAddress);
-            if (string.IsNullOrWhiteSpace(jwt))
-            {
-                _logger.LogWarning($"EntityConfiguration JWT not retrieved from url {metadataAddress}");
-                return default;
-            }
+            Throw<Exception>.If(string.IsNullOrWhiteSpace(jwt), $"EntityConfiguration JWT not retrieved from url {metadataAddress}");
 
             await _logPersister.LogGetEntityConfiguration(metadataAddress, jwt);
 
             var decodedJwt = _cryptoService.DecodeJWT(jwt);
-            if (string.IsNullOrWhiteSpace(decodedJwt))
-            {
-                _logger.LogWarning($"Invalid EntityConfiguration JWT for url {metadataAddress}: {jwt}");
-                return default;
-            }
+            Throw<Exception>.If(string.IsNullOrWhiteSpace(decodedJwt), $"Invalid EntityConfiguration JWT for url {metadataAddress}: {jwt}");
+
             var conf = JsonSerializer.Deserialize<T>(decodedJwt);
-            if (conf is null)
-            {
-                _logger.LogWarning($"Invalid Decoded EntityConfiguration JWT for url {metadataAddress}: {decodedJwt}");
-                return default;
-            }
+            Throw<Exception>.If(conf is null, $"Invalid Decoded EntityConfiguration JWT for url {metadataAddress}: {decodedJwt}");
+
             var decodedJwtHeader = _cryptoService.DecodeJWTHeader(jwt);
-            if (string.IsNullOrWhiteSpace(decodedJwtHeader))
-            {
-                _logger.LogWarning($"Invalid EntityConfiguration JWT Header for url {metadataAddress}: {jwt}");
-                return default;
-            }
+            Throw<Exception>.If(string.IsNullOrWhiteSpace(decodedJwtHeader), $"Invalid EntityConfiguration JWT Header for url {metadataAddress}: {jwt}");
+
             var header = JObject.Parse(decodedJwtHeader);
             var kid = (string)header[SpidCieConst.Kid];
-            if (string.IsNullOrWhiteSpace(kid))
-            {
-                _logger.LogWarning($"No Kid specified in the EntityConfiguration JWT Header for url {metadataAddress}: {decodedJwtHeader}");
-                return default;
-            }
-            var key = conf.JWKS.Keys.FirstOrDefault(k => k.kid.Equals(kid, System.StringComparison.InvariantCultureIgnoreCase));
-            if (key is null)
-            {
-                _logger.LogWarning($"No key found with kid {kid} for url {metadataAddress}: {decodedJwtHeader}");
-                return default;
-            }
-            RSA publicKey = _cryptoService.GetRSAPublicKey(key);
-            if (!decodedJwt.Equals(_cryptoService.ValidateJWTSignature(jwt, publicKey)))
-            {
-                _logger.LogWarning($"Invalid Signature for the EntityConfiguration JWT retrieved at the url {metadataAddress}: {decodedJwtHeader}");
-                return default;
-            }
+            Throw<Exception>.If(string.IsNullOrWhiteSpace(kid), $"No Kid specified in the EntityConfiguration JWT Header for url {metadataAddress}: {decodedJwtHeader}");
+
+            var key = conf!.JWKS.Keys.FirstOrDefault(k => k.kid.Equals(kid, System.StringComparison.InvariantCultureIgnoreCase));
+            Throw<Exception>.If(key is null, $"No key found with kid {kid} for url {metadataAddress}: {decodedJwtHeader}");
+
+            RSA publicKey = _cryptoService.GetRSAPublicKey(key!);
+            Throw<Exception>.If(!decodedJwt.Equals(_cryptoService.ValidateJWTSignature(jwt, publicKey)),
+                $"Invalid Signature for the EntityConfiguration JWT retrieved at the url {metadataAddress}: {decodedJwtHeader}");
 
             return (conf, decodedJwt, jwt);
         }
         catch (System.Exception ex)
         {
-            _logger.LogWarning(ex, $"An error occurred while retrieving the EntityConfiguration at the url {url}: {ex.Message}");
+            _logger.LogWarning(ex, ex.Message);
             return default;
         }
     }
@@ -168,66 +143,42 @@ internal class TrustChainManager : ITrustChainManager
     {
         try
         {
-            if (string.IsNullOrWhiteSpace(url))
-            {
-                _logger.LogWarning("Url parameter is not defined");
-                return default;
-            }
-            var esJwt = await _httpClient.GetStringAsync(url);
-            if (string.IsNullOrWhiteSpace(esJwt))
-            {
-                _logger.LogWarning($"EntityStatement JWT not retrieved from url {url}");
-                return default;
-            }
 
-            await _logPersister.LogGetEntityStatement(url, esJwt);
+            Throw<Exception>.If(string.IsNullOrWhiteSpace(url), "Url parameter is not defined");
+
+            var esJwt = await _httpClient.GetStringAsync(url);
+            Throw<Exception>.If(string.IsNullOrWhiteSpace(esJwt), $"EntityStatement JWT not retrieved from url {url}");
+
+            await _logPersister.LogGetEntityStatement(url!, esJwt);
 
             var decodedEsJwt = _cryptoService.DecodeJWT(esJwt);
-            if (string.IsNullOrWhiteSpace(decodedEsJwt))
-            {
-                _logger.LogWarning($"Invalid EntityStatement JWT for url {url}: {esJwt}");
-                return default;
-            }
+            Throw<Exception>.If(string.IsNullOrWhiteSpace(decodedEsJwt), $"Invalid EntityStatement JWT for url {url}: {esJwt}");
+
             var entityStatement = JsonSerializer.Deserialize<EntityStatement>(decodedEsJwt);
-            if (entityStatement is null)
-            {
-                _logger.LogWarning($"Invalid Decoded EntityStatement JWT for url {url}: {decodedEsJwt}");
-                return default;
-            }
+            Throw<Exception>.If(entityStatement is null, $"Invalid Decoded EntityStatement JWT for url {url}: {decodedEsJwt}");
+
             var decodedOpJwtHeader = _cryptoService.DecodeJWTHeader(opJwt);
-            if (string.IsNullOrWhiteSpace(decodedOpJwtHeader))
-            {
-                _logger.LogWarning($"Invalid EntityConfiguration JWT Header: {opJwt}");
-                return default;
-            }
+            Throw<Exception>.If(string.IsNullOrWhiteSpace(decodedOpJwtHeader), $"Invalid EntityConfiguration JWT Header: {opJwt}");
+
             var opHeader = JObject.Parse(decodedOpJwtHeader);
             var kid = (string)opHeader[SpidCieConst.Kid];
-            if (string.IsNullOrWhiteSpace(kid))
-            {
-                _logger.LogWarning($"No Kid specified in the EntityConfiguration JWT Header: {decodedOpJwtHeader}");
-                return default;
-            }
-            var key = entityStatement.JWKS.Keys.FirstOrDefault(k => k.kid.Equals(kid, System.StringComparison.InvariantCultureIgnoreCase));
-            if (key is null)
-            {
-                _logger.LogWarning($"No key found with kid {kid} in the EntityStatement at url {url}: {decodedEsJwt}");
-                return default;
-            }
-            RSA publicKey = _cryptoService.GetRSAPublicKey(key);
+            Throw<Exception>.If(string.IsNullOrWhiteSpace(kid), $"No Kid specified in the EntityConfiguration JWT Header: {decodedOpJwtHeader}");
+
+            var key = entityStatement!.JWKS.Keys.FirstOrDefault(k => k.kid.Equals(kid, System.StringComparison.InvariantCultureIgnoreCase));
+            Throw<Exception>.If(key is null, $"No key found with kid {kid} in the EntityStatement at url {url}: {decodedEsJwt}");
+
+            RSA publicKey = _cryptoService.GetRSAPublicKey(key!);
             var decodedOpJwt = _cryptoService.DecodeJWT(opJwt);
-            if (string.IsNullOrWhiteSpace(decodedOpJwt)
-                || !decodedOpJwt.Equals(_cryptoService.ValidateJWTSignature(opJwt, publicKey)))
-            {
-                _logger.LogWarning($"Invalid Signature for the EntityConfiguration JWT verified with the EntityStatement at url {url}: EntityConfiguration JWT {opJwt} - EntityStatement JWT {esJwt}");
-                return default;
-            }
+            Throw<Exception>.If(string.IsNullOrWhiteSpace(decodedOpJwt) || !decodedOpJwt.Equals(_cryptoService.ValidateJWTSignature(opJwt, publicKey)),
+                $"Invalid Signature for the EntityConfiguration JWT verified with the EntityStatement at url {url}: EntityConfiguration JWT {opJwt} - EntityStatement JWT {esJwt}");
+
             // Apply policy
 
             return (opConf, entityStatement.ExpiresOn);
         }
         catch (System.Exception ex)
         {
-            _logger.LogWarning(ex, $"An error occurred while retrieving the EntityStatement at the url {url}: {ex.Message}");
+            _logger.LogWarning(ex, ex.Message);
             return default;
         }
     }

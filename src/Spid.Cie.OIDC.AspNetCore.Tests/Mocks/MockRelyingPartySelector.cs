@@ -8,14 +8,16 @@ namespace Spid.Cie.OIDC.AspNetCore.Tests.Mocks;
 internal class MockRelyingPartySelector : IRelyingPartySelector
 {
     private readonly bool _emptyCollection;
+    private readonly bool _noKeys;
 
-    public MockRelyingPartySelector(bool emptyCollection = false)
+    public MockRelyingPartySelector(bool emptyCollection = false, bool noKeys = false)
     {
         _emptyCollection = emptyCollection;
+        _noKeys = noKeys;
     }
 
     public async Task<RelyingParty?> GetSelectedRelyingParty()
     {
-        return (await new MockRelyingPartiesRetriever(_emptyCollection).GetRelyingParties()).FirstOrDefault();
+        return (await new MockRelyingPartiesRetriever(_emptyCollection, _noKeys).GetRelyingParties()).FirstOrDefault();
     }
 }

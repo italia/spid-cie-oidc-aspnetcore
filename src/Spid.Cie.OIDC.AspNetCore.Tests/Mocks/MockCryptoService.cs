@@ -8,8 +8,4 @@ internal class MockCryptoService : Helpers.CryptoService
     {
         return this.DecodeJWT(jwt);
     }
-
-
-    //public override string DecodeJose(string jose, RSA privateKey)
-    //    => Jose.JWT.Decode(jose);
 }

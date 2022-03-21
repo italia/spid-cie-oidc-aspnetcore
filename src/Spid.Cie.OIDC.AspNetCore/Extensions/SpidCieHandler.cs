@@ -13,7 +13,6 @@ using Spid.Cie.OIDC.AspNetCore.Models;
 using Spid.Cie.OIDC.AspNetCore.Services;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -99,18 +98,6 @@ internal class SpidCieHandler : OpenIdConnectHandler
         message.Parameters.Add(OAuthConstants.CodeChallengeMethodKey, OAuthConstants.CodeChallengeMethodS256);
         #endregion
 
-        var maxAge = properties.GetParameter<TimeSpan?>(OpenIdConnectParameterNames.MaxAge) ?? Options.MaxAge;
-        if (maxAge.HasValue)
-        {
-            message.MaxAge = Convert.ToInt64(Math.Floor((maxAge.Value).TotalSeconds))
-                .ToString(CultureInfo.InvariantCulture);
-        }
-
-        if (!string.Equals(Options.ResponseType, OpenIdConnectResponseType.Code, StringComparison.Ordinal) ||
-            !string.Equals(Options.ResponseMode, OpenIdConnectResponseMode.Query, StringComparison.Ordinal))
-        {
-            message.ResponseMode = Options.ResponseMode;
-        }
 
         message.Nonce = Options.ProtocolValidator.GenerateNonce();
         WriteNonceCookie(message.Nonce);
@@ -123,17 +110,10 @@ internal class SpidCieHandler : OpenIdConnectHandler
         };
 
         await Events.RedirectToIdentityProvider(redirectContext);
-        if (redirectContext.Handled)
-        {
-            return;
-        }
 
         message = redirectContext.ProtocolMessage;
 
-        if (!string.IsNullOrEmpty(message.State))
-        {
-            properties.Items[OpenIdConnectDefaults.UserstatePropertiesKey] = message.State;
-        }
+        properties.Items[OpenIdConnectDefaults.UserstatePropertiesKey] = message.State;
 
         properties.Items.Add(OpenIdConnectDefaults.RedirectUriForCodePropertiesKey, message.RedirectUri);
 
@@ -155,9 +135,7 @@ internal class SpidCieHandler : OpenIdConnectHandler
 
     private void WriteNonceCookie(string nonce)
     {
-        Throw<ArgumentNullException>.If(string.IsNullOrEmpty(nonce),
-            nameof(nonce));
-
+        Throw<ArgumentNullException>.If(string.IsNullOrEmpty(nonce), nameof(nonce));
 
         var cookieOptions = Options.NonceCookie.Build(Context, Clock.UtcNow);
 
@@ -208,7 +186,6 @@ internal class SpidCieHandler : OpenIdConnectHandler
         var revocationEndpoint = idp.EntityConfiguration.Metadata.OpenIdProvider.AdditionalData[SpidCieConst.RevocationEndpoint] as string;
         Throw<InvalidOperationException>.If(string.IsNullOrWhiteSpace(revocationEndpoint),
             $"No RevocationEndpoint specified in the EntityConfiguration of the IdentityProvider {issuer}");
-
 
         var request = new TokenRevocationRequest()
         {

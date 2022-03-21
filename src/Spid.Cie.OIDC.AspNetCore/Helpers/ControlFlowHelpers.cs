@@ -11,3 +11,7 @@ internal static class Throw<T>
             throw (Exception)Activator.CreateInstance(typeof(T), message)!;
     }
 }
+
+
+
+

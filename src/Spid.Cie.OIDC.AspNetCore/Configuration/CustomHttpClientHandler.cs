@@ -1,6 +1,7 @@
 ﻿using Spid.Cie.OIDC.AspNetCore.Helpers;
 using Spid.Cie.OIDC.AspNetCore.Logging;
 using Spid.Cie.OIDC.AspNetCore.Services;
+using System;
 using System.Linq;
 using System.Net.Http;
 using System.Security.Cryptography;
@@ -43,26 +44,21 @@ internal class CustomHttpClientHandler : HttpClientHandler
     public async Task<HttpResponseMessage> DecodeJoseResponse(HttpResponseMessage response)
     {
         var token = await response.Content.ReadAsStringAsync();
-        if (!string.IsNullOrWhiteSpace(token))
-        {
-            var provider = await _rpSelector.GetSelectedRelyingParty();
-            if (provider is not null)
-            {
-                var key = provider.OpenIdCoreJWKs?.Keys?.FirstOrDefault();
-                if (key is not null)
-                {
-                    (_, RSA privateKey) = _cryptoService.GetRSAKeys(key);
+        Throw<Exception>.If(string.IsNullOrWhiteSpace(token), "No Body Content found in the Jose response");
 
-                    var decodedToken = _cryptoService.DecodeJWT(_cryptoService.DecodeJose(token, privateKey));
-                    if (!string.IsNullOrWhiteSpace(decodedToken))
-                    {
-                        var httpResponse = new HttpResponseMessage(System.Net.HttpStatusCode.OK);
-                        httpResponse.Content = new StringContent(decodedToken, Encoding.UTF8, "application/json");
-                        return httpResponse;
-                    }
-                }
-            }
-        }
-        return response;
+        var provider = await _rpSelector.GetSelectedRelyingParty();
+        Throw<Exception>.If(provider is null, "No currently selected RelyingParty was found");
+
+        var key = provider!.OpenIdCoreJWKs?.Keys?.FirstOrDefault();
+        Throw<Exception>.If(key is null, "No OpenIdCore Key was found in the currently selected RelyingParty");
+
+        (_, RSA privateKey) = _cryptoService.GetRSAKeys(key!);
+
+        var decodedToken = _cryptoService.DecodeJWT(_cryptoService.DecodeJose(token, privateKey));
+        Throw<Exception>.If(string.IsNullOrWhiteSpace(decodedToken), $"Unable to decode the Jose token {token}");
+
+        var httpResponse = new HttpResponseMessage(System.Net.HttpStatusCode.OK);
+        httpResponse.Content = new StringContent(decodedToken, Encoding.UTF8, "application/json");
+        return httpResponse;
     }
 }
