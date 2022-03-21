@@ -43,13 +43,14 @@ internal class SpidCieEvents : OpenIdConnectEvents
 
     public override async Task RedirectToIdentityProvider(RedirectContext context)
     {
-        var identityProvider = await _idpSelector.GetSelectedIdentityProvider()
-            ?? throw new Exception(ErrorLocalization.IdentityProviderNotFound);
-        var relyingParty = await _rpSelector.GetSelectedRelyingParty()
-            ?? throw new Exception(ErrorLocalization.RelyingPartyNotFound);
+        var identityProvider = await _idpSelector.GetSelectedIdentityProvider();
+        Throw<Exception>.If(identityProvider is null, ErrorLocalization.IdentityProviderNotFound);
 
-        context.ProtocolMessage.IssuerAddress = identityProvider.EntityConfiguration.Metadata.OpenIdProvider.AuthorizationEndpoint;
-        context.ProtocolMessage.ClientId = relyingParty.ClientId;
+        var relyingParty = await _rpSelector.GetSelectedRelyingParty();
+        Throw<Exception>.If(relyingParty is null, ErrorLocalization.RelyingPartyNotFound);
+
+        context.ProtocolMessage.IssuerAddress = identityProvider!.EntityConfiguration.Metadata.OpenIdProvider.AuthorizationEndpoint;
+        context.ProtocolMessage.ClientId = relyingParty!.ClientId;
         context.ProtocolMessage.AcrValues = identityProvider.GetAcrValue(relyingParty.SecurityLevel);
 
         if (_options.CurrentValue.RequestRefreshToken)
@@ -63,13 +64,14 @@ internal class SpidCieEvents : OpenIdConnectEvents
 
     public virtual async Task PostStateCreated(PostStateCreatedContext context)
     {
-        var identityProvider = await _idpSelector.GetSelectedIdentityProvider()
-            ?? throw new Exception(ErrorLocalization.IdentityProviderNotFound);
-        var relyingParty = await _rpSelector.GetSelectedRelyingParty()
-            ?? throw new Exception(ErrorLocalization.RelyingPartyNotFound);
+        var identityProvider = await _idpSelector.GetSelectedIdentityProvider();
+        Throw<Exception>.If(identityProvider is null, ErrorLocalization.IdentityProviderNotFound);
+
+        var relyingParty = await _rpSelector.GetSelectedRelyingParty();
+        Throw<Exception>.If(relyingParty is null, ErrorLocalization.RelyingPartyNotFound);
 
         context.ProtocolMessage.SetParameter(SpidCieConst.RequestParameter,
-            GenerateJWTRequest(identityProvider, relyingParty, context.ProtocolMessage, relyingParty.OpenIdCoreJWKs));
+            GenerateJWTRequest(identityProvider!, relyingParty!, context.ProtocolMessage, relyingParty!.OpenIdCoreJWKs));
     }
 
     private string GenerateJWTRequest(IdentityProvider idp,
@@ -130,11 +132,6 @@ internal class SpidCieEvents : OpenIdConnectEvents
                 _httpContextAccessor.HttpContext?.Items.Add(SpidCieConst.RPSelectorKey, clientId);
             }
 
-            var identityProvider = await _idpSelector.GetSelectedIdentityProvider()
-                ?? throw new Exception(ErrorLocalization.IdentityProviderNotFound);
-            var relyingParty = await _rpSelector.GetSelectedRelyingParty()
-                ?? throw new Exception(ErrorLocalization.RelyingPartyNotFound);
-
             context.Options.TokenValidationParameters = await _tokenValidationParametersRetriever.RetrieveTokenValidationParameter();
         }
         await base.MessageReceived(context);
@@ -142,12 +139,13 @@ internal class SpidCieEvents : OpenIdConnectEvents
 
     public override async Task AuthorizationCodeReceived(AuthorizationCodeReceivedContext context)
     {
-        var identityProvider = await _idpSelector.GetSelectedIdentityProvider()
-            ?? throw new Exception(ErrorLocalization.IdentityProviderNotFound);
-        var relyingParty = await _rpSelector.GetSelectedRelyingParty()
-            ?? throw new Exception(ErrorLocalization.RelyingPartyNotFound);
+        var identityProvider = await _idpSelector.GetSelectedIdentityProvider();
+        Throw<Exception>.If(identityProvider is null, ErrorLocalization.IdentityProviderNotFound);
 
-        var keySet = relyingParty.OpenIdCoreJWKs;
+        var relyingParty = await _rpSelector.GetSelectedRelyingParty();
+        Throw<Exception>.If(relyingParty is null, ErrorLocalization.RelyingPartyNotFound);
+
+        var keySet = relyingParty!.OpenIdCoreJWKs;
         var key = keySet?.Keys?.FirstOrDefault();
         if (key is not null)
         {
@@ -167,7 +165,7 @@ internal class SpidCieEvents : OpenIdConnectEvents
                     { SpidCieConst.Sub, relyingParty.ClientId },
                     { SpidCieConst.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds() },
                     { SpidCieConst.Exp, DateTimeOffset.UtcNow.AddMinutes(SpidCieConst.EntityConfigurationExpirationInMinutes).ToUnixTimeSeconds() },
-                    { SpidCieConst.Aud, new string[] { identityProvider.EntityConfiguration.Metadata.OpenIdProvider.TokenEndpoint } },
+                    { SpidCieConst.Aud, new string[] { identityProvider!.EntityConfiguration.Metadata.OpenIdProvider.TokenEndpoint } },
                     { SpidCieConst.Jti, Guid.NewGuid().ToString() }
                     });
             }

@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Spid.Cie.OIDC.AspNetCore.Extensions;
+using Spid.Cie.OIDC.AspNetCore.Logging;
 using Spid.Cie.OIDC.AspNetCore.Services;
-using Spid.Cie.OIDC.AspNetCore.Tests.Mocks;
 using Xunit;
 
 namespace Spid.Cie.OIDC.AspNetCore.Tests;
@@ -32,6 +32,6 @@ public class ApplicationBuilderExtensionsTests
         IServiceCollection service = new ServiceCollection();
         service.AddAuthentication()
             .AddSpidCieOIDC()
-            .AddLogPersister<MockLogPersister>();
+            .AddLogPersister<DefaultLogPersister>();
     }
 }

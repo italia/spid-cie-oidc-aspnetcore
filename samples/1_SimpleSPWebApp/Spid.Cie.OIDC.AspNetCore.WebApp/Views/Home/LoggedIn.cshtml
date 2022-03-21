@@ -1,12 +1,38 @@
 ﻿@{
-	ViewData["Title"] = "Logged in";
+    ViewData["Title"] = "Logged in";
 }
 <h1>@ViewData["Title"]</h1>
 
-<p>Hey @User.Identity.Name you are loggedin</p>
+<div>
+    <div class="container pt-2 p-3">
+        <div class="row d-lg-flex">
+            <div class="col-12">
+                <div class="card-wrapper card-space">
+                    <div class="card card-bg no-after">
+                        <div class="card-body">
+                            <div class="row h-100">
 
-@foreach (var claim in User.Claims)
-{
-	<p>@claim.Type - @claim.Value</p>
-}
+                                <div class="col-12 p-4">
+                                    <input type="hidden" name="csrfmiddlewaretoken" value="679YJgTpUDUQbf0ZLszrW2dHGiasiK43o0ybpS3bUJTsOJxOb9Ng2xUyvZBFP1Rh">
+                                    <h4 class="text-left">
+                                        User attributes
+                                    </h4>
 
+                                    <dl class="mt-4 mb-4">
+                                        @foreach (var claim in User.Claims)
+                                        {
+                                            <dt>@claim.Type:</dt>
+                                            <dd>@claim.Value</dd>
+                                        }
+
+                                    </dl>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

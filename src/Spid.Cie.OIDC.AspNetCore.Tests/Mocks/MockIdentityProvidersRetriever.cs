@@ -21,12 +21,23 @@ internal class MockIdentityProvidersRetriever : IIdentityProvidersRetriever
             ? Enumerable.Empty<IdentityProvider>()
             : await Task.FromResult(new List<IdentityProvider>() {
                     new SpidIdentityProvider(){
-                        Uri = "http://127.0.0.1/",
+                        Uri = "http://127.0.0.1:8000/",
                         EntityConfiguration = new IdPEntityConfiguration(){
-                            Issuer = "http://127.0.0.1/",
+                            Issuer = "http://127.0.0.1:8000/",
                             Metadata = new IdPMetadata_SpidCieOIDCConfiguration(){
                                 OpenIdProvider = new Microsoft.IdentityModel.Protocols.OpenIdConnect.OpenIdConnectConfiguration(){
-                                    TokenEndpoint = "http://127.0.0.1/token"
+                                    TokenEndpoint = "http://127.0.0.1:8000/token"
+                                }
+                            }
+                        }
+                    },
+                    new CieIdentityProvider(){
+                        Uri = "http://127.0.0.1:8002/",
+                        EntityConfiguration = new IdPEntityConfiguration(){
+                            Issuer = "http://127.0.0.1:8002/",
+                            Metadata = new IdPMetadata_SpidCieOIDCConfiguration(){
+                                OpenIdProvider = new Microsoft.IdentityModel.Protocols.OpenIdConnect.OpenIdConnectConfiguration(){
+                                    TokenEndpoint = "http://127.0.0.1:8002/token"
                                 }
                             }
                         }

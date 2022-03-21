@@ -7,11 +7,13 @@ namespace Spid.Cie.OIDC.AspNetCore.Configuration;
 
 public sealed class SpidCieOptions
 {
-    public string TrustAnchorUrl { get; set; } = "http://127.0.0.1:8000/";
-
     public bool RequestRefreshToken { get; set; } = false;
 
     public List<RelyingParty> RelyingParties { get; set; } = new List<RelyingParty>();
+
+    public List<string> SpidOPs { get; set; } = new List<string>();
+
+    public List<string> CieOPs { get; set; } = new List<string>();
 
     public int IdentityProvidersCacheExpirationInMinutes { get; set; } = 10;
 

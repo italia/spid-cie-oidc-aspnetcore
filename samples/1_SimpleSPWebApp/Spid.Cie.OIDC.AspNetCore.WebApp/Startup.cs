@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Spid.Cie.OIDC.AspNetCore.Extensions;
 using Spid.Cie.OIDC.AspNetCore.Models;
+using System.Collections.Generic;
 
 namespace Spid.Cie.OIDC.AspNetCore.WebApp;
 
@@ -35,6 +36,8 @@ public class Startup
                 o.LoadFromConfiguration(Configuration);
 
                 o.RequestRefreshToken = true;
+                o.SpidOPs = new List<string>() { "http://127.0.0.1:8000/oidc/op/" };
+                o.CieOPs = new List<string>() { "http://127.0.0.1:8002/oidc/op/" };
                 o.RelyingParties = new System.Collections.Generic.List<RelyingParty>() {
                     new RelyingParty()
                     {

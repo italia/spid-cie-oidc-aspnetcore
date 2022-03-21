@@ -144,10 +144,8 @@ internal class SpidCieHandler : OpenIdConnectHandler
             ProtocolMessage = message
         });
 
-        if (string.IsNullOrEmpty(message.IssuerAddress))
-        {
-            throw new InvalidOperationException("Cannot redirect to the authorization endpoint, the configuration may be missing or invalid.");
-        }
+        Throw<InvalidOperationException>.If(string.IsNullOrEmpty(message.IssuerAddress),
+            "Cannot redirect to the authorization endpoint, the configuration may be missing or invalid.");
 
         var redirectUri = message.CreateAuthenticationRequestUrl();
 
@@ -157,10 +155,9 @@ internal class SpidCieHandler : OpenIdConnectHandler
 
     private void WriteNonceCookie(string nonce)
     {
-        if (string.IsNullOrEmpty(nonce))
-        {
-            throw new ArgumentNullException(nameof(nonce));
-        }
+        Throw<ArgumentNullException>.If(string.IsNullOrEmpty(nonce),
+            nameof(nonce));
+
 
         var cookieOptions = Options.NonceCookie.Build(Context, Clock.UtcNow);
 
@@ -184,42 +181,36 @@ internal class SpidCieHandler : OpenIdConnectHandler
     private async Task RevokeToken(string accessToken)
     {
         var issuer = Context.User.FindFirst(SpidCieConst.Iss)?.Value;
-        if (string.IsNullOrWhiteSpace(issuer))
-        {
-            throw new InvalidOperationException("Current authenticated User doesn't have a 'sub' claim.");
-        }
+        Throw<InvalidOperationException>.If(string.IsNullOrWhiteSpace(issuer),
+            "Current authenticated User doesn't have a 'sub' claim.");
+
         var idps = await _idpRetriever.GetIdentityProviders();
         var idp = idps.FirstOrDefault(i => i.EntityConfiguration.Issuer.Equals(issuer));
-        if (idp is null)
-        {
-            throw new InvalidOperationException($"No IdentityProvider found for the issuer {issuer}");
-        }
+        Throw<InvalidOperationException>.If(idp is null,
+            $"No IdentityProvider found for the issuer {issuer}");
+
         var clientId = Context.User.FindFirst(SpidCieConst.Aud)?.Value;
-        if (string.IsNullOrWhiteSpace(clientId))
-        {
-            throw new InvalidOperationException("Current authenticated User doesn't have an 'aud' claim.");
-        }
+        Throw<InvalidOperationException>.If(string.IsNullOrWhiteSpace(clientId),
+            "Current authenticated User doesn't have an 'aud' claim.");
+
         var rps = await _rpRetriever.GetRelyingParties();
         var rp = rps.FirstOrDefault(r => r.ClientId.Equals(clientId));
-        if (rp is null)
-        {
-            throw new InvalidOperationException($"No RelyingParty found for the clientId {clientId}");
-        }
-        var keySet = rp.OpenIdCoreJWKs;
+        Throw<InvalidOperationException>.If(rp is null,
+            $"No RelyingParty found for the clientId {clientId}");
+
+        var keySet = rp!.OpenIdCoreJWKs;
         var key = keySet?.Keys?.FirstOrDefault();
-        if (key is null)
-        {
-            throw new InvalidOperationException($"No key found for the RelyingParty with clientId {clientId}");
-        }
+        Throw<InvalidOperationException>.If(key is null,
+            $"No key found for the RelyingParty with clientId {clientId}");
+
         (RSA publicKey, RSA privateKey) = _cryptoService.GetRSAKeys(key);
 
         var revocationEndpoint = idp.EntityConfiguration.Metadata.OpenIdProvider.AdditionalData[SpidCieConst.RevocationEndpoint] as string;
-        if (string.IsNullOrWhiteSpace(revocationEndpoint))
-        {
-            throw new InvalidOperationException($"No RevocationEndpoint specified in the EntityConfiguration of the IdentityProvider {issuer}");
-        }
+        Throw<InvalidOperationException>.If(string.IsNullOrWhiteSpace(revocationEndpoint),
+            $"No RevocationEndpoint specified in the EntityConfiguration of the IdentityProvider {issuer}");
 
-        var responseMessage = await Backchannel.RevokeTokenAsync(new TokenRevocationRequest()
+
+        var request = new TokenRevocationRequest()
         {
             ClientCredentialStyle = ClientCredentialStyle.PostBody,
             Address = revocationEndpoint,
@@ -243,7 +234,9 @@ internal class SpidCieHandler : OpenIdConnectHandler
                     })
             },
             Token = accessToken
-        });
+        };
+
+        var responseMessage = await Backchannel.RevokeTokenAsync(request);
         if (responseMessage.HttpStatusCode != System.Net.HttpStatusCode.OK)
         {
             Logger.LogWarning($"AccessToken Revocation returned http status {responseMessage.HttpStatusCode}");

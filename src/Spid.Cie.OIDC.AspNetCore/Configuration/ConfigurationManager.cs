@@ -1,5 +1,6 @@
 ﻿using Microsoft.IdentityModel.Protocols;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
+using Spid.Cie.OIDC.AspNetCore.Helpers;
 using Spid.Cie.OIDC.AspNetCore.Resources;
 using Spid.Cie.OIDC.AspNetCore.Services;
 using System;
@@ -18,8 +19,11 @@ internal class ConfigurationManager : IConfigurationManager<OpenIdConnectConfigu
     }
 
     public async Task<OpenIdConnectConfiguration> GetConfigurationAsync(CancellationToken cancel)
-        => (await _idpSelector.GetSelectedIdentityProvider())?.EntityConfiguration?.Metadata?.OpenIdProvider
-            ?? throw new Exception(ErrorLocalization.IdentityProviderNotFound);
+    {
+        var idpConf = (await _idpSelector.GetSelectedIdentityProvider())?.EntityConfiguration?.Metadata?.OpenIdProvider;
+        Throw<Exception>.If(idpConf is null, ErrorLocalization.IdentityProviderNotFound);
+        return idpConf!;
+    }
 
     public void RequestRefresh() { }
 }

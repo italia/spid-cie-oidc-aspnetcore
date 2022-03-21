@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.TestHost;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Spid.Cie.OIDC.AspNetCore.Configuration;
 using Spid.Cie.OIDC.AspNetCore.Helpers;
+using Spid.Cie.OIDC.AspNetCore.Logging;
 using Spid.Cie.OIDC.AspNetCore.Models;
 using Spid.Cie.OIDC.AspNetCore.Services;
 using System;
@@ -34,9 +35,10 @@ internal class TestSettings
     {
         _configureOptions = o =>
         {
-            configure?.Invoke(o);
             _options = o;
             _options.RequestRefreshToken = true;
+            _options.SpidOPs = new List<string>() { "http://127.0.0.1:8000/oidc/op/" };
+            _options.CieOPs = new List<string>() { "http://127.0.0.1:8002/oidc/op/" };
             _options.RelyingParties = new System.Collections.Generic.List<RelyingParty>() {
                     new RelyingParty()
                     {
@@ -67,6 +69,7 @@ internal class TestSettings
                         }
                     }
                 };
+            configure?.Invoke(o);
         };
     }
 
@@ -164,23 +167,26 @@ internal class TestSettings
 
     private void ValidateExpectedAuthority(string absoluteUri, ICollection<string> errors, OpenIdConnectRequestType requestType)
     {
-        string expectedAuthority;
+        IEnumerable<string> expectedAuthorities;
         switch (requestType)
         {
             case OpenIdConnectRequestType.Token:
-                expectedAuthority = _options.TrustAnchorUrl.EnsureTrailingSlash() + @"oidc/op/token";
+                expectedAuthorities = _options.SpidOPs.Select(s => s.EnsureTrailingSlash() + @"token")
+                    .Concat(_options.CieOPs.Select(s => s.EnsureTrailingSlash() + @"token"));
                 break;
             case OpenIdConnectRequestType.Logout:
-                expectedAuthority = _options.TrustAnchorUrl.EnsureTrailingSlash() + @"oidc/op/revocation";
+                expectedAuthorities = _options.SpidOPs.Select(s => s.EnsureTrailingSlash() + @"revocation")
+                    .Concat(_options.CieOPs.Select(s => s.EnsureTrailingSlash() + @"revocation"));
                 break;
             default:
-                expectedAuthority = _options.TrustAnchorUrl.EnsureTrailingSlash() + @"oidc/op/authorization";
+                expectedAuthorities = _options.SpidOPs.Select(s => s.EnsureTrailingSlash() + @"authorization")
+                    .Concat(_options.CieOPs.Select(s => s.EnsureTrailingSlash() + @"authorization"));
                 break;
         }
 
-        if (!absoluteUri.StartsWith(expectedAuthority, StringComparison.Ordinal))
+        if (!expectedAuthorities.Any(expectedAuthorities => absoluteUri.StartsWith(expectedAuthorities, StringComparison.Ordinal)))
         {
-            errors.Add($"ExpectedAuthority: {expectedAuthority}");
+            errors.Add($"ExpectedAuthority: {expectedAuthorities}");
         }
     }
 
@@ -263,8 +269,9 @@ internal class TestSettings
     internal class MockBackchannel : CustomHttpClientHandler
     {
         public MockBackchannel(IRelyingPartySelector rpSelector,
+            ILogPersister logPersister,
             ICryptoService cryptoService)
-            : base(rpSelector, cryptoService)
+            : base(rpSelector, logPersister, cryptoService)
         {
         }
 

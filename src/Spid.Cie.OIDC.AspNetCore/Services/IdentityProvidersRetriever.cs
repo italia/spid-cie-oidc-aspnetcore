@@ -1,14 +1,11 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Spid.Cie.OIDC.AspNetCore.Configuration;
-using Spid.Cie.OIDC.AspNetCore.Helpers;
 using Spid.Cie.OIDC.AspNetCore.Models;
 using Spid.Cie.OIDC.AspNetCore.OpenIdFederation;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -16,7 +13,6 @@ namespace Spid.Cie.OIDC.AspNetCore.Services;
 
 internal class IdentityProvidersRetriever : IIdentityProvidersRetriever
 {
-    private readonly HttpClient _client;
     private readonly IOptionsMonitor<SpidCieOptions> _options;
     private readonly ITrustChainManager _trustChainManager;
     private readonly ILogger<IdentityProvidersRetriever> _logger;
@@ -25,11 +21,9 @@ internal class IdentityProvidersRetriever : IIdentityProvidersRetriever
     private static DateTime _identityProvidersCacheLastUpdated = DateTime.MinValue;
 
     public IdentityProvidersRetriever(IOptionsMonitor<SpidCieOptions> options,
-        IHttpClientFactory httpClientFactory,
         ITrustChainManager trustChainManager,
         ILogger<IdentityProvidersRetriever> logger)
     {
-        _client = httpClientFactory.CreateClient("SpidCieBackchannel");
         _options = options;
         _trustChainManager = trustChainManager;
         _logger = logger;
@@ -52,15 +46,23 @@ internal class IdentityProvidersRetriever : IIdentityProvidersRetriever
                 {
                     List<IdentityProvider> result = new();
 
-                    var urlsString = await _client.GetStringAsync($"{_options.CurrentValue.TrustAnchorUrl.EnsureTrailingSlash()}{SpidCieConst.OPListPath}");
-                    var urls = JsonSerializer.Deserialize<IEnumerable<string>>(urlsString);
-                    foreach (var url in urls ?? Enumerable.Empty<string>())
+                    foreach (var url in _options.CurrentValue.SpidOPs ?? Enumerable.Empty<string>())
                     {
-                        var identityProvider = await _trustChainManager.BuildTrustChain(url);
+                        var idpConf = await _trustChainManager.BuildTrustChain(url);
 
-                        if (identityProvider is not null)
+                        if (idpConf is not null)
                         {
-                            result.Add(identityProvider);
+                            result.Add(CreateSpidIdentityProvider(idpConf));
+                        }
+                    }
+
+                    foreach (var url in _options.CurrentValue.CieOPs ?? Enumerable.Empty<string>())
+                    {
+                        var idpConf = await _trustChainManager.BuildTrustChain(url);
+
+                        if (idpConf is not null)
+                        {
+                            result.Add(CreateCieIdentityProvider(idpConf));
                         }
                     }
 
@@ -78,4 +80,28 @@ internal class IdentityProvidersRetriever : IIdentityProvidersRetriever
         }
         return _identityProvidersCache ?? Enumerable.Empty<IdentityProvider>();
     }
+
+    private static IdentityProvider CreateSpidIdentityProvider(IdPEntityConfiguration conf)
+       => new SpidIdentityProvider()
+       {
+           EntityConfiguration = conf,
+           Uri = conf.Metadata.OpenIdProvider.AdditionalData["op_uri"] as string ?? string.Empty,
+           OrganizationDisplayName = conf.Metadata.OpenIdProvider.AdditionalData["op_name"] as string ?? string.Empty,
+           OrganizationUrl = conf.Metadata.OpenIdProvider.AdditionalData["op_uri"] as string ?? string.Empty,
+           OrganizationLogoUrl = conf.Metadata.OpenIdProvider.AdditionalData["logo_uri"] as string ?? string.Empty,
+           OrganizationName = conf.Metadata.OpenIdProvider.AdditionalData["organization_name"] as string ?? string.Empty,
+           SupportedAcrValues = conf.Metadata.OpenIdProvider.AcrValuesSupported.ToArray(),
+       };
+
+    private static IdentityProvider CreateCieIdentityProvider(IdPEntityConfiguration conf)
+       => new CieIdentityProvider()
+       {
+           EntityConfiguration = conf,
+           Uri = conf.Metadata.OpenIdProvider.AdditionalData["op_uri"] as string ?? string.Empty,
+           OrganizationDisplayName = conf.Metadata.OpenIdProvider.AdditionalData["op_name"] as string ?? string.Empty,
+           OrganizationUrl = conf.Metadata.OpenIdProvider.AdditionalData["op_uri"] as string ?? string.Empty,
+           OrganizationLogoUrl = conf.Metadata.OpenIdProvider.AdditionalData["logo_uri"] as string ?? string.Empty,
+           OrganizationName = conf.Metadata.OpenIdProvider.AdditionalData["organization_name"] as string ?? string.Empty,
+           SupportedAcrValues = conf.Metadata.OpenIdProvider.AcrValuesSupported.ToArray(),
+       };
 }

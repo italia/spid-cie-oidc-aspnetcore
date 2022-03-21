@@ -21,5 +21,18 @@ public class OpenIdFederationTests
         Assert.NotNull(new MockCryptoService().DecodeJWT(transaction.ResponseText));
     }
 
+    [Fact]
+    public async Task RegularGenerateJWKEmpty()
+    {
+        // Arrange
+        var settings = new TestSettings(o => o.RelyingParties.Clear());
 
+        var server = settings.CreateTestServer();
+
+        // Act
+        var transaction = await server.SendAsync(TestServerBuilder.TestHost + "/.well-known/openid-federation");
+
+        // Assert
+        Assert.True(transaction.Response.StatusCode == System.Net.HttpStatusCode.NotFound);
+    }
 }

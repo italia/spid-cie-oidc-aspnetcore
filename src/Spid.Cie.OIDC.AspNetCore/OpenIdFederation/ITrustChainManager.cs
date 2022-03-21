@@ -5,5 +5,5 @@ namespace Spid.Cie.OIDC.AspNetCore.OpenIdFederation;
 
 internal interface ITrustChainManager
 {
-    Task<IdentityProvider?> BuildTrustChain(string url);
+    Task<IdPEntityConfiguration?> BuildTrustChain(string url);
 }

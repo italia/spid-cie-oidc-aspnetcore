@@ -65,7 +65,7 @@ public static class ApplicationBuilderExtensions
         internalBuilder.Services.Configure(configureOptions);
         internalBuilder.Services.AddHttpContextAccessor();
         internalBuilder.Services.TryAddScoped<CustomHttpClientHandler>();
-        internalBuilder.Services.AddHttpClient("SpidCieBackchannel")
+        internalBuilder.Services.AddHttpClient(SpidCieConst.BackchannelClientName)
             .ConfigurePrimaryHttpMessageHandler(srv => (srv.GetService(typeof(CustomHttpClientHandler)) as CustomHttpClientHandler)!);
 
         internalBuilder.Services.TryAddScoped<SpidCieEvents>();
@@ -80,6 +80,9 @@ public static class ApplicationBuilderExtensions
         internalBuilder.Services.TryAddScoped<IConfigurationManager<OpenIdConnectConfiguration>, ConfigurationManager>();
 
         internalBuilder.Services.AddAccessTokenManagement();
+        internalBuilder.Services.AddHttpClient(AccessTokenManagementDefaults.BackChannelHttpClientName)
+            .ConfigurePrimaryHttpMessageHandler(srv => (srv.GetService(typeof(CustomHttpClientHandler)) as CustomHttpClientHandler)!);
+
         internalBuilder.Services.AddScoped<ITokenClientConfigurationService, AssertionConfigurationService>();
         internalBuilder.Services.AddScoped<ICryptoService, CryptoService>();
         internalBuilder.Services.AddScoped<ITokenValidationParametersRetriever, TokenValidationParametersRetriever>();

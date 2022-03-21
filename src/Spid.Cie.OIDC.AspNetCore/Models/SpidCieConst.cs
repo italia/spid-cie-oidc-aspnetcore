@@ -121,4 +121,6 @@ public sealed class SpidCieConst
     public const string SignedOutCallbackPath = "/signout-callback-spidcie";
 
     public const string RemoteSignOutPath = "/signout-spidcie";
+
+    public const string BackchannelClientName = "SpidCieBackchannel";
 }

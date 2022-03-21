@@ -6,12 +6,12 @@ namespace Spid.Cie.OIDC.AspNetCore.Tests.Mocks;
 
 internal class MockTrustChainManager : ITrustChainManager
 {
-    public async Task<IdentityProvider?> BuildTrustChain(string url)
+    public async Task<IdPEntityConfiguration?> BuildTrustChain(string url)
     {
         await Task.CompletedTask;
-        return new SpidIdentityProvider()
+        return new IdPEntityConfiguration()
         {
-            Uri = url
+            Issuer = url
         };
     }
 }

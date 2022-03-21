@@ -45,7 +45,7 @@ internal class OpenIdConnectOptionsProvider : IOptionsMonitor<OpenIdConnectOptio
         {
             options.ConfigurationManager = _configurationManager;
             options.BackchannelHttpHandler = _httpClientHandler;
-            options.Backchannel = _httpClientFactory.CreateClient("SpidCieBackchannel");
+            options.Backchannel = _httpClientFactory.CreateClient(SpidCieConst.BackchannelClientName);
         }
         return options;
     }

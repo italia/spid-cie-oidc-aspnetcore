@@ -1,4 +1,5 @@
 ﻿using Microsoft.IdentityModel.Tokens;
+using Spid.Cie.OIDC.AspNetCore.Helpers;
 using Spid.Cie.OIDC.AspNetCore.Models;
 using Spid.Cie.OIDC.AspNetCore.Resources;
 using System;
@@ -22,22 +23,23 @@ internal class TokenValidationParametersRetriever : ITokenValidationParametersRe
 
     public async Task<TokenValidationParameters> RetrieveTokenValidationParameter()
     {
-        var identityProvider = await _idpSelector.GetSelectedIdentityProvider()
-            ?? throw new Exception(ErrorLocalization.IdentityProviderNotFound);
-        var relyingParty = await _rpSelector.GetSelectedRelyingParty()
-            ?? throw new Exception(ErrorLocalization.RelyingPartyNotFound);
+        var identityProvider = await _idpSelector.GetSelectedIdentityProvider();
+        Throw<Exception>.If(identityProvider is null, ErrorLocalization.IdentityProviderNotFound);
+
+        var relyingParty = await _rpSelector.GetSelectedRelyingParty();
+        Throw<Exception>.If(relyingParty is null, ErrorLocalization.RelyingPartyNotFound);
 
         return new TokenValidationParameters
         {
             NameClaimType = SpidCieConst.Sub,
             ClockSkew = TimeSpan.FromMinutes(5),
-            IssuerSigningKeys = identityProvider.EntityConfiguration.Metadata.OpenIdProvider.JsonWebKeySet?.Keys?.ToArray()
+            IssuerSigningKeys = identityProvider!.EntityConfiguration.Metadata.OpenIdProvider.JsonWebKeySet?.Keys?.ToArray()
                     ?? identityProvider.EntityConfiguration.JWKS?.Keys.Select(k => new Microsoft.IdentityModel.Tokens.JsonWebKey(JsonSerializer.Serialize(k))),
             RequireSignedTokens = true,
             RequireExpirationTime = true,
             ValidateLifetime = true,
             ValidateAudience = true,
-            ValidAudience = relyingParty.ClientId,
+            ValidAudience = relyingParty!.ClientId,
             ValidateIssuer = true,
             ValidIssuer = identityProvider.EntityConfiguration.Issuer
         };

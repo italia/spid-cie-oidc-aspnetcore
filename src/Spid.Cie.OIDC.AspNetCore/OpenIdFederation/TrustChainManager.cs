@@ -3,6 +3,7 @@ using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json.Linq;
 using Spid.Cie.OIDC.AspNetCore.Helpers;
+using Spid.Cie.OIDC.AspNetCore.Logging;
 using Spid.Cie.OIDC.AspNetCore.Models;
 using System;
 using System.Collections.Generic;
@@ -19,20 +20,23 @@ internal class TrustChainManager : ITrustChainManager
 {
     private readonly HttpClient _httpClient;
     private readonly ICryptoService _cryptoService;
+    private readonly ILogPersister _logPersister;
     private readonly ILogger<TrustChainManager> _logger;
-    private static readonly Dictionary<string, KeyValuePair<DateTimeOffset, IdentityProvider>> _trustChainCache = new Dictionary<string, KeyValuePair<DateTimeOffset, IdentityProvider>>();
+    private static readonly Dictionary<string, KeyValuePair<DateTimeOffset, IdPEntityConfiguration>> _trustChainCache = new Dictionary<string, KeyValuePair<DateTimeOffset, IdPEntityConfiguration>>();
     private static readonly SemaphoreSlim _syncLock = new SemaphoreSlim(1);
 
     public TrustChainManager(IHttpClientFactory httpClientFactory,
         ICryptoService cryptoService,
+        ILogPersister logPersister,
         ILogger<TrustChainManager> logger)
     {
-        _httpClient = httpClientFactory.CreateClient("SpidCieBackchannel");
+        _httpClient = httpClientFactory.CreateClient(SpidCieConst.BackchannelClientName);
         _cryptoService = cryptoService;
+        _logPersister = logPersister;
         _logger = logger;
     }
 
-    public async Task<IdentityProvider?> BuildTrustChain(string url)
+    public async Task<IdPEntityConfiguration?> BuildTrustChain(string url)
     {
         if (!_trustChainCache.ContainsKey(url) || _trustChainCache[url].Key < DateTimeOffset.UtcNow)
         {
@@ -79,10 +83,9 @@ internal class TrustChainManager : ITrustChainManager
                             break;
                         }
                     }
-                    if (opValidated)
+                    if (opValidated && opConf is not null)
                     {
-                        var idp = CreateIdentityProvider(opConf);
-                        _trustChainCache.Add(url, new KeyValuePair<DateTimeOffset, IdentityProvider>(expiresOn, idp));
+                        _trustChainCache.Add(url, new KeyValuePair<DateTimeOffset, IdPEntityConfiguration>(expiresOn, opConf));
                     }
                 }
                 finally
@@ -91,8 +94,7 @@ internal class TrustChainManager : ITrustChainManager
                 }
             }
         }
-        return _trustChainCache.ContainsKey(url) //&& _trustChainCache[url].Key > DateTimeOffset.UtcNow
-            ? _trustChainCache[url].Value : null;
+        return _trustChainCache.ContainsKey(url) ? _trustChainCache[url].Value : null;
     }
 
     private async Task<(T? conf, string? decodedJwt, string? jwt)> ValidateAndDecodeEntityConfiguration<T>(string? url)
@@ -112,6 +114,9 @@ internal class TrustChainManager : ITrustChainManager
                 _logger.LogWarning($"EntityConfiguration JWT not retrieved from url {metadataAddress}");
                 return default;
             }
+
+            await _logPersister.LogGetEntityConfiguration(metadataAddress, jwt);
+
             var decodedJwt = _cryptoService.DecodeJWT(jwt);
             if (string.IsNullOrWhiteSpace(decodedJwt))
             {
@@ -174,6 +179,9 @@ internal class TrustChainManager : ITrustChainManager
                 _logger.LogWarning($"EntityStatement JWT not retrieved from url {url}");
                 return default;
             }
+
+            await _logPersister.LogGetEntityStatement(url, esJwt);
+
             var decodedEsJwt = _cryptoService.DecodeJWT(esJwt);
             if (string.IsNullOrWhiteSpace(decodedEsJwt))
             {
@@ -223,17 +231,5 @@ internal class TrustChainManager : ITrustChainManager
             return default;
         }
     }
-
-    private static IdentityProvider CreateIdentityProvider(IdPEntityConfiguration conf)
-        => new SpidIdentityProvider()
-        {
-            EntityConfiguration = conf,
-            Uri = conf.Metadata.OpenIdProvider.AdditionalData["op_uri"] as string ?? string.Empty,
-            OrganizationDisplayName = conf.Metadata.OpenIdProvider.AdditionalData["op_name"] as string ?? string.Empty,
-            OrganizationUrl = conf.Metadata.OpenIdProvider.AdditionalData["op_uri"] as string ?? string.Empty,
-            OrganizationLogoUrl = conf.Metadata.OpenIdProvider.AdditionalData["logo_uri"] as string ?? string.Empty,
-            OrganizationName = conf.Metadata.OpenIdProvider.AdditionalData["organization_name"] as string ?? string.Empty,
-            SupportedAcrValues = conf.Metadata.OpenIdProvider.AcrValuesSupported.ToArray(),
-        };
 }
 
