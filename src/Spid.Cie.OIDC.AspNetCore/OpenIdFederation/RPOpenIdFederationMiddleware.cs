@@ -5,18 +5,12 @@ using Spid.Cie.OIDC.AspNetCore.Services;
 using System;
 using System.Linq;
 using System.Net;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace Spid.Cie.OIDC.AspNetCore.OpenIdFederation;
 
 internal class RPOpenIdFederationMiddleware
 {
-    private static readonly JsonSerializerOptions _options = new JsonSerializerOptions()
-    {
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
-    };
     private readonly RequestDelegate _next;
 
     public RPOpenIdFederationMiddleware(RequestDelegate next)
@@ -24,7 +18,7 @@ internal class RPOpenIdFederationMiddleware
         _next = next;
     }
 
-    public async Task Invoke(HttpContext context, IRelyingPartySelector rpSelector)
+    public async Task Invoke(HttpContext context, IRelyingPartySelector rpSelector, ICryptoService cryptoService)
     {
         if (!context.Request.Path.Value!.EndsWith(SpidCieConst.EntityConfigurationPath, StringComparison.InvariantCultureIgnoreCase))
         {
@@ -38,8 +32,8 @@ internal class RPOpenIdFederationMiddleware
             var key = rp.OpenIdFederationJWKs.Keys?.FirstOrDefault();
             if (key is not null)
             {
-                var entityConfiguration = rp.EntityConfiguration;
-                string token = entityConfiguration.JWTEncode(key);
+                var entityConfiguration = GetEntityConfiguration(rp, cryptoService);
+                string token = cryptoService.JWTEncode(entityConfiguration, key);
 
                 context.Response.ContentType = SpidCieConst.EntityConfigurationContentType;
                 await context.Response.WriteAsync(token);
@@ -51,5 +45,31 @@ internal class RPOpenIdFederationMiddleware
 
     }
 
-
+    private RPEntityConfiguration GetEntityConfiguration(RelyingParty rp, ICryptoService cryptoService)
+    {
+        return new RPEntityConfiguration()
+        {
+            ExpiresOn = DateTimeOffset.UtcNow.AddMinutes(SpidCieConst.EntityConfigurationExpirationInMinutes),
+            IssuedAt = DateTimeOffset.UtcNow,
+            AuthorityHints = rp.AuthorityHints,
+            Issuer = rp.Issuer,
+            Subject = rp.ClientId,
+            TrustMarks = rp.TrustMarks,
+            JWKS = cryptoService.GetJWKS(rp.OpenIdFederationJWKs),
+            Metadata = new RPMetadata_SpidCieOIDCConfiguration()
+            {
+                OpenIdRelyingParty = new RP_SpidCieOIDCConfiguration()
+                {
+                    ClientName = rp.ClientName,
+                    Contacts = rp.Contacts,
+                    GrantTypes = rp.LongSessionsEnabled
+                        ? new[] { SpidCieConst.AuthorizationCode, SpidCieConst.RefreshToken }
+                        : new[] { SpidCieConst.AuthorizationCode },
+                    JWKS = cryptoService.GetJWKS(rp.OpenIdCoreJWKs),
+                    RedirectUris = rp.RedirectUris,
+                    ResponseTypes = new[] { SpidCieConst.ResponseType }
+                }
+            }
+        };
+    }
 }

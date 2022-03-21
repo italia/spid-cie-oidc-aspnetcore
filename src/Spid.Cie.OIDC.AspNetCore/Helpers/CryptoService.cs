@@ -12,9 +12,14 @@ using System.Security.Cryptography;
 
 namespace Spid.Cie.OIDC.AspNetCore.Helpers;
 
-internal static class CryptoHelpers
+internal class CryptoService : ICryptoService
 {
-    internal static (RSA publicKey, RSA privateKey) GetRSAKeys(this Microsoft.IdentityModel.Tokens.JsonWebKey key)
+    public CryptoService()
+    {
+
+    }
+
+    public (RSA publicKey, RSA privateKey) GetRSAKeys(Microsoft.IdentityModel.Tokens.JsonWebKey key)
         => (RSA.Create(new RSAParameters()
         {
             Modulus = WebEncoders.Base64UrlDecode(key.N),
@@ -31,29 +36,29 @@ internal static class CryptoHelpers
             InverseQ = WebEncoders.Base64UrlDecode(key.QI)
         }));
 
-    internal static RSA GetRSAPublicKey(this Models.JsonWebKey key)
+    public RSA GetRSAPublicKey(Models.JsonWebKey key)
         => RSA.Create(new RSAParameters()
         {
             Modulus = WebEncoders.Base64UrlDecode(key.n),
             Exponent = WebEncoders.Base64UrlDecode(key.e),
         });
 
-    internal static string DecodeJWTHeader(this string jwt)
+    public string DecodeJWTHeader(string jwt)
         => JwtBuilder.Create().DecodeHeader(jwt);
 
-    internal static string DecodeJWT(this string jwt)
+    public string DecodeJWT(string jwt)
         => JwtBuilder.Create().Decode(jwt);
 
-    internal static string ValidateJWTSignature(this string jwt, RSA publicKey)
+    public virtual string ValidateJWTSignature(string jwt, RSA publicKey)
         => JwtBuilder.Create()
             .WithAlgorithm(new RS256Algorithm(publicKey))
             .MustVerifySignature()
             .Decode(jwt);
 
-    internal static string DecodeJose(this string jose, RSA privateKey)
+    public virtual string DecodeJose(string jose, RSA privateKey)
         => Jose.JWT.Decode(jose, privateKey);
 
-    internal static string CreateJWT(RSA publicKey,
+    public string CreateJWT(RSA publicKey,
         RSA privateKey,
         Dictionary<string, object> headers,
         Dictionary<string, object> claims)
@@ -73,7 +78,7 @@ internal static class CryptoHelpers
         return builder.Encode();
     }
 
-    internal static JWKS GetJWKS(this JsonWebKeySet jwks)
+    public JWKS GetJWKS(JsonWebKeySet jwks)
         => new JWKS()
         {
             Keys = jwks.Keys?.Select(jsonWebKey =>
@@ -95,13 +100,13 @@ internal static class CryptoHelpers
             }).ToArray() ?? Array.Empty<Models.JsonWebKey>()
         };
 
-    internal static RsaSecurityKey CreateRsaSecurityKey(int keySize = 2048)
+    public RsaSecurityKey CreateRsaSecurityKey(int keySize = 2048)
         => new RsaSecurityKey(RSA.Create(keySize).ExportParameters(true))
         {
             KeyId = CryptoRandom.CreateUniqueId(16, CryptoRandom.OutputFormat.Hex)
         };
 
-    internal static Models.JsonWebKey GetPublicJWK(this Microsoft.IdentityModel.Tokens.JsonWebKey jwk)
+    public Models.JsonWebKey GetPublicJWK(Microsoft.IdentityModel.Tokens.JsonWebKey jwk)
         => new Models.JsonWebKey()
         {
             kty = jwk.Kty,
@@ -110,7 +115,7 @@ internal static class CryptoHelpers
             e = jwk.E
         };
 
-    internal static Models.JsonWebKey GetPrivateJWK(this Microsoft.IdentityModel.Tokens.JsonWebKey jwk)
+    public Models.JsonWebKey GetPrivateJWK(Microsoft.IdentityModel.Tokens.JsonWebKey jwk)
         => new Models.JsonWebKey()
         {
             kty = jwk.Kty,
@@ -125,9 +130,9 @@ internal static class CryptoHelpers
             qi = jwk.QI,
         };
 
-    internal static string JWTEncode(this RPEntityConfiguration entityConfiguration, Microsoft.IdentityModel.Tokens.JsonWebKey key)
+    public string JWTEncode(RPEntityConfiguration entityConfiguration, Microsoft.IdentityModel.Tokens.JsonWebKey key)
     {
-        (RSA publicKey, RSA privateKey) = key.GetRSAKeys();
+        (RSA publicKey, RSA privateKey) = GetRSAKeys(key);
 
         IJwtAlgorithm algorithm = new RS256Algorithm(publicKey, privateKey);
         IJsonSerializer serializer = new SerializationHelpers();

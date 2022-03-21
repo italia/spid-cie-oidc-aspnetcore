@@ -124,7 +124,7 @@
     <value>Error reading file: {fileName}</value>
   </data>
   <data name="IdentityProviderNotFound" xml:space="preserve">
-    <value>The specified IdentityProvider was found</value>
+    <value>The specified IdentityProvider was not found</value>
   </data>
   <data name="InvalidClaimType" xml:space="preserve">
     <value>Invalid ClaimType</value>

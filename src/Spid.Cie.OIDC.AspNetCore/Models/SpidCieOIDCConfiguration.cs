@@ -1,9 +1,11 @@
 ﻿using Microsoft.IdentityModel.Protocols.OpenIdConnect;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
 
 namespace Spid.Cie.OIDC.AspNetCore.Models;
 
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
+[ExcludeFromCodeCoverage]
 internal class RequestAuthenticationMethodsSupported
 {
     [JsonPropertyName("ar")]
@@ -11,12 +13,14 @@ internal class RequestAuthenticationMethodsSupported
 
 }
 
+[ExcludeFromCodeCoverage]
 internal sealed class RPMetadata_SpidCieOIDCConfiguration
 {
     [JsonPropertyName("openid_relying_party")]
     public RP_SpidCieOIDCConfiguration OpenIdRelyingParty { get; set; }
 }
 
+[ExcludeFromCodeCoverage]
 internal sealed class RP_SpidCieOIDCConfiguration
 {
     [JsonPropertyName("client_registration_types")]
@@ -49,18 +53,21 @@ internal sealed class RP_SpidCieOIDCConfiguration
 }
 
 
+[ExcludeFromCodeCoverage]
 internal sealed class IdPMetadata_SpidCieOIDCConfiguration
 {
     [JsonPropertyName("openid_provider")]
     public OpenIdConnectConfiguration OpenIdProvider { get; set; }
 }
 
+[ExcludeFromCodeCoverage]
 internal sealed class JWKS
 {
     [JsonPropertyName("keys")]
     public JsonWebKey[] Keys { get; set; }
 }
 
+[ExcludeFromCodeCoverage]
 internal class JsonWebKey
 {
     public string kty { get; set; }

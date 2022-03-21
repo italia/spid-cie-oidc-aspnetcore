@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
@@ -9,6 +10,7 @@ using Microsoft.IdentityModel.Protocols;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Spid.Cie.OIDC.AspNetCore.Configuration;
 using Spid.Cie.OIDC.AspNetCore.Events;
+using Spid.Cie.OIDC.AspNetCore.Helpers;
 using Spid.Cie.OIDC.AspNetCore.Logging;
 using Spid.Cie.OIDC.AspNetCore.Models;
 using Spid.Cie.OIDC.AspNetCore.OpenIdFederation;
@@ -34,6 +36,9 @@ public static class ApplicationBuilderExtensions
         builder.AddRemoteScheme<OpenIdConnectOptions, SpidCieHandler>(SpidCieConst.AuthenticationScheme, SpidCieConst.AuthenticationScheme,
             options =>
             {
+                options.CallbackPath = new PathString(SpidCieConst.CallbackPath);
+                options.SignedOutCallbackPath = new PathString(SpidCieConst.SignedOutCallbackPath);
+                options.RemoteSignOutPath = new PathString(SpidCieConst.RemoteSignOutPath);
                 options.ClientId = SpidCieConst.DummyUrl;
                 options.MetadataAddress = SpidCieConst.DummyUrl;
                 options.SaveTokens = true;
@@ -76,6 +81,8 @@ public static class ApplicationBuilderExtensions
 
         internalBuilder.Services.AddAccessTokenManagement();
         internalBuilder.Services.AddScoped<ITokenClientConfigurationService, AssertionConfigurationService>();
+        internalBuilder.Services.AddScoped<ICryptoService, CryptoService>();
+        internalBuilder.Services.AddScoped<ITokenValidationParametersRetriever, TokenValidationParametersRetriever>();
 
         return internalBuilder;
     }

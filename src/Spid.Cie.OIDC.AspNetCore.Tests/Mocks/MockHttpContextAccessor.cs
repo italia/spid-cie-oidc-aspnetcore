@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Spid.Cie.OIDC.AspNetCore.Models;
+using System.Collections.Generic;
+using System.Security.Claims;
 
 namespace Spid.Cie.OIDC.AspNetCore.Tests.Mocks;
 
@@ -17,8 +19,12 @@ internal class MockHttpContextAccessor : IHttpContextAccessor
         get
         {
             var context = new DefaultHttpContext();
+            context.User = new System.Security.Claims.ClaimsPrincipal(new ClaimsIdentity(new List<Claim>() {
+                new Claim("iss", "http://127.0.0.1/"),
+                new Claim("aud", "http://127.0.0.1:5000/"),
+            }));
             if (_hasQSValue)
-                context.Request.QueryString = context.Request.QueryString.Add(SpidCieConst.IdPSelectorKey, "MockIdP");
+                context.Request.QueryString = context.Request.QueryString.Add(SpidCieConst.IdPSelectorKey, "http://127.0.0.1/");
             return context;
         }
         set => throw new System.NotImplementedException();

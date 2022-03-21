@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Spid.Cie.OIDC.AspNetCore.Models;
 
+[ExcludeFromCodeCoverage]
 public sealed class ClaimTypes
 {
     private static readonly Dictionary<string, ClaimTypes> _types = new Dictionary<string, ClaimTypes>() {

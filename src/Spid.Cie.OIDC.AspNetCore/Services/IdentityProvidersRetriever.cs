@@ -25,11 +25,11 @@ internal class IdentityProvidersRetriever : IIdentityProvidersRetriever
     private static DateTime _identityProvidersCacheLastUpdated = DateTime.MinValue;
 
     public IdentityProvidersRetriever(IOptionsMonitor<SpidCieOptions> options,
-        HttpClient client,
+        IHttpClientFactory httpClientFactory,
         ITrustChainManager trustChainManager,
         ILogger<IdentityProvidersRetriever> logger)
     {
-        _client = client;
+        _client = httpClientFactory.CreateClient("SpidCieBackchannel");
         _options = options;
         _trustChainManager = trustChainManager;
         _logger = logger;

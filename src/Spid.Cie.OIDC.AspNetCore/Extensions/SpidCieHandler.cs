@@ -30,6 +30,7 @@ internal class SpidCieHandler : OpenIdConnectHandler
     private readonly SpidCieEvents _events;
     private readonly IIdentityProvidersRetriever _idpRetriever;
     private readonly IRelyingPartiesRetriever _rpRetriever;
+    private readonly ICryptoService _cryptoService;
 
     public SpidCieHandler(IOptionsMonitor<OpenIdConnectOptions> options,
             ILoggerFactory logger,
@@ -39,6 +40,7 @@ internal class SpidCieHandler : OpenIdConnectHandler
             ILogPersister logPersister,
             IIdentityProvidersRetriever idpRetriever,
             IRelyingPartiesRetriever rpRetriever,
+            ICryptoService cryptoService,
             SpidCieEvents events)
         : base(options, logger, htmlEncoder, encoder, clock)
     {
@@ -46,6 +48,7 @@ internal class SpidCieHandler : OpenIdConnectHandler
         _events = events;
         _idpRetriever = idpRetriever;
         _rpRetriever = rpRetriever;
+        _cryptoService = cryptoService;
         Events = events;
     }
 
@@ -208,7 +211,7 @@ internal class SpidCieHandler : OpenIdConnectHandler
         {
             throw new InvalidOperationException($"No key found for the RelyingParty with clientId {clientId}");
         }
-        (RSA publicKey, RSA privateKey) = key.GetRSAKeys();
+        (RSA publicKey, RSA privateKey) = _cryptoService.GetRSAKeys(key);
 
         var revocationEndpoint = idp.EntityConfiguration.Metadata.OpenIdProvider.AdditionalData[SpidCieConst.RevocationEndpoint] as string;
         if (string.IsNullOrWhiteSpace(revocationEndpoint))
@@ -224,7 +227,7 @@ internal class SpidCieHandler : OpenIdConnectHandler
             ClientAssertion = new ClientAssertion()
             {
                 Type = SpidCieConst.ClientAssertionTypeValue,
-                Value = CryptoHelpers.CreateJWT(publicKey,
+                Value = _cryptoService.CreateJWT(publicKey,
                     privateKey,
                     new Dictionary<string, object>() {
                                                 { SpidCieConst.Kid, key.Kid },

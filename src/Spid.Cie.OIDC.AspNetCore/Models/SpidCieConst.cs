@@ -1,8 +1,11 @@
-﻿namespace Spid.Cie.OIDC.AspNetCore.Models;
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace Spid.Cie.OIDC.AspNetCore.Models;
 
 /// <summary>
 /// Default values related to Spid authentication handler
 /// </summary>
+[ExcludeFromCodeCoverage]
 public sealed class SpidCieConst
 {
     /// <summary>
@@ -112,4 +115,10 @@ public sealed class SpidCieConst
     public const string DummyUrl = "https://dummy.org";
 
     public const string RevocationEndpoint = "revocation_endpoint";
+
+    public const string CallbackPath = "/signin-spidcie";
+
+    public const string SignedOutCallbackPath = "/signout-callback-spidcie";
+
+    public const string RemoteSignOutPath = "/signout-spidcie";
 }

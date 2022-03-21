@@ -18,13 +18,17 @@ namespace Spid.Cie.OIDC.AspNetCore.OpenIdFederation;
 internal class TrustChainManager : ITrustChainManager
 {
     private readonly HttpClient _httpClient;
+    private readonly ICryptoService _cryptoService;
     private readonly ILogger<TrustChainManager> _logger;
     private static readonly Dictionary<string, KeyValuePair<DateTimeOffset, IdentityProvider>> _trustChainCache = new Dictionary<string, KeyValuePair<DateTimeOffset, IdentityProvider>>();
     private static readonly SemaphoreSlim _syncLock = new SemaphoreSlim(1);
 
-    public TrustChainManager(IHttpClientFactory httpClientFactory, ILogger<TrustChainManager> logger)
+    public TrustChainManager(IHttpClientFactory httpClientFactory,
+        ICryptoService cryptoService,
+        ILogger<TrustChainManager> logger)
     {
         _httpClient = httpClientFactory.CreateClient("SpidCieBackchannel");
+        _cryptoService = cryptoService;
         _logger = logger;
     }
 
@@ -64,7 +68,7 @@ internal class TrustChainManager : ITrustChainManager
                         if (taConf.ExpiresOn < expiresOn)
                             expiresOn = taConf.ExpiresOn;
 
-                        var fetchUrl = $"{taConf.Metadata.FederationEntity.FederationApiEndpoint.EnsureTrailingSlash()}?sub={url}";
+                        var fetchUrl = $"{taConf.Metadata.FederationEntity.FederationFetchEndpoint.EnsureTrailingSlash()}?sub={url}";
                         (opConf, DateTimeOffset? esExpiresOn) = await GetEntityStatementAndApplyPolicy(fetchUrl, opConf, opJwt);
                         if (opConf != null && esExpiresOn.HasValue)
                         {
@@ -87,7 +91,7 @@ internal class TrustChainManager : ITrustChainManager
                 }
             }
         }
-        return _trustChainCache.ContainsKey(url) && _trustChainCache[url].Key > DateTimeOffset.UtcNow
+        return _trustChainCache.ContainsKey(url) //&& _trustChainCache[url].Key > DateTimeOffset.UtcNow
             ? _trustChainCache[url].Value : null;
     }
 
@@ -108,7 +112,7 @@ internal class TrustChainManager : ITrustChainManager
                 _logger.LogWarning($"EntityConfiguration JWT not retrieved from url {metadataAddress}");
                 return default;
             }
-            var decodedJwt = jwt.DecodeJWT();
+            var decodedJwt = _cryptoService.DecodeJWT(jwt);
             if (string.IsNullOrWhiteSpace(decodedJwt))
             {
                 _logger.LogWarning($"Invalid EntityConfiguration JWT for url {metadataAddress}: {jwt}");
@@ -120,7 +124,7 @@ internal class TrustChainManager : ITrustChainManager
                 _logger.LogWarning($"Invalid Decoded EntityConfiguration JWT for url {metadataAddress}: {decodedJwt}");
                 return default;
             }
-            var decodedJwtHeader = jwt.DecodeJWTHeader();
+            var decodedJwtHeader = _cryptoService.DecodeJWTHeader(jwt);
             if (string.IsNullOrWhiteSpace(decodedJwtHeader))
             {
                 _logger.LogWarning($"Invalid EntityConfiguration JWT Header for url {metadataAddress}: {jwt}");
@@ -139,8 +143,8 @@ internal class TrustChainManager : ITrustChainManager
                 _logger.LogWarning($"No key found with kid {kid} for url {metadataAddress}: {decodedJwtHeader}");
                 return default;
             }
-            RSA publicKey = key.GetRSAPublicKey();
-            if (!decodedJwt.Equals(jwt.ValidateJWTSignature(publicKey)))
+            RSA publicKey = _cryptoService.GetRSAPublicKey(key);
+            if (!decodedJwt.Equals(_cryptoService.ValidateJWTSignature(jwt, publicKey)))
             {
                 _logger.LogWarning($"Invalid Signature for the EntityConfiguration JWT retrieved at the url {metadataAddress}: {decodedJwtHeader}");
                 return default;
@@ -170,7 +174,7 @@ internal class TrustChainManager : ITrustChainManager
                 _logger.LogWarning($"EntityStatement JWT not retrieved from url {url}");
                 return default;
             }
-            var decodedEsJwt = esJwt.DecodeJWT();
+            var decodedEsJwt = _cryptoService.DecodeJWT(esJwt);
             if (string.IsNullOrWhiteSpace(decodedEsJwt))
             {
                 _logger.LogWarning($"Invalid EntityStatement JWT for url {url}: {esJwt}");
@@ -182,7 +186,7 @@ internal class TrustChainManager : ITrustChainManager
                 _logger.LogWarning($"Invalid Decoded EntityStatement JWT for url {url}: {decodedEsJwt}");
                 return default;
             }
-            var decodedOpJwtHeader = opJwt.DecodeJWTHeader();
+            var decodedOpJwtHeader = _cryptoService.DecodeJWTHeader(opJwt);
             if (string.IsNullOrWhiteSpace(decodedOpJwtHeader))
             {
                 _logger.LogWarning($"Invalid EntityConfiguration JWT Header: {opJwt}");
@@ -201,10 +205,10 @@ internal class TrustChainManager : ITrustChainManager
                 _logger.LogWarning($"No key found with kid {kid} in the EntityStatement at url {url}: {decodedEsJwt}");
                 return default;
             }
-            RSA publicKey = key.GetRSAPublicKey();
-            var decodedOpJwt = opJwt.DecodeJWT();
+            RSA publicKey = _cryptoService.GetRSAPublicKey(key);
+            var decodedOpJwt = _cryptoService.DecodeJWT(opJwt);
             if (string.IsNullOrWhiteSpace(decodedOpJwt)
-                || !decodedOpJwt.Equals(opJwt.ValidateJWTSignature(publicKey)))
+                || !decodedOpJwt.Equals(_cryptoService.ValidateJWTSignature(opJwt, publicKey)))
             {
                 _logger.LogWarning($"Invalid Signature for the EntityConfiguration JWT verified with the EntityStatement at url {url}: EntityConfiguration JWT {opJwt} - EntityStatement JWT {esJwt}");
                 return default;

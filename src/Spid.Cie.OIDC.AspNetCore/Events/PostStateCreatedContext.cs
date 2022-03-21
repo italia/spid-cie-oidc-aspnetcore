@@ -2,9 +2,11 @@
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Http;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Spid.Cie.OIDC.AspNetCore.Events;
 
+[ExcludeFromCodeCoverage]
 internal class PostStateCreatedContext : PropertiesContext<OpenIdConnectOptions>
 {
     public PostStateCreatedContext(

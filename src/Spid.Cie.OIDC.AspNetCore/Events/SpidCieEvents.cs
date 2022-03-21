@@ -12,7 +12,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
-using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace Spid.Cie.OIDC.AspNetCore.Events;
@@ -23,16 +22,22 @@ internal class SpidCieEvents : OpenIdConnectEvents
     private readonly IRelyingPartySelector _rpSelector;
     private readonly IIdentityProviderSelector _idpSelector;
     private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly ITokenValidationParametersRetriever _tokenValidationParametersRetriever;
+    private readonly ICryptoService _cryptoService;
 
     public SpidCieEvents(IOptionsMonitor<SpidCieOptions> options,
         IIdentityProviderSelector idpSelector,
         IRelyingPartySelector rpSelector,
+        ICryptoService cryptoService,
+        ITokenValidationParametersRetriever tokenValidationParametersRetriever,
         IHttpContextAccessor httpContextAccessor)
     {
         _options = options;
         _rpSelector = rpSelector;
         _idpSelector = idpSelector;
         _httpContextAccessor = httpContextAccessor;
+        _tokenValidationParametersRetriever = tokenValidationParametersRetriever;
+        _cryptoService = cryptoService;
     }
 
 
@@ -75,9 +80,9 @@ internal class SpidCieEvents : OpenIdConnectEvents
         var key = keySet?.Keys?.FirstOrDefault();
         if (key is not null)
         {
-            (RSA publicKey, RSA privateKey) = key.GetRSAKeys();
+            (RSA publicKey, RSA privateKey) = _cryptoService.GetRSAKeys(key);
 
-            return CryptoHelpers.CreateJWT(publicKey,
+            return _cryptoService.CreateJWT(publicKey,
                 privateKey,
                 new Dictionary<string, object>() {
                     { SpidCieConst.Kid, key.Kid },
@@ -108,41 +113,30 @@ internal class SpidCieEvents : OpenIdConnectEvents
 
     public override async Task MessageReceived(MessageReceivedContext context)
     {
-        string? provider = null;
-        context.Properties?.Items.TryGetValue(SpidCieConst.IdPSelectorKey, out provider);
-        if (!string.IsNullOrWhiteSpace(provider))
+        if (string.IsNullOrWhiteSpace(context.ProtocolMessage?.Error))
         {
-            _httpContextAccessor.HttpContext?.Items.Add(SpidCieConst.IdPSelectorKey, provider);
+            string? provider = null;
+            context.Properties?.Items.TryGetValue(SpidCieConst.IdPSelectorKey, out provider);
+            if (!string.IsNullOrWhiteSpace(provider))
+            {
+                _httpContextAccessor.HttpContext?.Items.Add(SpidCieConst.IdPSelectorKey, provider);
+            }
+
+            string? clientId = null;
+            context.Properties?.Items.TryGetValue(SpidCieConst.RPSelectorKey, out clientId);
+            if (!string.IsNullOrWhiteSpace(clientId))
+            {
+                context.Options.ClientId = clientId;
+                _httpContextAccessor.HttpContext?.Items.Add(SpidCieConst.RPSelectorKey, clientId);
+            }
+
+            var identityProvider = await _idpSelector.GetSelectedIdentityProvider()
+                ?? throw new Exception(ErrorLocalization.IdentityProviderNotFound);
+            var relyingParty = await _rpSelector.GetSelectedRelyingParty()
+                ?? throw new Exception(ErrorLocalization.RelyingPartyNotFound);
+
+            context.Options.TokenValidationParameters = await _tokenValidationParametersRetriever.RetrieveTokenValidationParameter();
         }
-
-        string? clientId = null;
-        context.Properties?.Items.TryGetValue(SpidCieConst.RPSelectorKey, out clientId);
-        if (!string.IsNullOrWhiteSpace(clientId))
-        {
-            context.Options.ClientId = clientId;
-            _httpContextAccessor.HttpContext?.Items.Add(SpidCieConst.RPSelectorKey, clientId);
-        }
-
-        var identityProvider = await _idpSelector.GetSelectedIdentityProvider()
-            ?? throw new Exception(ErrorLocalization.IdentityProviderNotFound);
-        var relyingParty = await _rpSelector.GetSelectedRelyingParty()
-            ?? throw new Exception(ErrorLocalization.RelyingPartyNotFound);
-
-        context.Options.TokenValidationParameters = new TokenValidationParameters
-        {
-            NameClaimType = SpidCieConst.Sub,
-            ClockSkew = TimeSpan.FromMinutes(5),
-            IssuerSigningKeys = identityProvider.EntityConfiguration.Metadata.OpenIdProvider.JsonWebKeySet?.Keys?.ToArray()
-                ?? identityProvider.EntityConfiguration.JWKS?.Keys.Select(k => new Microsoft.IdentityModel.Tokens.JsonWebKey(JsonSerializer.Serialize(k))),
-            RequireSignedTokens = true,
-            RequireExpirationTime = true,
-            ValidateLifetime = true,
-            ValidateAudience = true,
-            ValidAudience = relyingParty.ClientId,
-            ValidateIssuer = true,
-            ValidIssuer = identityProvider.EntityConfiguration.Issuer
-        };
-
         await base.MessageReceived(context);
     }
 
@@ -157,12 +151,12 @@ internal class SpidCieEvents : OpenIdConnectEvents
         var key = keySet?.Keys?.FirstOrDefault();
         if (key is not null)
         {
-            (RSA publicKey, RSA privateKey) = key.GetRSAKeys();
+            (RSA publicKey, RSA privateKey) = _cryptoService.GetRSAKeys(key);
 
             if (context.TokenEndpointRequest is not null)
             {
                 context.TokenEndpointRequest.ClientAssertionType = SpidCieConst.ClientAssertionTypeValue;
-                context.TokenEndpointRequest.ClientAssertion = CryptoHelpers.CreateJWT(publicKey,
+                context.TokenEndpointRequest.ClientAssertion = _cryptoService.CreateJWT(publicKey,
                     privateKey,
                     new Dictionary<string, object>() {
                     { SpidCieConst.Kid, key.Kid },

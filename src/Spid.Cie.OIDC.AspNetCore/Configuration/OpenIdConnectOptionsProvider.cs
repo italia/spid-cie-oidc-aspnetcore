@@ -2,16 +2,11 @@
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Protocols;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
-using Spid.Cie.OIDC.AspNetCore.Helpers;
 using Spid.Cie.OIDC.AspNetCore.Models;
 using Spid.Cie.OIDC.AspNetCore.Services;
 using System;
 using System.Collections.Concurrent;
-using System.Linq;
 using System.Net.Http;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Spid.Cie.OIDC.AspNetCore.Configuration;
@@ -56,39 +51,4 @@ internal class OpenIdConnectOptionsProvider : IOptionsMonitor<OpenIdConnectOptio
     }
 
     public IDisposable OnChange(Action<OpenIdConnectOptions, string> listener) => throw new NotImplementedException();
-}
-
-
-internal class CustomHttpClientHandler : HttpClientHandler
-{
-    private readonly IRelyingPartySelector _rpSelector;
-    public CustomHttpClientHandler(IRelyingPartySelector rpSelector)
-    {
-        _rpSelector = rpSelector;
-    }
-
-    protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-    {
-        var response = await base.SendAsync(request, cancellationToken);
-        if (response.Content.Headers.ContentType?.MediaType == "application/jose")
-        {
-            var provider = await _rpSelector.GetSelectedRelyingParty();
-            if (provider is not null)
-            {
-                var token = await response.Content.ReadAsStringAsync();
-                var key = provider.OpenIdCoreJWKs?.Keys?.FirstOrDefault();
-                if (key is not null)
-                {
-                    (_, RSA privateKey) = key.GetRSAKeys();
-
-                    var decodedToken = token.DecodeJose(privateKey).DecodeJWT();
-
-                    var httpResponse = new HttpResponseMessage(System.Net.HttpStatusCode.OK);
-                    httpResponse.Content = new StringContent(decodedToken, Encoding.UTF8, "application/json");
-                    return httpResponse;
-                }
-            }
-        }
-        return response;
-    }
 }

@@ -1,5 +1,8 @@
-﻿namespace Spid.Cie.OIDC.AspNetCore.Models;
+﻿using System.Diagnostics.CodeAnalysis;
 
+namespace Spid.Cie.OIDC.AspNetCore.Models;
+
+[ExcludeFromCodeCoverage]
 internal class CieConst
 {
     internal const string Cie_L1 = nameof(Cie_L1);

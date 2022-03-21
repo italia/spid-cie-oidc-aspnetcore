@@ -1,5 +1,8 @@
-﻿namespace Spid.Cie.OIDC.AspNetCore.Models;
+﻿using System.Diagnostics.CodeAnalysis;
 
+namespace Spid.Cie.OIDC.AspNetCore.Models;
+
+[ExcludeFromCodeCoverage]
 internal class SpidConst
 {
     internal const string SpidLevelBaseURI = "https://www.spid.gov.it/";

@@ -22,7 +22,7 @@ internal class JWKGeneratorMiddleware
         _next = next;
     }
 
-    public async Task Invoke(HttpContext context)
+    public async Task Invoke(HttpContext context, ICryptoService cryptoService)
     {
         if (!context.Request.Path.Value!.EndsWith(SpidCieConst.JWKGeneratorPath, StringComparison.InvariantCultureIgnoreCase))
         {
@@ -30,12 +30,12 @@ internal class JWKGeneratorMiddleware
             return;
         }
 
-        var key = CryptoHelpers.CreateRsaSecurityKey();
+        var key = cryptoService.CreateRsaSecurityKey();
 
         var jwk = JsonWebKeyConverter.ConvertFromRSASecurityKey(key);
 
-        Models.JsonWebKey privateJwk = jwk.GetPrivateJWK();
-        Models.JsonWebKey publicJwk = jwk.GetPublicJWK();
+        Models.JsonWebKey privateJwk = cryptoService.GetPrivateJWK(jwk);
+        Models.JsonWebKey publicJwk = cryptoService.GetPublicJWK(jwk);
 
         var json = JsonSerializer.Serialize(new
         {

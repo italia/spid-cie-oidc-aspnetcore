@@ -19,15 +19,17 @@ internal class AssertionConfigurationService : DefaultTokenClientConfigurationSe
 {
     private readonly IRelyingPartiesRetriever _rpRetriever;
     private readonly IIdentityProvidersRetriever _idpRetriever;
+    private readonly ICryptoService _cryptoService;
     private readonly IHttpContextAccessor _httpContextAccessor;
 
     public AssertionConfigurationService(IHttpContextAccessor httpContextAccessor,
-          IRelyingPartiesRetriever rpRetriever,
+            IRelyingPartiesRetriever rpRetriever,
             IIdentityProvidersRetriever idpRetriever,
             UserAccessTokenManagementOptions userAccessTokenManagementOptions,
             ClientAccessTokenManagementOptions clientAccessTokenManagementOptions,
             IOptionsMonitor<OpenIdConnectOptions> oidcOptions,
             IAuthenticationSchemeProvider schemeProvider,
+            ICryptoService cryptoService,
             ILogger<DefaultTokenClientConfigurationService> logger)
         : base(userAccessTokenManagementOptions,
             clientAccessTokenManagementOptions,
@@ -38,6 +40,7 @@ internal class AssertionConfigurationService : DefaultTokenClientConfigurationSe
         _httpContextAccessor = httpContextAccessor;
         _rpRetriever = rpRetriever;
         _idpRetriever = idpRetriever;
+        _cryptoService = cryptoService;
     }
 
     protected override async Task<ClientAssertion> CreateAssertionAsync(string? clientName = null)
@@ -71,12 +74,12 @@ internal class AssertionConfigurationService : DefaultTokenClientConfigurationSe
         {
             throw new InvalidOperationException($"No key found for the RelyingParty with clientId {clientId}");
         }
-        (RSA publicKey, RSA privateKey) = key.GetRSAKeys();
+        (RSA publicKey, RSA privateKey) = _cryptoService.GetRSAKeys(key);
 
         return new ClientAssertion()
         {
             Type = SpidCieConst.ClientAssertionTypeValue,
-            Value = CryptoHelpers.CreateJWT(publicKey,
+            Value = _cryptoService.CreateJWT(publicKey,
                     privateKey,
                     new Dictionary<string, object>() {
                                                 { SpidCieConst.Kid, key.Kid },
