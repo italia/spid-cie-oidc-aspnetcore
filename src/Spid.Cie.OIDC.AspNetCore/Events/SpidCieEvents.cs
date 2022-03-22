@@ -145,31 +145,28 @@ internal class SpidCieEvents : OpenIdConnectEvents
         var relyingParty = await _rpSelector.GetSelectedRelyingParty();
         Throw<Exception>.If(relyingParty is null, ErrorLocalization.RelyingPartyNotFound);
 
-        var keySet = relyingParty!.OpenIdCoreJWKs;
-        var key = keySet?.Keys?.FirstOrDefault();
-        if (key is not null)
-        {
-            (RSA publicKey, RSA privateKey) = _cryptoService.GetRSAKeys(key);
+        var key = relyingParty!.OpenIdCoreJWKs?.Keys?.FirstOrDefault();
+        Throw<Exception>.If(key is null, ErrorLocalization.NoSigningKeyFound);
 
-            if (context.TokenEndpointRequest is not null)
-            {
-                context.TokenEndpointRequest.ClientAssertionType = SpidCieConst.ClientAssertionTypeValue;
-                context.TokenEndpointRequest.ClientAssertion = _cryptoService.CreateJWT(publicKey,
-                    privateKey,
-                    new Dictionary<string, object>() {
-                    { SpidCieConst.Kid, key.Kid },
+        (RSA publicKey, RSA privateKey) = _cryptoService.GetRSAKeys(key!);
+
+        Throw<Exception>.If(context.TokenEndpointRequest is null, $"No Token Endpoint Request found in the current context");
+
+        context.TokenEndpointRequest!.ClientAssertionType = SpidCieConst.ClientAssertionTypeValue;
+        context.TokenEndpointRequest!.ClientAssertion = _cryptoService.CreateJWT(publicKey,
+            privateKey,
+            new Dictionary<string, object>() {
+                    { SpidCieConst.Kid, key!.Kid },
                     { SpidCieConst.Typ, SpidCieConst.TypValue }
-                    },
-                    new Dictionary<string, object>() {
+            },
+            new Dictionary<string, object>() {
                     { SpidCieConst.Iss, relyingParty.ClientId },
                     { SpidCieConst.Sub, relyingParty.ClientId },
                     { SpidCieConst.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds() },
                     { SpidCieConst.Exp, DateTimeOffset.UtcNow.AddMinutes(SpidCieConst.EntityConfigurationExpirationInMinutes).ToUnixTimeSeconds() },
                     { SpidCieConst.Aud, new string[] { identityProvider!.EntityConfiguration.Metadata.OpenIdProvider.TokenEndpoint } },
                     { SpidCieConst.Jti, Guid.NewGuid().ToString() }
-                    });
-            }
-        }
+            });
 
         await base.AuthorizationCodeReceived(context);
     }

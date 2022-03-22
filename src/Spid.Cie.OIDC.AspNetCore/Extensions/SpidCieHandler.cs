@@ -8,7 +8,6 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Spid.Cie.OIDC.AspNetCore.Events;
 using Spid.Cie.OIDC.AspNetCore.Helpers;
-using Spid.Cie.OIDC.AspNetCore.Logging;
 using Spid.Cie.OIDC.AspNetCore.Models;
 using Spid.Cie.OIDC.AspNetCore.Services;
 using System;
@@ -27,8 +26,8 @@ internal class SpidCieHandler : OpenIdConnectHandler
     private const string NonceProperty = "N";
     private readonly ILogPersister _logPersister;
     private readonly SpidCieEvents _events;
-    private readonly IIdentityProvidersRetriever _idpRetriever;
-    private readonly IRelyingPartiesRetriever _rpRetriever;
+    private readonly IIdentityProvidersHandler _idpHandler;
+    private readonly IRelyingPartiesHandler _rpRetriever;
     private readonly ICryptoService _cryptoService;
 
     public SpidCieHandler(IOptionsMonitor<OpenIdConnectOptions> options,
@@ -37,15 +36,15 @@ internal class SpidCieHandler : OpenIdConnectHandler
             UrlEncoder encoder,
             ISystemClock clock,
             ILogPersister logPersister,
-            IIdentityProvidersRetriever idpRetriever,
-            IRelyingPartiesRetriever rpRetriever,
+            IIdentityProvidersHandler idpHandler,
+            IRelyingPartiesHandler rpRetriever,
             ICryptoService cryptoService,
             SpidCieEvents events)
         : base(options, logger, htmlEncoder, encoder, clock)
     {
         _logPersister = logPersister;
         _events = events;
-        _idpRetriever = idpRetriever;
+        _idpHandler = idpHandler;
         _rpRetriever = rpRetriever;
         _cryptoService = cryptoService;
         Events = events;
@@ -162,7 +161,7 @@ internal class SpidCieHandler : OpenIdConnectHandler
         Throw<InvalidOperationException>.If(string.IsNullOrWhiteSpace(issuer),
             "Current authenticated User doesn't have a 'sub' claim.");
 
-        var idps = await _idpRetriever.GetIdentityProviders();
+        var idps = await _idpHandler.GetIdentityProviders();
         var idp = idps.FirstOrDefault(i => i.EntityConfiguration.Issuer.Equals(issuer));
         Throw<InvalidOperationException>.If(idp is null,
             $"No IdentityProvider found for the issuer {issuer}");

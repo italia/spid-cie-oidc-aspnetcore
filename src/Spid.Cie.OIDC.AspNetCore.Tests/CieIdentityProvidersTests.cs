@@ -8,10 +8,6 @@ namespace Spid.Cie.OIDC.AspNetCore.Tests;
 public class CieIdentityProvidersTests
 {
 
-    public CieIdentityProvidersTests()
-    {
-    }
-
     [Fact]
     public async Task TestFilterRequestedClaims()
     {

@@ -1,4 +1,4 @@
-using Spid.Cie.OIDC.AspNetCore.Services;
+using Spid.Cie.OIDC.AspNetCore.Services.Defaults;
 using Spid.Cie.OIDC.AspNetCore.Tests.Mocks;
 using System.Threading.Tasks;
 using Xunit;
@@ -13,7 +13,8 @@ public class DefaultIdentityProviderSelectorTests
     {
         bool hasQueryStringValue = true;
         bool emptyIdpCollection = true;
-        var _selector = new DefaultIdentityProviderSelector(new MockHttpContextAccessor(hasQueryStringValue), new MockIdentityProvidersRetriever(emptyIdpCollection));
+        var _selector = new DefaultIdentityProviderSelector(new MockHttpContextAccessor(hasQueryStringValue),
+            new MockIdentityProvidersHandler(emptyIdpCollection));
 
         var idp = await _selector.GetSelectedIdentityProvider();
         Assert.Null(idp);
@@ -24,7 +25,8 @@ public class DefaultIdentityProviderSelectorTests
     {
         bool hasQueryStringValue = true;
         bool emptyIdpCollection = false;
-        var _selector = new DefaultIdentityProviderSelector(new MockHttpContextAccessor(hasQueryStringValue), new MockIdentityProvidersRetriever(emptyIdpCollection));
+        var _selector = new DefaultIdentityProviderSelector(new MockHttpContextAccessor(hasQueryStringValue),
+            new MockIdentityProvidersHandler(emptyIdpCollection));
 
         var idp = await _selector.GetSelectedIdentityProvider();
         Assert.NotNull(idp);
@@ -35,7 +37,8 @@ public class DefaultIdentityProviderSelectorTests
     {
         bool hasQueryStringValue = false;
         bool emptyIdpCollection = true;
-        var _selector = new DefaultIdentityProviderSelector(new MockHttpContextAccessor(hasQueryStringValue), new MockIdentityProvidersRetriever(emptyIdpCollection));
+        var _selector = new DefaultIdentityProviderSelector(new MockHttpContextAccessor(hasQueryStringValue),
+            new MockIdentityProvidersHandler(emptyIdpCollection));
 
         var idp = await _selector.GetSelectedIdentityProvider();
         Assert.Null(idp);
@@ -46,7 +49,8 @@ public class DefaultIdentityProviderSelectorTests
     {
         bool hasQueryStringValue = false;
         bool emptyIdpCollection = false;
-        var _selector = new DefaultIdentityProviderSelector(new MockHttpContextAccessor(hasQueryStringValue), new MockIdentityProvidersRetriever(emptyIdpCollection));
+        var _selector = new DefaultIdentityProviderSelector(new MockHttpContextAccessor(hasQueryStringValue),
+            new MockIdentityProvidersHandler(emptyIdpCollection));
 
         var idp = await _selector.GetSelectedIdentityProvider();
         Assert.Null(idp);

@@ -3,7 +3,6 @@ using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json.Linq;
 using Spid.Cie.OIDC.AspNetCore.Helpers;
-using Spid.Cie.OIDC.AspNetCore.Logging;
 using Spid.Cie.OIDC.AspNetCore.Models;
 using System;
 using System.Collections.Generic;
@@ -14,7 +13,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Spid.Cie.OIDC.AspNetCore.OpenIdFederation;
+namespace Spid.Cie.OIDC.AspNetCore.Services;
 
 internal class TrustChainManager : ITrustChainManager
 {
@@ -123,7 +122,7 @@ internal class TrustChainManager : ITrustChainManager
             var kid = (string)header[SpidCieConst.Kid];
             Throw<Exception>.If(string.IsNullOrWhiteSpace(kid), $"No Kid specified in the EntityConfiguration JWT Header for url {metadataAddress}: {decodedJwtHeader}");
 
-            var key = conf!.JWKS.Keys.FirstOrDefault(k => k.kid.Equals(kid, System.StringComparison.InvariantCultureIgnoreCase));
+            var key = conf!.JWKS.Keys.FirstOrDefault(k => k.kid.Equals(kid, StringComparison.InvariantCultureIgnoreCase));
             Throw<Exception>.If(key is null, $"No key found with kid {kid} for url {metadataAddress}: {decodedJwtHeader}");
 
             RSA publicKey = _cryptoService.GetRSAPublicKey(key!);
@@ -132,7 +131,7 @@ internal class TrustChainManager : ITrustChainManager
 
             return (conf, decodedJwt, jwt);
         }
-        catch (System.Exception ex)
+        catch (Exception ex)
         {
             _logger.LogWarning(ex, ex.Message);
             return default;
@@ -164,7 +163,7 @@ internal class TrustChainManager : ITrustChainManager
             var kid = (string)opHeader[SpidCieConst.Kid];
             Throw<Exception>.If(string.IsNullOrWhiteSpace(kid), $"No Kid specified in the EntityConfiguration JWT Header: {decodedOpJwtHeader}");
 
-            var key = entityStatement!.JWKS.Keys.FirstOrDefault(k => k.kid.Equals(kid, System.StringComparison.InvariantCultureIgnoreCase));
+            var key = entityStatement!.JWKS.Keys.FirstOrDefault(k => k.kid.Equals(kid, StringComparison.InvariantCultureIgnoreCase));
             Throw<Exception>.If(key is null, $"No key found with kid {kid} in the EntityStatement at url {url}: {decodedEsJwt}");
 
             RSA publicKey = _cryptoService.GetRSAPublicKey(key!);
@@ -176,7 +175,7 @@ internal class TrustChainManager : ITrustChainManager
 
             return (opConf, entityStatement.ExpiresOn);
         }
-        catch (System.Exception ex)
+        catch (Exception ex)
         {
             _logger.LogWarning(ex, ex.Message);
             return default;

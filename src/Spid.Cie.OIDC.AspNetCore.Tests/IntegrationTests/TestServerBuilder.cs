@@ -19,13 +19,13 @@ using Spid.Cie.OIDC.AspNetCore.Tests.Mocks;
 using System;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using static Spid.Cie.OIDC.AspNetCore.Tests.IntegrationTests.TestSettings;
+using static Spid.Cie.OIDC.AspNetCore.Tests.Mocks.TestSettings;
 
 namespace Spid.Cie.OIDC.AspNetCore.Tests.IntegrationTests;
 
 internal class TestServerBuilder
 {
-    public static readonly string DefaultAuthority = @"http://127.0.0.1:8000";
+    public static readonly string DefaultAuthority = @"http://127.0.0.1:8000/oidc/op/";
     public static readonly string TestHost = @"http://127.0.0.1:5000";
     public static readonly string Challenge = "/challenge";
     public static readonly string ChallengeWithProvider = "/challenge?provider=https://www.agid.gov.it";
@@ -126,7 +126,7 @@ internal class TestServerBuilder
                         services.AddScoped<MockBackchannel>();
                         services.AddHttpClient("SpidCieBackchannel")
                             .ConfigurePrimaryHttpMessageHandler(srv => (srv.GetService(typeof(MockBackchannel)) as MockBackchannel)!);
-                        services.AddScoped<Helpers.ICryptoService, MockCryptoService>();
+                        services.AddScoped<ICryptoService, MockCryptoService>();
                         services.AddScoped<ITokenValidationParametersRetriever, MockTokenValidationParametersRetriever>();
                         services.TryAddEnumerable(ServiceDescriptor.Singleton<IPostConfigureOptions<OpenIdConnectOptions>, MockOpenIdConnectPostConfigureOptions>());
                     }))

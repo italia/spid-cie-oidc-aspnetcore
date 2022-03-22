@@ -17,14 +17,14 @@ namespace Spid.Cie.OIDC.AspNetCore.Services;
 
 internal class AssertionConfigurationService : DefaultTokenClientConfigurationService
 {
-    private readonly IRelyingPartiesRetriever _rpRetriever;
-    private readonly IIdentityProvidersRetriever _idpRetriever;
+    private readonly IRelyingPartiesHandler _rpRetriever;
+    private readonly IIdentityProvidersHandler _idpHandler;
     private readonly ICryptoService _cryptoService;
     private readonly IHttpContextAccessor _httpContextAccessor;
 
     public AssertionConfigurationService(IHttpContextAccessor httpContextAccessor,
-            IRelyingPartiesRetriever rpRetriever,
-            IIdentityProvidersRetriever idpRetriever,
+            IRelyingPartiesHandler rpRetriever,
+            IIdentityProvidersHandler idpHandler,
             UserAccessTokenManagementOptions userAccessTokenManagementOptions,
             ClientAccessTokenManagementOptions clientAccessTokenManagementOptions,
             IOptionsMonitor<OpenIdConnectOptions> oidcOptions,
@@ -39,7 +39,7 @@ internal class AssertionConfigurationService : DefaultTokenClientConfigurationSe
     {
         _httpContextAccessor = httpContextAccessor;
         _rpRetriever = rpRetriever;
-        _idpRetriever = idpRetriever;
+        _idpHandler = idpHandler;
         _cryptoService = cryptoService;
     }
 
@@ -49,7 +49,7 @@ internal class AssertionConfigurationService : DefaultTokenClientConfigurationSe
         Throw<InvalidOperationException>.If(string.IsNullOrWhiteSpace(issuer),
             "Current authenticated User doesn't have a 'sub' claim.");
 
-        var idps = await _idpRetriever.GetIdentityProviders();
+        var idps = await _idpHandler.GetIdentityProviders();
         var idp = idps.FirstOrDefault(i => i.EntityConfiguration.Issuer.Equals(issuer));
         Throw<InvalidOperationException>.If(idp is null,
             $"No IdentityProvider found for the issuer {issuer}");

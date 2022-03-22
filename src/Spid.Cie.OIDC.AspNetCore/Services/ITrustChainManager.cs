@@ -1,7 +1,7 @@
 ﻿using Spid.Cie.OIDC.AspNetCore.Models;
 using System.Threading.Tasks;
 
-namespace Spid.Cie.OIDC.AspNetCore.OpenIdFederation;
+namespace Spid.Cie.OIDC.AspNetCore.Services;
 
 internal interface ITrustChainManager
 {

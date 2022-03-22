@@ -4,25 +4,20 @@ using Microsoft.AspNetCore.TestHost;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Spid.Cie.OIDC.AspNetCore.Configuration;
 using Spid.Cie.OIDC.AspNetCore.Helpers;
-using Spid.Cie.OIDC.AspNetCore.Logging;
 using Spid.Cie.OIDC.AspNetCore.Models;
-using Spid.Cie.OIDC.AspNetCore.Services;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
-using System.Net.Http;
 using System.Reflection;
 using System.Text;
 using System.Text.Encodings.Web;
-using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 
 namespace Spid.Cie.OIDC.AspNetCore.Tests.IntegrationTests;
 
-internal class TestSettings
+internal partial class TestSettings
 {
     private readonly Action<SpidCieOptions> _configureOptions;
     private SpidCieOptions _options;
@@ -46,14 +41,14 @@ internal class TestSettings
                         ClientName = "RP Test",
                         Contacts = new string[] { "info@rptest.it" },
                         Issuer = "http://127.0.0.1:5000/",
-                        AuthorityHints = new string[] { "http://127.0.0.1:8000/" },
+                        AuthorityHints = new string[] { "http://127.0.0.1:8000/oidc/op/" },
                         RedirectUris = new string[] { "http://127.0.0.1:5000/signin-spidcie" },
                         SecurityLevel = SecurityLevel.L2,
                         LongSessionsEnabled = false,
                         TrustMarks = new TrustMarkDefinition[] {
                             new TrustMarkDefinition() {
                                 Id = "https://www.spid.gov.it/openid-federation/agreement/sp-public/",
-                                Issuer = "http://127.0.0.1:8000/",
+                                Issuer = "http://127.0.0.1:8000/oidc/op/",
                                 TrustMark = "eyJhbGciOiJSUzI1NiIsImtpZCI6IkZpZll4MDNibm9zRDhtNmdZUUlmTkhOUDljTV9TYW05VGM1bkxsb0lJcmMiLCJ0eXAiOiJ0cnVzdC1tYXJrK2p3dCJ9.eyJpc3MiOiJodHRwOi8vMTI3LjAuMC4xOjgwMDAvIiwic3ViIjoiaHR0cDovL2xvY2FsaG9zdDo1MDAwLyIsImlhdCI6MTY0NzI3Njc2NiwiaWQiOiJodHRwczovL3d3dy5zcGlkLmdvdi5pdC9jZXJ0aWZpY2F0aW9uL3JwIiwibWFyayI6Imh0dHBzOi8vd3d3LmFnaWQuZ292Lml0L3RoZW1lcy9jdXN0b20vYWdpZC9sb2dvLnN2ZyIsInJlZiI6Imh0dHBzOi8vZG9jcy5pdGFsaWEuaXQvaXRhbGlhL3NwaWQvc3BpZC1yZWdvbGUtdGVjbmljaGUtb2lkYy9pdC9zdGFiaWxlL2luZGV4Lmh0bWwifQ.uTbO9gbx3cyNgs4LS-zij9kOC1alQuxFytsPNjwloGdnoGj_4PCJasMxmKVyUJXkXKQGeiG69oXBnf6sL9McYP6RYklhqFBR0hW4X5H5qc4vDYetDo8ajzocMZm050YzTrUObwy3OLOQRGLuWvg2uifRy8YCC0xD0OxoeBaEeURM_zkU3PFQ76RLP2W8b63J37behBevrO1lKJHhyfE4oJ6qFpR2Vk0367mMu7c0vhuTZYw8a5UkDbYR4L77vyzVlpE1duL5ibvREV4YMuMtWbI9fn1nlpgtmTp1Z089PN_PHVQHBrmHRG6jcwU6JCOdNXFBTsXtglU-xRng99Z6aQ"
                             }
                         },
@@ -248,85 +243,6 @@ internal class TestSettings
         else
         {
             errors.Add($"Parameter {parameterName} is missing");
-        }
-    }
-
-    internal class TestProtocolValidator : OpenIdConnectProtocolValidator
-    {
-        public override void ValidateAuthenticationResponse(OpenIdConnectProtocolValidationContext validationContext)
-        {
-        }
-
-        public override void ValidateTokenResponse(OpenIdConnectProtocolValidationContext validationContext)
-        {
-        }
-
-        public override void ValidateUserInfoResponse(OpenIdConnectProtocolValidationContext validationContext)
-        {
-        }
-    }
-
-    internal class MockBackchannel : CustomHttpClientHandler
-    {
-        public MockBackchannel(IRelyingPartySelector rpSelector,
-            ILogPersister logPersister,
-            ICryptoService cryptoService)
-            : base(rpSelector, logPersister, cryptoService)
-        {
-        }
-
-        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-        {
-            if (request.RequestUri.AbsoluteUri.Equals("http://127.0.0.1:8000/list/?type=openid_provider"))
-            {
-                return await ReturnResource("oplist.json", "application/json");
-            }
-            if (request.RequestUri.AbsoluteUri.Equals("http://127.0.0.1:8000/oidc/op/.well-known/openid-federation"))
-            {
-                return await ReturnResource("jwtOP.json", "application/jwt");
-            }
-            if (request.RequestUri.AbsoluteUri.Equals("http://127.0.0.1:8000/.well-known/openid-federation"))
-            {
-                return await ReturnResource("jwtTA.json", "application/jwt");
-            }
-            if (request.RequestUri.AbsoluteUri.Equals("http://127.0.0.1:8000/fetch/?sub=http://127.0.0.1:8000/oidc/op/"))
-            {
-                return await ReturnResource("jwtES.json", "application/jwt");
-            }
-
-            if (request.RequestUri.AbsoluteUri.Equals("http://127.0.0.1:8000/oidc/op/authorization"))
-            {
-                return await ReturnResource("jwtES.json", "application/jwt");
-            }
-            if (request.RequestUri.AbsoluteUri.Equals("http://127.0.0.1:8000/oidc/op/token/"))
-            {
-                return await ReturnResource("tokenResponse.json", "application/json");
-            }
-            if (request.RequestUri.AbsoluteUri.Equals("http://127.0.0.1:8000/oidc/op/userinfo/"))
-            {
-                return await base.DecodeJoseResponse(await ReturnResource("userInfoResponse.jose", "application/jose"));
-            }
-            if (request.RequestUri.AbsoluteUri.Equals("http://127.0.0.1:8000/oidc/op/revocation/"))
-            {
-                return await ReturnResource("revocationResponse.json", "application/json");
-            }
-
-            throw new NotImplementedException();
-        }
-
-        private async Task<HttpResponseMessage> ReturnResource(string resource, string contentType)
-        {
-            var resourceName = "Spid.Cie.OIDC.AspNetCore.Tests.IntegrationTests." + resource;
-            using (var stream = typeof(MockBackchannel).Assembly.GetManifestResourceStream(resourceName))
-            using (var reader = new StreamReader(stream))
-            {
-                var body = await reader.ReadToEndAsync();
-                var content = new StringContent(body, Encoding.UTF8, contentType);
-                return new HttpResponseMessage()
-                {
-                    Content = content,
-                };
-            }
         }
     }
 }

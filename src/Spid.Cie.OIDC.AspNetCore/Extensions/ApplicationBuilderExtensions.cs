@@ -10,12 +10,10 @@ using Microsoft.IdentityModel.Protocols;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Spid.Cie.OIDC.AspNetCore.Configuration;
 using Spid.Cie.OIDC.AspNetCore.Events;
-using Spid.Cie.OIDC.AspNetCore.Helpers;
-using Spid.Cie.OIDC.AspNetCore.Logging;
+using Spid.Cie.OIDC.AspNetCore.Middlewares;
 using Spid.Cie.OIDC.AspNetCore.Models;
-using Spid.Cie.OIDC.AspNetCore.OpenIdFederation;
 using Spid.Cie.OIDC.AspNetCore.Services;
-
+using Spid.Cie.OIDC.AspNetCore.Services.Defaults;
 using System;
 
 namespace Spid.Cie.OIDC.AspNetCore.Extensions;
@@ -69,12 +67,15 @@ public static class ApplicationBuilderExtensions
             .ConfigurePrimaryHttpMessageHandler(srv => (srv.GetService(typeof(CustomHttpClientHandler)) as CustomHttpClientHandler)!);
 
         internalBuilder.Services.TryAddScoped<SpidCieEvents>();
-        internalBuilder.Services.TryAddScoped<ILogPersister, DefaultLogPersister>();
-        internalBuilder.Services.TryAddScoped<IIdentityProvidersRetriever, IdentityProvidersRetriever>();
-        internalBuilder.Services.TryAddScoped<IIdentityProviderSelector, DefaultIdentityProviderSelector>();
-        internalBuilder.Services.TryAddScoped<IRelyingPartiesRetriever, DefaultRelyingPartiesRetriever>();
-        internalBuilder.Services.TryAddScoped<IRelyingPartySelector, DefaultRelyingPartySelector>();
+        internalBuilder.Services.TryAddScoped<IIdentityProvidersHandler, IdentityProvidersHandler>();
+        internalBuilder.Services.TryAddScoped<IRelyingPartiesHandler, RelyingPartiesHandler>();
         internalBuilder.Services.TryAddScoped<ITrustChainManager, TrustChainManager>();
+
+        internalBuilder.Services.TryAddScoped<IIdentityProvidersRetriever, DefaultIdentityProvidersRetriever>();
+        internalBuilder.Services.TryAddScoped<IIdentityProviderSelector, DefaultIdentityProviderSelector>();
+        internalBuilder.Services.TryAddScoped<IRelyingPartySelector, DefaultRelyingPartySelector>();
+        internalBuilder.Services.TryAddScoped<IRelyingPartiesRetriever, DefaultRelyingPartiesRetriever>();
+        internalBuilder.Services.TryAddScoped<ILogPersister, DefaultLogPersister>();
 
         internalBuilder.Services.TryAddScoped<IOptionsMonitor<OpenIdConnectOptions>, OpenIdConnectOptionsProvider>();
         internalBuilder.Services.TryAddScoped<IConfigurationManager<OpenIdConnectConfiguration>, ConfigurationManager>();
@@ -108,6 +109,13 @@ public static class ApplicationBuilderExtensions
         where T : class, IRelyingPartiesRetriever
     {
         builder.Services.AddScoped<IRelyingPartiesRetriever, T>();
+        return builder;
+    }
+
+    public static ISpidCieOIDCBuilder AddIdentityProvidersRetriever<T>(this ISpidCieOIDCBuilder builder)
+        where T : class, IIdentityProvidersRetriever
+    {
+        builder.Services.AddScoped<IIdentityProvidersRetriever, T>();
         return builder;
     }
 

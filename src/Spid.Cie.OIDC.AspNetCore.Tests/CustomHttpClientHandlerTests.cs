@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using Moq;
 using Spid.Cie.OIDC.AspNetCore.Configuration;
-using Spid.Cie.OIDC.AspNetCore.Logging;
+using Spid.Cie.OIDC.AspNetCore.Services.Defaults;
 using Spid.Cie.OIDC.AspNetCore.Tests.Mocks;
 using System;
 using System.Net.Http;

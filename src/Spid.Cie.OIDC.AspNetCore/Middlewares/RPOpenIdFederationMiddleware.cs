@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Http;
-using Spid.Cie.OIDC.AspNetCore.Helpers;
 using Spid.Cie.OIDC.AspNetCore.Models;
 using Spid.Cie.OIDC.AspNetCore.Services;
 using System;
@@ -7,7 +6,7 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 
-namespace Spid.Cie.OIDC.AspNetCore.OpenIdFederation;
+namespace Spid.Cie.OIDC.AspNetCore.Middlewares;
 
 internal class RPOpenIdFederationMiddleware
 {

@@ -6,12 +6,12 @@ using System.Threading.Tasks;
 
 namespace Spid.Cie.OIDC.AspNetCore.Tests.Mocks
 {
-    internal class MockRelyingPartiesRetriever : IRelyingPartiesRetriever
+    internal class MockRelyingPartiesHandler : IRelyingPartiesHandler
     {
         private readonly bool _emptyCollection;
         private readonly bool _noKeys;
 
-        public MockRelyingPartiesRetriever(bool emptyCollection = false, bool noKeys = false)
+        public MockRelyingPartiesHandler(bool emptyCollection = false, bool noKeys = false)
         {
             _emptyCollection = emptyCollection;
             _noKeys = noKeys;

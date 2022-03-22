@@ -3,7 +3,7 @@ using Spid.Cie.OIDC.AspNetCore.Models;
 using System.Collections.Generic;
 using System.Security.Cryptography;
 
-namespace Spid.Cie.OIDC.AspNetCore.Helpers;
+namespace Spid.Cie.OIDC.AspNetCore.Services;
 
 internal interface ICryptoService
 {

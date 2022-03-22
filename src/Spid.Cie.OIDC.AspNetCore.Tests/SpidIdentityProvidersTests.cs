@@ -7,11 +7,6 @@ namespace Spid.Cie.OIDC.AspNetCore.Tests;
 
 public class SpidIdentityProvidersTests
 {
-
-    public SpidIdentityProvidersTests()
-    {
-    }
-
     [Fact]
     public async Task TestFilterRequestedClaims()
     {

@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using Moq;
-using Spid.Cie.OIDC.AspNetCore.Logging;
+using Spid.Cie.OIDC.AspNetCore.Services.Defaults;
 using Xunit;
 
 namespace Spid.Cie.OIDC.AspNetCore.Tests;

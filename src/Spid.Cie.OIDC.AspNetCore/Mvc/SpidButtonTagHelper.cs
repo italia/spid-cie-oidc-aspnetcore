@@ -22,11 +22,11 @@ public class SpidButtonTagHelper : TagHelper
         { SpidButtonSize.Large, ("l", "large") },
         { SpidButtonSize.ExtraLarge, ("xl", "xlarge") }
     };
-    private readonly IIdentityProvidersRetriever _idpRetriever;
+    private readonly IIdentityProvidersHandler _idpHandler;
 
-    public SpidButtonTagHelper(IIdentityProvidersRetriever idpRetriever)
+    public SpidButtonTagHelper(IIdentityProvidersHandler idpHandler)
     {
-        _idpRetriever = idpRetriever;
+        _idpHandler = idpHandler;
     }
 
     public SpidButtonSize Size { get; set; } = SpidButtonSize.Medium;
@@ -75,7 +75,7 @@ public class SpidButtonTagHelper : TagHelper
         listContainer.Attributes.Add("aria-labelledby", "spid-idp");
         listContainer.AddCssClass("spid-idp-button-menu");
 
-        var identityProviders = await _idpRetriever.GetIdentityProviders();
+        var identityProviders = await _idpHandler.GetIdentityProviders();
         foreach (var idp in identityProviders.Where(i => i.Type == Models.IdentityProviderType.SPID))
         {
             var itemContainer = new TagBuilder("li");

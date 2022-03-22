@@ -16,6 +16,6 @@ internal class MockIdentityProviderSelector : IIdentityProviderSelector
 
     public async Task<IdentityProvider?> GetSelectedIdentityProvider()
     {
-        return (await new MockIdentityProvidersRetriever(_emptyCollection).GetIdentityProviders()).FirstOrDefault();
+        return (await new MockIdentityProvidersHandler(_emptyCollection).GetIdentityProviders()).FirstOrDefault();
     }
 }

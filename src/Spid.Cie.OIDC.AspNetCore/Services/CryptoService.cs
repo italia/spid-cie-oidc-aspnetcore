@@ -4,21 +4,17 @@ using JWT.Algorithms;
 using JWT.Builder;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.IdentityModel.Tokens;
+using Spid.Cie.OIDC.AspNetCore.Helpers;
 using Spid.Cie.OIDC.AspNetCore.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 
-namespace Spid.Cie.OIDC.AspNetCore.Helpers;
+namespace Spid.Cie.OIDC.AspNetCore.Services;
 
 internal class CryptoService : ICryptoService
 {
-    public CryptoService()
-    {
-
-    }
-
     public (RSA publicKey, RSA privateKey) GetRSAKeys(Microsoft.IdentityModel.Tokens.JsonWebKey key)
         => (RSA.Create(new RSAParameters()
         {

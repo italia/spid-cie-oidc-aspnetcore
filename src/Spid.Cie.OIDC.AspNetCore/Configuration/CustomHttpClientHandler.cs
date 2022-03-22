@@ -1,5 +1,4 @@
 ﻿using Spid.Cie.OIDC.AspNetCore.Helpers;
-using Spid.Cie.OIDC.AspNetCore.Logging;
 using Spid.Cie.OIDC.AspNetCore.Services;
 using System;
 using System.Linq;

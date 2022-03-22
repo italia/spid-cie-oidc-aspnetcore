@@ -2,13 +2,13 @@
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Spid.Cie.OIDC.AspNetCore.Services;
+namespace Spid.Cie.OIDC.AspNetCore.Services.Defaults;
 
 internal class DefaultRelyingPartySelector : IRelyingPartySelector
 {
-    private readonly IRelyingPartiesRetriever _retriever;
+    private readonly IRelyingPartiesHandler _retriever;
 
-    public DefaultRelyingPartySelector(IRelyingPartiesRetriever retriever)
+    public DefaultRelyingPartySelector(IRelyingPartiesHandler retriever)
     {
         _retriever = retriever;
     }

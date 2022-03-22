@@ -1,13 +1,13 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.IdentityModel.Tokens;
-using Spid.Cie.OIDC.AspNetCore.Helpers;
 using Spid.Cie.OIDC.AspNetCore.Models;
+using Spid.Cie.OIDC.AspNetCore.Services;
 using System;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
-namespace Spid.Cie.OIDC.AspNetCore.OpenIdFederation;
+namespace Spid.Cie.OIDC.AspNetCore.Middlewares;
 
 internal class JWKGeneratorMiddleware
 {

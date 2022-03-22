@@ -2,7 +2,7 @@
 using Microsoft.Extensions.Options;
 using Spid.Cie.OIDC.AspNetCore.Models;
 using System;
-using static Spid.Cie.OIDC.AspNetCore.Tests.IntegrationTests.TestSettings;
+using static Spid.Cie.OIDC.AspNetCore.Tests.Mocks.TestSettings;
 
 namespace Spid.Cie.OIDC.AspNetCore.Tests.Mocks;
 
@@ -16,7 +16,7 @@ internal class MockOptionsMonitorOpenIdConnectOptions : IOptionsMonitor<OpenIdCo
         {
             SignInScheme = name,
             ConfigurationManager = new MockConfigurationManager(),
-            ProtocolValidator = new TestProtocolValidator()
+            ProtocolValidator = new MockProtocolValidator()
         };
     }
 

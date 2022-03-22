@@ -2,7 +2,6 @@
 using Microsoft.Extensions.Options;
 using Spid.Cie.OIDC.AspNetCore.Configuration;
 using Spid.Cie.OIDC.AspNetCore.Models;
-using Spid.Cie.OIDC.AspNetCore.OpenIdFederation;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,20 +10,23 @@ using System.Threading.Tasks;
 
 namespace Spid.Cie.OIDC.AspNetCore.Services;
 
-internal class IdentityProvidersRetriever : IIdentityProvidersRetriever
+internal class IdentityProvidersHandler : IIdentityProvidersHandler
 {
     private readonly IOptionsMonitor<SpidCieOptions> _options;
+    private readonly IIdentityProvidersRetriever _idpRetriever;
     private readonly ITrustChainManager _trustChainManager;
-    private readonly ILogger<IdentityProvidersRetriever> _logger;
+    private readonly ILogger<IdentityProvidersHandler> _logger;
     private static readonly SemaphoreSlim _syncLock = new SemaphoreSlim(1);
     private static List<IdentityProvider>? _identityProvidersCache;
     private static DateTime _identityProvidersCacheLastUpdated = DateTime.MinValue;
 
-    public IdentityProvidersRetriever(IOptionsMonitor<SpidCieOptions> options,
+    public IdentityProvidersHandler(IOptionsMonitor<SpidCieOptions> options,
+        IIdentityProvidersRetriever idpRetriever,
         ITrustChainManager trustChainManager,
-        ILogger<IdentityProvidersRetriever> logger)
+        ILogger<IdentityProvidersHandler> logger)
     {
         _options = options;
+        _idpRetriever = idpRetriever;
         _trustChainManager = trustChainManager;
         _logger = logger;
     }
@@ -46,7 +48,9 @@ internal class IdentityProvidersRetriever : IIdentityProvidersRetriever
                 {
                     List<IdentityProvider> result = new();
 
-                    foreach (var url in _options.CurrentValue.SpidOPs ?? Enumerable.Empty<string>())
+                    var spidIdP = (_options.CurrentValue.SpidOPs ?? Enumerable.Empty<string>())
+                        .Union(await _idpRetriever.GetSpidIdentityProviders());
+                    foreach (var url in spidIdP)
                     {
                         var idpConf = await _trustChainManager.BuildTrustChain(url);
 
@@ -56,7 +60,9 @@ internal class IdentityProvidersRetriever : IIdentityProvidersRetriever
                         }
                     }
 
-                    foreach (var url in _options.CurrentValue.CieOPs ?? Enumerable.Empty<string>())
+                    var cieIdP = (_options.CurrentValue.CieOPs ?? Enumerable.Empty<string>())
+                        .Union(await _idpRetriever.GetCieIdentityProviders());
+                    foreach (var url in cieIdP)
                     {
                         var idpConf = await _trustChainManager.BuildTrustChain(url);
 
@@ -72,6 +78,9 @@ internal class IdentityProvidersRetriever : IIdentityProvidersRetriever
                         _identityProvidersCacheLastUpdated = DateTime.UtcNow;
                     }
                 }
+            }
+            catch (Exception ex)
+            {
             }
             finally
             {

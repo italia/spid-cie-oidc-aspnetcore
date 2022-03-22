@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Spid.Cie.OIDC.AspNetCore.Middlewares;
 using Spid.Cie.OIDC.AspNetCore.Models;
-using Spid.Cie.OIDC.AspNetCore.OpenIdFederation;
 using Spid.Cie.OIDC.AspNetCore.Tests.Mocks;
 using System.Threading.Tasks;
 using Xunit;

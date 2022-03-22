@@ -2,7 +2,7 @@
 using System.Net;
 using System.Threading.Tasks;
 
-namespace Spid.Cie.OIDC.AspNetCore.Logging;
+namespace Spid.Cie.OIDC.AspNetCore.Services;
 
 public interface ILogPersister
 {

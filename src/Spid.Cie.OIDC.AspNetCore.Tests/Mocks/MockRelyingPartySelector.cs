@@ -18,6 +18,6 @@ internal class MockRelyingPartySelector : IRelyingPartySelector
 
     public async Task<RelyingParty?> GetSelectedRelyingParty()
     {
-        return (await new MockRelyingPartiesRetriever(_emptyCollection, _noKeys).GetRelyingParties()).FirstOrDefault();
+        return (await new MockRelyingPartiesHandler(_emptyCollection, _noKeys).GetRelyingParties()).FirstOrDefault();
     }
 }

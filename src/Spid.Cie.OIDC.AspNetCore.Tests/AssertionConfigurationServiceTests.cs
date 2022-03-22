@@ -1,8 +1,10 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using IdentityModel.AspNetCore.AccessTokenManagement;
+using IdentityModel.Client;
+using Microsoft.Extensions.Logging;
 using Moq;
-using Spid.Cie.OIDC.AspNetCore.Models;
 using Spid.Cie.OIDC.AspNetCore.Services;
 using Spid.Cie.OIDC.AspNetCore.Tests.Mocks;
+using System;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -10,27 +12,61 @@ namespace Spid.Cie.OIDC.AspNetCore.Tests;
 
 public class AssertionConfigurationServiceTests
 {
-    private readonly AssertionConfigurationService _service;
-    public AssertionConfigurationServiceTests()
-    {
-        _service = new AssertionConfigurationService(new MockHttpContextAccessor(true),
-            new MockRelyingPartiesRetriever(),
-            new MockIdentityProvidersRetriever(false),
-            new IdentityModel.AspNetCore.AccessTokenManagement.UserAccessTokenManagementOptions(),
-            new IdentityModel.AspNetCore.AccessTokenManagement.ClientAccessTokenManagementOptions(),
-            new MockOptionsMonitorOpenIdConnectOptions(),
-            null,
-            new MockCryptoService(),
-            Mock.Of<ILogger<IdentityModel.AspNetCore.AccessTokenManagement.DefaultTokenClientConfigurationService>>());
-    }
-
     [Fact]
     public async Task Test()
     {
-        var tokenRequest = await _service.GetRefreshTokenRequestAsync(new IdentityModel.AspNetCore.AccessTokenManagement.UserAccessTokenParameters()
+        bool thrown = false;
+        try
         {
-            ChallengeScheme = SpidCieConst.AuthenticationScheme
-        });
-        Assert.NotNull(tokenRequest);
+            var _service = new AssertionConfigurationService(new MockHttpContextAccessor(true),
+               new MockRelyingPartiesHandler(),
+               new MockIdentityProvidersHandler(false),
+               new IdentityModel.AspNetCore.AccessTokenManagement.UserAccessTokenManagementOptions(),
+               new IdentityModel.AspNetCore.AccessTokenManagement.ClientAccessTokenManagementOptions(),
+               new MockOptionsMonitorOpenIdConnectOptions(),
+               null,
+               new MockCryptoService(),
+               Mock.Of<ILogger<IdentityModel.AspNetCore.AccessTokenManagement.DefaultTokenClientConfigurationService>>());
+
+            await (typeof(DefaultTokenClientConfigurationService).InvokeMember("CreateAssertionAsync",
+               System.Reflection.BindingFlags.InvokeMethod | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic,
+               Type.DefaultBinder,
+               _service,
+               new object[] { null }) as Task<ClientAssertion>)!;
+        }
+        catch (Exception ex)
+        {
+            thrown = true;
+        }
+        Assert.False(thrown);
+    }
+
+    [Fact]
+    public async Task TestFail()
+    {
+        bool thrown = false;
+        try
+        {
+            var _service = new AssertionConfigurationService(new MockHttpContextAccessor(true, false),
+               new MockRelyingPartiesHandler(),
+               new MockIdentityProvidersHandler(false),
+               new IdentityModel.AspNetCore.AccessTokenManagement.UserAccessTokenManagementOptions(),
+               new IdentityModel.AspNetCore.AccessTokenManagement.ClientAccessTokenManagementOptions(),
+               new MockOptionsMonitorOpenIdConnectOptions(),
+               null,
+               new MockCryptoService(),
+               Mock.Of<ILogger<IdentityModel.AspNetCore.AccessTokenManagement.DefaultTokenClientConfigurationService>>());
+
+            await (typeof(DefaultTokenClientConfigurationService).InvokeMember("CreateAssertionAsync",
+               System.Reflection.BindingFlags.InvokeMethod | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic,
+               Type.DefaultBinder,
+               _service,
+               new object[] { null }) as Task<ClientAssertion>)!;
+        }
+        catch (Exception ex)
+        {
+            thrown = true;
+        }
+        Assert.True(thrown);
     }
 }

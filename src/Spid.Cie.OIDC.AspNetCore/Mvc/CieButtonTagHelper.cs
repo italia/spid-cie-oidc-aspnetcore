@@ -22,11 +22,11 @@ public class CieButtonTagHelper : TagHelper
         { CieButtonSize.ExtraLarge, ("xl", "xlarge") }
     };
 
-    private readonly IIdentityProvidersRetriever _idpRetriever;
+    private readonly IIdentityProvidersHandler _idpHandler;
 
-    public CieButtonTagHelper(IIdentityProvidersRetriever idpRetriever)
+    public CieButtonTagHelper(IIdentityProvidersHandler idpHandler)
     {
-        _idpRetriever = idpRetriever;
+        _idpHandler = idpHandler;
     }
 
     public CieButtonSize Size { get; set; }
@@ -51,7 +51,7 @@ public class CieButtonTagHelper : TagHelper
         spanText.AddCssClass("italia-it-button-text");
         spanText.InnerHtml.AppendHtml("Entra con CIE");
 
-        var identityProviders = await _idpRetriever.GetIdentityProviders();
+        var identityProviders = await _idpHandler.GetIdentityProviders();
         var idp = identityProviders.FirstOrDefault(p => p.Type == Models.IdentityProviderType.CIE);
 
         var a = new TagBuilder("a");

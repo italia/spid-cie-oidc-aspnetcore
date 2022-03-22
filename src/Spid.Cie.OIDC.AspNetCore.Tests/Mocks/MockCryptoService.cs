@@ -2,7 +2,7 @@
 
 namespace Spid.Cie.OIDC.AspNetCore.Tests.Mocks;
 
-internal class MockCryptoService : Helpers.CryptoService
+internal class MockCryptoService : Services.CryptoService
 {
     public override string ValidateJWTSignature(string jwt, RSA publicKey)
     {

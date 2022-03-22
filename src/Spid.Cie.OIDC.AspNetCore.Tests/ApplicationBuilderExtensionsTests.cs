@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Spid.Cie.OIDC.AspNetCore.Extensions;
-using Spid.Cie.OIDC.AspNetCore.Logging;
-using Spid.Cie.OIDC.AspNetCore.Services;
+using Spid.Cie.OIDC.AspNetCore.Services.Defaults;
 using System;
 using Xunit;
 
@@ -30,6 +29,15 @@ public class ApplicationBuilderExtensionsTests
         service.AddAuthentication()
             .AddSpidCieOIDC()
             .AddRelyingPartiesRetriever<DefaultRelyingPartiesRetriever>();
+    }
+
+    [Fact]
+    public void DefaultIdentityProvidersRetriever()
+    {
+        IServiceCollection service = new ServiceCollection();
+        service.AddAuthentication()
+            .AddSpidCieOIDC()
+            .AddIdentityProvidersRetriever<DefaultIdentityProvidersRetriever>();
     }
 
     [Fact]

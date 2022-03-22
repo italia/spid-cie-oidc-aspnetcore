@@ -25,7 +25,7 @@ public class CieButtonTests
             return Task.FromResult<TagHelperContent>(tagHelperContent);
         });
 
-        var tagHelper = new Mvc.CieButtonTagHelper(new Mocks.MockIdentityProvidersRetriever(false));
+        var tagHelper = new Mvc.CieButtonTagHelper(new Mocks.MockIdentityProvidersHandler(false));
         tagHelper.ChallengeUrl = "http://127.0.0.1:8002/";
         await tagHelper.ProcessAsync(context, tagHelperOutput);
     }
@@ -47,7 +47,7 @@ public class CieButtonTests
             return Task.FromResult<TagHelperContent>(tagHelperContent);
         });
 
-        var tagHelper = new Mvc.CieButtonTagHelper(new Mocks.MockIdentityProvidersRetriever(true));
+        var tagHelper = new Mvc.CieButtonTagHelper(new Mocks.MockIdentityProvidersHandler(true));
         tagHelper.ChallengeUrl = "http://127.0.0.1:8002/";
         await tagHelper.ProcessAsync(context, tagHelperOutput);
     }

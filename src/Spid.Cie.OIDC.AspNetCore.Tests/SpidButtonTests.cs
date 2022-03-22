@@ -67,7 +67,7 @@ public class SpidButtonTests
             return Task.FromResult<TagHelperContent>(tagHelperContent);
         });
 
-        var tagHelper = new Mvc.SpidButtonTagHelper(new Mocks.MockIdentityProvidersRetriever(false));
+        var tagHelper = new Mvc.SpidButtonTagHelper(new Mocks.MockIdentityProvidersHandler(false));
         tagHelper.ChallengeUrl = "http://127.0.0.1/";
         await tagHelper.ProcessAsync(context, tagHelperOutput);
         Assert.NotNull(tagHelperOutput.Content.GetContent());
