@@ -38,5 +38,11 @@ jobs:
       run: dotnet build --no-restore
       working-directory: src
     - name: Test
-      run: dotnet test --no-build --verbosity normal --collect:"XPlat Code Coverage"
+      run: dotnet test --no-build --verbosity normal -p:CollectCoverage=true -p:CoverletOutput=TestResults/ -p:CoverletOutputFormat=opencover
       working-directory: src
+    - name: Copy the opencover.xml file
+      run: |
+        find ./TestResults/ -type f -name "coverage.opencover.xml" | while read fname; do
+          dirname=`dirname "$fname"`
+          cp "${dirname}/coverage.opencover.xml" "./TestResults/coverage.opencover.xml"
+        done
