@@ -42,7 +42,7 @@ jobs:
       working-directory: src
     - name: Copy the opencover.xml file
       run: |
-        find ./TestResults/ -type f -name "coverage.opencover.xml" | while read fname; do
+        find ./ -type f -name "coverage.opencover.xml" | while read fname; do
           dirname=`dirname "$fname"`
           cp "${dirname}/coverage.opencover.xml" "./TestResults/coverage.opencover.xml"
         done
