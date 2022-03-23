@@ -57,7 +57,7 @@ internal sealed class RP_SpidCieOIDCConfiguration
 internal sealed class IdPMetadata_SpidCieOIDCConfiguration
 {
     [JsonPropertyName("openid_provider")]
-    public OpenIdConnectConfiguration OpenIdProvider { get; set; }
+    public OpenIdConnectConfiguration? OpenIdProvider { get; set; }
 }
 
 [ExcludeFromCodeCoverage]

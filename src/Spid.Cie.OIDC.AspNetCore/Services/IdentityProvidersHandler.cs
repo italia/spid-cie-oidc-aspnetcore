@@ -79,9 +79,6 @@ internal class IdentityProvidersHandler : IIdentityProvidersHandler
                     }
                 }
             }
-            catch (Exception ex)
-            {
-            }
             finally
             {
                 _syncLock.Release();

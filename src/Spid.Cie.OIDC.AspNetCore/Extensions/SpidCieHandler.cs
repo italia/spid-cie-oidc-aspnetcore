@@ -180,9 +180,9 @@ internal class SpidCieHandler : OpenIdConnectHandler
         Throw<InvalidOperationException>.If(key is null,
             $"No key found for the RelyingParty with clientId {clientId}");
 
-        (RSA publicKey, RSA privateKey) = _cryptoService.GetRSAKeys(key);
+        (RSA publicKey, RSA privateKey) = _cryptoService.GetRSAKeys(key!);
 
-        var revocationEndpoint = idp.EntityConfiguration.Metadata.OpenIdProvider.AdditionalData[SpidCieConst.RevocationEndpoint] as string;
+        var revocationEndpoint = idp!.EntityConfiguration.Metadata.OpenIdProvider.AdditionalData[SpidCieConst.RevocationEndpoint] as string;
         Throw<InvalidOperationException>.If(string.IsNullOrWhiteSpace(revocationEndpoint),
             $"No RevocationEndpoint specified in the EntityConfiguration of the IdentityProvider {issuer}");
 
@@ -197,15 +197,15 @@ internal class SpidCieHandler : OpenIdConnectHandler
                 Value = _cryptoService.CreateJWT(publicKey,
                     privateKey,
                     new Dictionary<string, object>() {
-                                                { SpidCieConst.Kid, key.Kid },
+                                                { SpidCieConst.Kid, key!.Kid },
                                                 { SpidCieConst.Typ, SpidCieConst.TypValue }
                     },
                     new Dictionary<string, object>() {
-                                                { SpidCieConst.Iss, clientId },
-                                                { SpidCieConst.Sub, clientId },
+                                                { SpidCieConst.Iss, clientId! },
+                                                { SpidCieConst.Sub, clientId! },
                                                 { SpidCieConst.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds() },
                                                 { SpidCieConst.Exp, DateTimeOffset.UtcNow.AddMinutes(SpidCieConst.EntityConfigurationExpirationInMinutes).ToUnixTimeSeconds() },
-                                                { SpidCieConst.Aud, new string[] { revocationEndpoint } },
+                                                { SpidCieConst.Aud, new string[] { revocationEndpoint! } },
                                                 { SpidCieConst.Jti, Guid.NewGuid().ToString() }
                     })
             },

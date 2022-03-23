@@ -131,7 +131,7 @@ internal class CryptoService : ICryptoService
         (RSA publicKey, RSA privateKey) = GetRSAKeys(key);
 
         IJwtAlgorithm algorithm = new RS256Algorithm(publicKey, privateKey);
-        IJsonSerializer serializer = new SerializationHelpers();
+        IJsonSerializer serializer = new CustomJsonSerializer();
         IBase64UrlEncoder urlEncoder = new JwtBase64UrlEncoder();
         IJwtEncoder encoder = new JwtEncoder(algorithm, serializer, urlEncoder);
 

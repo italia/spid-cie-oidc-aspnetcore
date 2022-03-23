@@ -1,6 +1,4 @@
 ﻿using Microsoft.Extensions.Logging;
-using Microsoft.IdentityModel.Protocols.OpenIdConnect;
-using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json.Linq;
 using Spid.Cie.OIDC.AspNetCore.Helpers;
 using Spid.Cie.OIDC.AspNetCore.Models;
@@ -21,11 +19,13 @@ internal class TrustChainManager : ITrustChainManager
     private readonly ICryptoService _cryptoService;
     private readonly ILogPersister _logPersister;
     private readonly ILogger<TrustChainManager> _logger;
+    private readonly IMetadataPolicyHandler _metadataPolicyHandler;
     private static readonly Dictionary<string, KeyValuePair<DateTimeOffset, IdPEntityConfiguration>> _trustChainCache = new Dictionary<string, KeyValuePair<DateTimeOffset, IdPEntityConfiguration>>();
     private static readonly SemaphoreSlim _syncLock = new SemaphoreSlim(1);
 
     public TrustChainManager(IHttpClientFactory httpClientFactory,
         ICryptoService cryptoService,
+        IMetadataPolicyHandler metadataPolicyHandler,
         ILogPersister logPersister,
         ILogger<TrustChainManager> logger)
     {
@@ -33,6 +33,7 @@ internal class TrustChainManager : ITrustChainManager
         _cryptoService = cryptoService;
         _logPersister = logPersister;
         _logger = logger;
+        _metadataPolicyHandler = metadataPolicyHandler;
     }
 
     public async Task<IdPEntityConfiguration?> BuildTrustChain(string url)
@@ -54,8 +55,6 @@ internal class TrustChainManager : ITrustChainManager
                         _logger.LogWarning($"EntityConfiguration not retrieved for OP {url}");
                         return default;
                     }
-                    opConf.Metadata.OpenIdProvider = OpenIdConnectConfiguration.Create(JObject.Parse(opDecodedJwt)["metadata"]["openid_provider"].ToString());
-                    opConf.Metadata.OpenIdProvider.JsonWebKeySet = JsonWebKeySet.Create(JObject.Parse(opDecodedJwt)["metadata"]["openid_provider"]["jwks"].ToString());
 
                     DateTimeOffset expiresOn = opConf.ExpiresOn;
 
@@ -72,11 +71,16 @@ internal class TrustChainManager : ITrustChainManager
                             expiresOn = taConf.ExpiresOn;
 
                         var fetchUrl = $"{taConf.Metadata.FederationEntity.FederationFetchEndpoint.EnsureTrailingSlash()}?sub={url}";
-                        (opConf, DateTimeOffset? esExpiresOn) = await GetEntityStatementAndApplyPolicy(fetchUrl, opConf, opJwt);
-                        if (opConf != null && esExpiresOn.HasValue)
+                        var entityStatement = await GetAndValidateEntityStatement(fetchUrl, opJwt);
+                        var esExpiresOn = entityStatement.ExpiresOn;
+
+                        // Apply policy
+                        opConf!.Metadata!.OpenIdProvider = _metadataPolicyHandler.ApplyMetadataPolicy(opDecodedJwt!, entityStatement.MetadataPolicy.ToJsonString());
+
+                        if (opConf is not null && opConf.Metadata?.OpenIdProvider is not null)
                         {
                             if (esExpiresOn < expiresOn)
-                                expiresOn = esExpiresOn.Value;
+                                expiresOn = esExpiresOn;
 
                             opValidated = true;
                             break;
@@ -138,11 +142,10 @@ internal class TrustChainManager : ITrustChainManager
         }
     }
 
-    private async Task<(IdPEntityConfiguration? conf, DateTimeOffset? expiresOn)> GetEntityStatementAndApplyPolicy(string? url, IdPEntityConfiguration? opConf, string opJwt)
+    private async Task<EntityStatement> GetAndValidateEntityStatement(string? url, string opJwt)
     {
         try
         {
-
             Throw<Exception>.If(string.IsNullOrWhiteSpace(url), "Url parameter is not defined");
 
             var esJwt = await _httpClient.GetStringAsync(url);
@@ -171,9 +174,7 @@ internal class TrustChainManager : ITrustChainManager
             Throw<Exception>.If(string.IsNullOrWhiteSpace(decodedOpJwt) || !decodedOpJwt.Equals(_cryptoService.ValidateJWTSignature(opJwt, publicKey)),
                 $"Invalid Signature for the EntityConfiguration JWT verified with the EntityStatement at url {url}: EntityConfiguration JWT {opJwt} - EntityStatement JWT {esJwt}");
 
-            // Apply policy
-
-            return (opConf, entityStatement.ExpiresOn);
+            return entityStatement;
         }
         catch (Exception ex)
         {

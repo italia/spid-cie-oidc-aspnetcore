@@ -13,13 +13,13 @@ internal static class TestServerExtensions
         return server.SendAsync(url, cookieHeader: null);
     }
 
-    public static Task<TestTransaction> SendAsync(this TestServer server, string url, string cookieHeader = null, string[] cookieHeaders = null)
+    public static Task<TestTransaction> SendAsync(this TestServer server, string url, string? cookieHeader = null, string[]? cookieHeaders = null)
     {
         return server.SendAsync(new HttpRequestMessage(HttpMethod.Get, url), cookieHeader, cookieHeaders);
     }
 
 
-    public static async Task<TestTransaction> SendAsync(this TestServer server, HttpRequestMessage request, string cookieHeader, string[] cookieHeaders = null)
+    public static async Task<TestTransaction> SendAsync(this TestServer server, HttpRequestMessage request, string? cookieHeader = null, string[]? cookieHeaders = null)
     {
         if (!string.IsNullOrEmpty(cookieHeader))
         {

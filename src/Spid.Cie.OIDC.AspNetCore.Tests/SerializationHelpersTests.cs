@@ -9,13 +9,13 @@ public class SerializationHelpersTests
     [Fact]
     public void Serialize()
     {
-        Assert.Equal("[0,1]", new SerializationHelpers().Serialize(new int[] { 0, 1 }));
+        Assert.Equal("[0,1]", new CustomJsonSerializer().Serialize(new int[] { 0, 1 }));
     }
 
     [Fact]
     public void Deserialize()
     {
-        Assert.True(new SerializationHelpers().Deserialize<int[]>("[0,1]").SequenceEqual(new int[] { 0, 1 }));
+        Assert.True(new CustomJsonSerializer().Deserialize<int[]>("[0,1]")!.SequenceEqual(new int[] { 0, 1 }));
     }
 
 }

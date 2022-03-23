@@ -1,5 +1,6 @@
 ﻿using IdentityModel.AspNetCore.AccessTokenManagement;
 using IdentityModel.Client;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Spid.Cie.OIDC.AspNetCore.Services;
@@ -24,7 +25,7 @@ public class AssertionConfigurationServiceTests
                new IdentityModel.AspNetCore.AccessTokenManagement.UserAccessTokenManagementOptions(),
                new IdentityModel.AspNetCore.AccessTokenManagement.ClientAccessTokenManagementOptions(),
                new MockOptionsMonitorOpenIdConnectOptions(),
-               null,
+               Mock.Of<IAuthenticationSchemeProvider>(),
                new MockCryptoService(),
                Mock.Of<ILogger<IdentityModel.AspNetCore.AccessTokenManagement.DefaultTokenClientConfigurationService>>());
 

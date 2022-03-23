@@ -67,8 +67,8 @@ internal class TestServerBuilder
 
     public static TestServer CreateServer(
         Action<SpidCieOptions> options,
-        Func<HttpContext, Task> handler,
-        AuthenticationProperties properties)
+        Func<HttpContext, Task>? handler,
+        AuthenticationProperties? properties)
     {
         var host = new HostBuilder()
             .ConfigureWebHost(builder =>
