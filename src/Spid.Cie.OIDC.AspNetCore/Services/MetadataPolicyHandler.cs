@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
-using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json.Linq;
 using Spid.Cie.OIDC.AspNetCore.Helpers;
 using System;
@@ -151,7 +150,6 @@ internal class MetadataPolicyHandler : IMetadataPolicyHandler
             }
 
             var result = OpenIdConnectConfiguration.Create(openIdConfigurationObj.ToString());
-            result.JsonWebKeySet = JsonWebKeySet.Create(JObject.Parse(opDecodedJwt)["metadata"]["openid_provider"]["jwks"].ToString());
             return result;
         }
         catch (Exception ex)

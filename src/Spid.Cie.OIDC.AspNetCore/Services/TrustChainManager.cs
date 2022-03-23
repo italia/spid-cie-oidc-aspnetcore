@@ -1,4 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Spid.Cie.OIDC.AspNetCore.Helpers;
 using Spid.Cie.OIDC.AspNetCore.Models;
@@ -7,7 +9,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Security.Cryptography;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -77,6 +78,30 @@ internal class TrustChainManager : ITrustChainManager
                         // Apply policy
                         opConf!.Metadata!.OpenIdProvider = _metadataPolicyHandler.ApplyMetadataPolicy(opDecodedJwt!, entityStatement.MetadataPolicy.ToJsonString());
 
+                        if (opConf!.Metadata!.OpenIdProvider is not null)
+                        {
+                            if (!string.IsNullOrEmpty(opConf!.Metadata!.OpenIdProvider.JwksUri))
+                            {
+                                var keys = await _httpClient.GetStringAsync(opConf!.Metadata!.OpenIdProvider.JwksUri);
+                                if (!string.IsNullOrWhiteSpace(keys))
+                                {
+                                    opConf!.Metadata!.OpenIdProvider.JsonWebKeySet = JsonConvert.DeserializeObject<JsonWebKeySet>(keys);
+                                }
+                            }
+                            else if (!string.IsNullOrEmpty(JObject.Parse(opDecodedJwt)["metadata"]["openid_provider"]["jwks"].ToString()))
+                            {
+                                opConf!.Metadata!.OpenIdProvider.JsonWebKeySet = JsonWebKeySet.Create(JObject.Parse(opDecodedJwt)["metadata"]["openid_provider"]["jwks"].ToString());
+                            }
+                            if (opConf!.Metadata!.OpenIdProvider.JsonWebKeySet is not null)
+                            {
+                                foreach (SecurityKey key in opConf!.Metadata!.OpenIdProvider.JsonWebKeySet.GetSigningKeys())
+                                {
+                                    opConf!.Metadata!.OpenIdProvider.SigningKeys.Add(key);
+                                }
+                            }
+                        }
+
+
                         if (opConf is not null && opConf.Metadata?.OpenIdProvider is not null)
                         {
                             if (esExpiresOn < expiresOn)
@@ -116,7 +141,7 @@ internal class TrustChainManager : ITrustChainManager
             var decodedJwt = _cryptoService.DecodeJWT(jwt);
             Throw<Exception>.If(string.IsNullOrWhiteSpace(decodedJwt), $"Invalid EntityConfiguration JWT for url {metadataAddress}: {jwt}");
 
-            var conf = JsonSerializer.Deserialize<T>(decodedJwt);
+            var conf = System.Text.Json.JsonSerializer.Deserialize<T>(decodedJwt);
             Throw<Exception>.If(conf is null, $"Invalid Decoded EntityConfiguration JWT for url {metadataAddress}: {decodedJwt}");
 
             var decodedJwtHeader = _cryptoService.DecodeJWTHeader(jwt);
@@ -156,7 +181,7 @@ internal class TrustChainManager : ITrustChainManager
             var decodedEsJwt = _cryptoService.DecodeJWT(esJwt);
             Throw<Exception>.If(string.IsNullOrWhiteSpace(decodedEsJwt), $"Invalid EntityStatement JWT for url {url}: {esJwt}");
 
-            var entityStatement = JsonSerializer.Deserialize<EntityStatement>(decodedEsJwt);
+            var entityStatement = System.Text.Json.JsonSerializer.Deserialize<EntityStatement>(decodedEsJwt);
             Throw<Exception>.If(entityStatement is null, $"Invalid Decoded EntityStatement JWT for url {url}: {decodedEsJwt}");
 
             var decodedOpJwtHeader = _cryptoService.DecodeJWTHeader(opJwt);
