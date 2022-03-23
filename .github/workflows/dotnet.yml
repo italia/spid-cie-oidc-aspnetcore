@@ -44,5 +44,5 @@ jobs:
       run: |
         find ./ -type f -name "coverage.opencover.xml" | while read fname; do
           dirname=`dirname "$fname"`
-          cp "${dirname}/coverage.opencover.xml" "./TestResults/coverage.opencover.xml"
+          cp "${dirname}/coverage.opencover.xml" "./coverage.opencover.xml"
         done
