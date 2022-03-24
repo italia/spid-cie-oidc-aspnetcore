@@ -38,27 +38,23 @@ jobs:
           dirname=`dirname "$fname"`
           cp "${dirname}/coverage.opencover.xml" "./coverage.opencover.xml"
         done
-    - name: Create Test Coverage Badge
+    - name: Create Test Coverage Badge Data
       uses: simon-k/dotnet-code-coverage-badge@v1.0.0
       id: create_coverage_badge
       with:
         label: Unit Test Coverage
         color: brightgreen
         path: ./coverage.opencover.xml      
-    - name: Print code coverage
-      run: echo "Code coverage percentage ${{steps.create_coverage_badge.outputs.percentage}}"
-    - name: Print code coverage data
-      run: echo "Code coverage percentage ${{steps.create_coverage_badge.outputs.badge}}"
-    - name: Create A File
+    - name: Create the Coverage Badge Data File
       uses: 1arp/create-a-file-action@0.2
       with:
         path: ./.github
-        file: coverage_badge
+        file: coverage_badge.json
         content: ${{steps.create_coverage_badge.outputs.badge}}
-    - name: Commit coverage_badge
+    - name: Commit coverage_badge.json
       run: |
         git config --global user.name 'GitHub Action'
         git config --global user.email 'githubaction@users.noreply.github.com'
-        git add ./.github/coverage_badge
+        git add ./.github/coverage_badge.json
         git commit -am "Automated Code Coverage badge data push"
         git push
