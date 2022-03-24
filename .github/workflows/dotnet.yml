@@ -57,3 +57,9 @@ jobs:
       run: echo "Code coverage percentage ${{steps.create_coverage_badge.outputs.percentage}}%"
     - name: Print code coverage data
       run: echo "Code coverage percentage ${{steps.create_coverage_badge.outputs.badge}}%"
+    - name: Create A File
+      uses: 1arp/create-a-file-action@0.2
+      with:
+        path: ./.github
+        file: coverage_badge
+        content: ${{steps.create_coverage_badge.outputs.badge}}%
