@@ -19,14 +19,6 @@ jobs:
     
     steps:
     - uses: actions/checkout@v2
-    - name: Setup .NET 3.1.x
-      uses: actions/setup-dotnet@v1
-      with:
-        dotnet-version: 3.1.x
-    - name: Setup .NET 5.0.x
-      uses: actions/setup-dotnet@v1
-      with:
-        dotnet-version: 5.0.x
     - name: Setup .NET 6.0.x
       uses: actions/setup-dotnet@v1
       with:
@@ -54,15 +46,15 @@ jobs:
         color: brightgreen
         path: ./coverage.opencover.xml      
     - name: Print code coverage
-      run: echo "Code coverage percentage ${{steps.create_coverage_badge.outputs.percentage}}%"
+      run: echo "Code coverage percentage ${{steps.create_coverage_badge.outputs.percentage}}"
     - name: Print code coverage data
-      run: echo "Code coverage percentage ${{steps.create_coverage_badge.outputs.badge}}%"
+      run: echo "Code coverage percentage ${{steps.create_coverage_badge.outputs.badge}}"
     - name: Create A File
       uses: 1arp/create-a-file-action@0.2
       with:
         path: ./.github
         file: coverage_badge
-        content: ${{steps.create_coverage_badge.outputs.badge}}%
+        content: ${{steps.create_coverage_badge.outputs.badge}}
     - name: Commit coverage_badge
       run: |
         git config --global user.name 'GitHub Action'
