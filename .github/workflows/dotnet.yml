@@ -14,9 +14,7 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
-    
     steps:
     - uses: actions/checkout@v2
     - name: Setup .NET 6.0.x
@@ -32,6 +30,12 @@ jobs:
     - name: Test
       run: dotnet test --no-build --verbosity normal -p:CollectCoverage=true -p:CoverletOutput=TestResults/ -p:CoverletOutputFormat=opencover
       working-directory: src
+      
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/remotes')
+    steps:
     - name: Copy the opencover.xml file
       run: |
         find ./ -type f -name "coverage.opencover.xml" | while read fname; do
