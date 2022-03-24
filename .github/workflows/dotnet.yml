@@ -63,11 +63,10 @@ jobs:
         path: ./.github
         file: coverage_badge
         content: ${{steps.create_coverage_badge.outputs.badge}}%
-    - name: Upload a Build Artifact
-      uses: actions/upload-artifact@v3.0.0
-      with:
-        # Artifact name
-        name: coverage_badge # optional, default is artifact
-        # A file, directory or wildcard pattern that describes what to upload
-        path: ./.github/coverage_badge
-        retention-days: 90
+    - name: Commit coverage_badge
+      run: |
+        git config --global user.name 'GitHub Action'
+        git config --global user.email 'githubaction@users.noreply.github.com'
+        git add ./.github/coverage_badge
+        git commit -am "Automated Code Coverage badge data push"
+        git push
