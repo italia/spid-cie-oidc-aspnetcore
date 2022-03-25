@@ -17,7 +17,7 @@ internal class IdentityProvidersHandler : IIdentityProvidersHandler
     private readonly ITrustChainManager _trustChainManager;
     private readonly ILogger<IdentityProvidersHandler> _logger;
     private static readonly SemaphoreSlim _syncLock = new SemaphoreSlim(1);
-    private static List<IdentityProvider>? _identityProvidersCache;
+    private static readonly List<IdentityProvider> _identityProvidersCache = new();
     private static DateTime _identityProvidersCacheLastUpdated = DateTime.MinValue;
 
     public IdentityProvidersHandler(IOptionsMonitor<SpidCieOptions> options,
@@ -33,8 +33,7 @@ internal class IdentityProvidersHandler : IIdentityProvidersHandler
 
     public async Task<IEnumerable<IdentityProvider>> GetIdentityProviders()
     {
-        if (_identityProvidersCache is null
-            || _identityProvidersCacheLastUpdated.AddMinutes(_options.CurrentValue.IdentityProvidersCacheExpirationInMinutes) < DateTime.UtcNow)
+        if (_identityProvidersCacheLastUpdated.AddMinutes(_options.CurrentValue.IdentityProvidersCacheExpirationInMinutes) < DateTime.UtcNow)
         {
             if (!await _syncLock.WaitAsync(TimeSpan.FromSeconds(10)))
             {
@@ -43,12 +42,13 @@ internal class IdentityProvidersHandler : IIdentityProvidersHandler
             }
             try
             {
-                if (_identityProvidersCache is null
-                    || _identityProvidersCacheLastUpdated.AddMinutes(_options.CurrentValue.IdentityProvidersCacheExpirationInMinutes) < DateTime.UtcNow)
+                if (_identityProvidersCacheLastUpdated.AddMinutes(_options.CurrentValue.IdentityProvidersCacheExpirationInMinutes) < DateTime.UtcNow)
                 {
+                    _identityProvidersCache.Clear();
+
                     List<IdentityProvider> result = new();
 
-                    var spidIdP = (_options.CurrentValue.SpidOPs ?? Enumerable.Empty<string>())
+                    var spidIdP = _options.CurrentValue.SpidOPs
                         .Union(await _idpRetriever.GetSpidIdentityProviders());
                     foreach (var url in spidIdP)
                     {
@@ -60,7 +60,7 @@ internal class IdentityProvidersHandler : IIdentityProvidersHandler
                         }
                     }
 
-                    var cieIdP = (_options.CurrentValue.CieOPs ?? Enumerable.Empty<string>())
+                    var cieIdP = _options.CurrentValue.CieOPs
                         .Union(await _idpRetriever.GetCieIdentityProviders());
                     foreach (var url in cieIdP)
                     {
@@ -74,7 +74,7 @@ internal class IdentityProvidersHandler : IIdentityProvidersHandler
 
                     if (result.Count > 0)
                     {
-                        _identityProvidersCache = result;
+                        _identityProvidersCache.AddRange(result);
                         _identityProvidersCacheLastUpdated = DateTime.UtcNow;
                     }
                 }
@@ -84,14 +84,14 @@ internal class IdentityProvidersHandler : IIdentityProvidersHandler
                 _syncLock.Release();
             }
         }
-        return _identityProvidersCache ?? Enumerable.Empty<IdentityProvider>();
+        return _identityProvidersCache;
     }
 
     private static IdentityProvider CreateSpidIdentityProvider(IdPEntityConfiguration conf)
        => new SpidIdentityProvider()
        {
            EntityConfiguration = conf,
-           Uri = conf.Metadata.OpenIdProvider.AdditionalData["op_uri"] as string ?? string.Empty,
+           Uri = conf.Metadata.OpenIdProvider!.AdditionalData["op_uri"] as string ?? string.Empty,
            OrganizationDisplayName = conf.Metadata.OpenIdProvider.AdditionalData["op_name"] as string ?? string.Empty,
            OrganizationUrl = conf.Metadata.OpenIdProvider.AdditionalData["op_uri"] as string ?? string.Empty,
            OrganizationLogoUrl = conf.Metadata.OpenIdProvider.AdditionalData["logo_uri"] as string ?? string.Empty,
@@ -103,7 +103,7 @@ internal class IdentityProvidersHandler : IIdentityProvidersHandler
        => new CieIdentityProvider()
        {
            EntityConfiguration = conf,
-           Uri = conf.Metadata.OpenIdProvider.AdditionalData["op_uri"] as string ?? string.Empty,
+           Uri = conf.Metadata.OpenIdProvider!.AdditionalData["op_uri"] as string ?? string.Empty,
            OrganizationDisplayName = conf.Metadata.OpenIdProvider.AdditionalData["op_name"] as string ?? string.Empty,
            OrganizationUrl = conf.Metadata.OpenIdProvider.AdditionalData["op_uri"] as string ?? string.Empty,
            OrganizationLogoUrl = conf.Metadata.OpenIdProvider.AdditionalData["logo_uri"] as string ?? string.Empty,

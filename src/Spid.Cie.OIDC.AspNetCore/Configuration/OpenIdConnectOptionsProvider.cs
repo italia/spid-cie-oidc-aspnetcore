@@ -6,6 +6,7 @@ using Spid.Cie.OIDC.AspNetCore.Models;
 using Spid.Cie.OIDC.AspNetCore.Services;
 using System;
 using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using System.Net.Http;
 using System.Threading.Tasks;
 
@@ -35,6 +36,7 @@ internal class OpenIdConnectOptionsProvider : IOptionsMonitor<OpenIdConnectOptio
         _httpClientFactory = httpClientFactory;
     }
 
+    [ExcludeFromCodeCoverage]
     public OpenIdConnectOptions CurrentValue => Get(Options.DefaultName);
 
     public OpenIdConnectOptions Get(string name)
@@ -50,5 +52,6 @@ internal class OpenIdConnectOptionsProvider : IOptionsMonitor<OpenIdConnectOptio
         return options;
     }
 
+    [ExcludeFromCodeCoverage]
     public IDisposable OnChange(Action<OpenIdConnectOptions, string> listener) => throw new NotImplementedException();
 }

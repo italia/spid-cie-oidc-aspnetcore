@@ -62,11 +62,11 @@ internal class CryptoService : ICryptoService
         var builder = JwtBuilder.Create()
             .WithAlgorithm(new RS256Algorithm(publicKey, privateKey));
 
-        foreach (var (key, value) in headers ?? new Dictionary<string, object>())
+        foreach (var (key, value) in headers)
         {
             builder.AddHeader(key, value);
         }
-        foreach (var (key, value) in claims ?? new Dictionary<string, object>())
+        foreach (var (key, value) in claims)
         {
             builder.AddClaim(key, value);
         }
@@ -77,7 +77,7 @@ internal class CryptoService : ICryptoService
     public JWKS GetJWKS(JsonWebKeySet jwks)
         => new JWKS()
         {
-            Keys = jwks.Keys?.Select(jsonWebKey =>
+            Keys = jwks.Keys.Select(jsonWebKey =>
             {
                 return new Models.JsonWebKey()
                 {
@@ -87,13 +87,13 @@ internal class CryptoService : ICryptoService
                     x5t = jsonWebKey.X5t,
                     e = jsonWebKey.E,
                     n = jsonWebKey.N,
-                    x5c = jsonWebKey.X5c?.Count == 0 ? Array.Empty<string>() : jsonWebKey.X5c!.ToArray(),
+                    x5c = jsonWebKey.X5c.ToArray(),
                     alg = jsonWebKey.Alg,
                     crv = jsonWebKey.Crv,
                     x = jsonWebKey.X,
                     y = jsonWebKey.Y
                 };
-            }).ToArray() ?? Array.Empty<Models.JsonWebKey>()
+            }).ToArray()
         };
 
     public RsaSecurityKey CreateRsaSecurityKey(int keySize = 2048)
@@ -142,5 +142,28 @@ internal class CryptoService : ICryptoService
                     { SpidCieConst.Typ, SpidCieConst.TypValue }
                 }, entityConfiguration, exportedPrivateKey);
         return token;
+    }
+
+
+    public string CreateClientAssertion(IdentityProvider idp,
+        string clientId,
+        Microsoft.IdentityModel.Tokens.JsonWebKey key,
+        RSA publicKey,
+        RSA privateKey)
+    {
+        return CreateJWT(publicKey,
+            privateKey,
+            new Dictionary<string, object>() {
+                { SpidCieConst.Kid, key!.Kid },
+                { SpidCieConst.Typ, SpidCieConst.TypValue }
+            },
+            new Dictionary<string, object>() {
+                { SpidCieConst.Iss, clientId! },
+                { SpidCieConst.Sub, clientId! },
+                { SpidCieConst.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds() },
+                { SpidCieConst.Exp, DateTimeOffset.UtcNow.AddMinutes(SpidCieConst.EntityConfigurationExpirationInMinutes).ToUnixTimeSeconds() },
+                { SpidCieConst.Aud, new string[] { idp!.EntityConfiguration.Metadata.OpenIdProvider!.TokenEndpoint } },
+                { SpidCieConst.Jti, Guid.NewGuid().ToString() }
+            });
     }
 }

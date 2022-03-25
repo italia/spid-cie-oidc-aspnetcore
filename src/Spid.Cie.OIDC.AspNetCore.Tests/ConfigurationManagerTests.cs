@@ -27,6 +27,6 @@ public class ConfigurationManagerTests
     public async Task TestGetConfigurationEmptyAsync()
     {
         var confMan = new ConfigurationManager(new Mocks.MockIdentityProviderSelector(true));
-        await Assert.ThrowsAsync(typeof(Exception), async () => await confMan.GetConfigurationAsync(new System.Threading.CancellationToken()));
+        await Assert.ThrowsAnyAsync<Exception>(async () => await confMan.GetConfigurationAsync(new System.Threading.CancellationToken()));
     }
 }

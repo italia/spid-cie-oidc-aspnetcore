@@ -73,42 +73,48 @@ internal class TrustChainManager : ITrustChainManager
 
                         var fetchUrl = $"{taConf.Metadata.FederationEntity.FederationFetchEndpoint.EnsureTrailingSlash()}?sub={url}";
                         var entityStatement = await GetAndValidateEntityStatement(fetchUrl, opJwt);
-                        var esExpiresOn = entityStatement.ExpiresOn;
-
-                        // Apply policy
-                        opConf!.Metadata!.OpenIdProvider = _metadataPolicyHandler.ApplyMetadataPolicy(opDecodedJwt!, entityStatement.MetadataPolicy.ToJsonString());
-
-                        if (opConf!.Metadata!.OpenIdProvider is not null)
+                        if (entityStatement is not null)
                         {
-                            if (!string.IsNullOrEmpty(opConf!.Metadata!.OpenIdProvider.JwksUri))
+                            var esExpiresOn = entityStatement.ExpiresOn;
+
+                            // Apply policy
+                            opConf!.Metadata!.OpenIdProvider = _metadataPolicyHandler.ApplyMetadataPolicy(opDecodedJwt!, entityStatement.MetadataPolicy.ToJsonString());
+
+                            if (opConf!.Metadata!.OpenIdProvider is not null)
                             {
-                                var keys = await _httpClient.GetStringAsync(opConf!.Metadata!.OpenIdProvider.JwksUri);
-                                if (!string.IsNullOrWhiteSpace(keys))
+                                if (!string.IsNullOrEmpty(opConf!.Metadata!.OpenIdProvider.JwksUri))
                                 {
-                                    opConf!.Metadata!.OpenIdProvider.JsonWebKeySet = JsonConvert.DeserializeObject<JsonWebKeySet>(keys);
+                                    var keys = await _httpClient.GetStringAsync(opConf!.Metadata!.OpenIdProvider.JwksUri);
+                                    if (!string.IsNullOrWhiteSpace(keys))
+                                    {
+                                        opConf!.Metadata!.OpenIdProvider.JsonWebKeySet = JsonConvert.DeserializeObject<JsonWebKeySet>(keys);
+                                    }
                                 }
-                            }
-                            else if (!string.IsNullOrEmpty(JObject.Parse(opDecodedJwt)["metadata"]["openid_provider"]["jwks"].ToString()))
-                            {
-                                opConf!.Metadata!.OpenIdProvider.JsonWebKeySet = JsonWebKeySet.Create(JObject.Parse(opDecodedJwt)["metadata"]["openid_provider"]["jwks"].ToString());
-                            }
-                            if (opConf!.Metadata!.OpenIdProvider.JsonWebKeySet is not null)
-                            {
+                                else if (!string.IsNullOrEmpty(JObject.Parse(opDecodedJwt)["metadata"]["openid_provider"]["jwks"].ToString()))
+                                {
+                                    opConf!.Metadata!.OpenIdProvider.JsonWebKeySet = JsonWebKeySet.Create(JObject.Parse(opDecodedJwt)["metadata"]["openid_provider"]["jwks"].ToString());
+                                }
+                                if (opConf!.Metadata!.OpenIdProvider.JsonWebKeySet is null)
+                                {
+                                    _logger.LogWarning($"No jwks found for the OP {url} validated by the authorityHint {authorityHint}");
+                                    continue;
+                                }
+
                                 foreach (SecurityKey key in opConf!.Metadata!.OpenIdProvider.JsonWebKeySet.GetSigningKeys())
                                 {
                                     opConf!.Metadata!.OpenIdProvider.SigningKeys.Add(key);
                                 }
                             }
-                        }
 
 
-                        if (opConf is not null && opConf.Metadata?.OpenIdProvider is not null)
-                        {
-                            if (esExpiresOn < expiresOn)
-                                expiresOn = esExpiresOn;
+                            if (opConf is not null && opConf.Metadata?.OpenIdProvider is not null)
+                            {
+                                if (esExpiresOn < expiresOn)
+                                    expiresOn = esExpiresOn;
 
-                            opValidated = true;
-                            break;
+                                opValidated = true;
+                                break;
+                            }
                         }
                     }
                     if (opValidated && opConf is not null)
@@ -167,7 +173,7 @@ internal class TrustChainManager : ITrustChainManager
         }
     }
 
-    private async Task<EntityStatement> GetAndValidateEntityStatement(string? url, string opJwt)
+    private async Task<EntityStatement?> GetAndValidateEntityStatement(string? url, string opJwt)
     {
         try
         {

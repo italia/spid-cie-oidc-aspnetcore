@@ -27,8 +27,8 @@ namespace Spid.Cie.OIDC.AspNetCore.Tests.Mocks
             {
                 foreach (var rp in rps)
                 {
-                    rp.OpenIdCoreJWKs = new Microsoft.IdentityModel.Tokens.JsonWebKeySet();
-                    rp.OpenIdFederationJWKs = new Microsoft.IdentityModel.Tokens.JsonWebKeySet();
+                    rp.OpenIdCoreJWKs = null;
+                    rp.OpenIdFederationJWKs = null;
                 }
             }
             return rps;

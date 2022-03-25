@@ -8,7 +8,6 @@ using Microsoft.Extensions.Options;
 using Spid.Cie.OIDC.AspNetCore.Helpers;
 using Spid.Cie.OIDC.AspNetCore.Models;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
@@ -73,20 +72,7 @@ internal class AssertionConfigurationService : DefaultTokenClientConfigurationSe
         return new ClientAssertion()
         {
             Type = SpidCieConst.ClientAssertionTypeValue,
-            Value = _cryptoService.CreateJWT(publicKey,
-                    privateKey,
-                    new Dictionary<string, object>() {
-                        { SpidCieConst.Kid, key!.Kid },
-                        { SpidCieConst.Typ, SpidCieConst.TypValue }
-                    },
-                    new Dictionary<string, object>() {
-                        { SpidCieConst.Iss, clientId! },
-                        { SpidCieConst.Sub, clientId! },
-                        { SpidCieConst.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds() },
-                        { SpidCieConst.Exp, DateTimeOffset.UtcNow.AddMinutes(SpidCieConst.EntityConfigurationExpirationInMinutes).ToUnixTimeSeconds() },
-                        { SpidCieConst.Aud, new string[] { idp!.EntityConfiguration.Metadata.OpenIdProvider.TokenEndpoint } },
-                        { SpidCieConst.Jti, Guid.NewGuid().ToString() }
-                    })
+            Value = _cryptoService.CreateClientAssertion(idp!, clientId!, key!, publicKey, privateKey)
         };
     }
 }

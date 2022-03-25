@@ -4,7 +4,6 @@ using Spid.Cie.OIDC.AspNetCore.Models;
 using Spid.Cie.OIDC.AspNetCore.Resources;
 using System;
 using System.Linq;
-using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace Spid.Cie.OIDC.AspNetCore.Services;
@@ -33,8 +32,7 @@ internal class TokenValidationParametersRetriever : ITokenValidationParametersRe
         {
             NameClaimType = SpidCieConst.Sub,
             ClockSkew = TimeSpan.FromMinutes(5),
-            IssuerSigningKeys = identityProvider!.EntityConfiguration.Metadata.OpenIdProvider.JsonWebKeySet?.Keys?.ToArray()
-                    ?? identityProvider.EntityConfiguration.JWKS?.Keys.Select(k => new Microsoft.IdentityModel.Tokens.JsonWebKey(JsonSerializer.Serialize(k))),
+            IssuerSigningKeys = identityProvider!.EntityConfiguration.Metadata.OpenIdProvider!.JsonWebKeySet.Keys.ToArray(),
             RequireSignedTokens = true,
             RequireExpirationTime = true,
             ValidateLifetime = true,

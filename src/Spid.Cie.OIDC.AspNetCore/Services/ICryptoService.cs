@@ -7,6 +7,7 @@ namespace Spid.Cie.OIDC.AspNetCore.Services;
 
 internal interface ICryptoService
 {
+    string CreateClientAssertion(IdentityProvider idp, string clientId, Microsoft.IdentityModel.Tokens.JsonWebKey key, RSA publicKey, RSA privateKey);
     string CreateJWT(RSA publicKey, RSA privateKey, Dictionary<string, object> headers, Dictionary<string, object> claims);
     RsaSecurityKey CreateRsaSecurityKey(int keySize = 2048);
     string DecodeJose(string jose, RSA privateKey);

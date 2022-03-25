@@ -20,7 +20,9 @@ internal class ConfigurationManager : IConfigurationManager<OpenIdConnectConfigu
 
     public async Task<OpenIdConnectConfiguration> GetConfigurationAsync(CancellationToken cancel)
     {
-        var idpConf = (await _idpSelector.GetSelectedIdentityProvider())?.EntityConfiguration?.Metadata?.OpenIdProvider;
+        var idp = await _idpSelector.GetSelectedIdentityProvider();
+        Throw<InvalidOperationException>.If(idp is null, ErrorLocalization.IdentityProviderNotFound);
+        var idpConf = idp!.EntityConfiguration.Metadata.OpenIdProvider;
         Throw<Exception>.If(idpConf is null, ErrorLocalization.IdentityProviderNotFound);
         return idpConf!;
     }

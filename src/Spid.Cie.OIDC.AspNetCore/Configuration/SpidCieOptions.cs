@@ -9,11 +9,11 @@ public sealed class SpidCieOptions
 {
     public bool RequestRefreshToken { get; set; } = false;
 
-    public List<RelyingParty> RelyingParties { get; set; } = new List<RelyingParty>();
+    public List<RelyingParty> RelyingParties { get; } = new List<RelyingParty>();
 
-    public List<string> SpidOPs { get; set; } = new List<string>();
+    public List<string> SpidOPs { get; } = new List<string>();
 
-    public List<string> CieOPs { get; set; } = new List<string>();
+    public List<string> CieOPs { get; } = new List<string>();
 
     public int IdentityProvidersCacheExpirationInMinutes { get; set; } = 10;
 

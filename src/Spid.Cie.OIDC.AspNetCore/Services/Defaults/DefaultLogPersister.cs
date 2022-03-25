@@ -26,13 +26,13 @@ internal class DefaultLogPersister : ILogPersister
         return Task.CompletedTask;
     }
 
-    public Task LogRequest(Uri requestUri, string content)
+    public Task LogRequest(Uri requestUri, string? content)
     {
         _logger.LogInformation($"LogRequest to {requestUri.OriginalString}: {content}");
         return Task.CompletedTask;
     }
 
-    public Task LogResponse(Uri requestUri, HttpStatusCode statusCode, string content)
+    public Task LogResponse(Uri requestUri, HttpStatusCode statusCode, string? content)
     {
         _logger.LogInformation($"LogResponse from {requestUri.OriginalString}: {content}");
         return Task.CompletedTask;

@@ -27,37 +27,38 @@ internal class CustomHttpClientHandler : HttpClientHandler
 
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
-        await _logPersister.LogRequest(request.RequestUri!, request.Content is not null ? await request.Content.ReadAsStringAsync() : string.Empty);
+        await _logPersister.LogRequest(request.RequestUri!, request.Content is not null ? await request.Content.ReadAsStringAsync() : null);
 
         var response = await base.SendAsync(request, cancellationToken);
 
         await _logPersister.LogResponse(request.RequestUri!, response.StatusCode, await response.Content.ReadAsStringAsync());
 
-        if (response.Content.Headers.ContentType?.MediaType == "application/jose")
-        {
-            return await DecodeJoseResponse(response);
-        }
-        return response;
+        return await DecodeJoseResponse(response);
     }
 
     public async Task<HttpResponseMessage> DecodeJoseResponse(HttpResponseMessage response)
     {
-        var token = await response.Content.ReadAsStringAsync();
-        Throw<Exception>.If(string.IsNullOrWhiteSpace(token), "No Body Content found in the Jose response");
+        if (response.Content.Headers.ContentType!.MediaType == "application/jose")
+        {
+            var token = await response.Content.ReadAsStringAsync();
+            Throw<Exception>.If(string.IsNullOrWhiteSpace(token), "No Body Content found in the Jose response");
 
-        var provider = await _rpSelector.GetSelectedRelyingParty();
-        Throw<Exception>.If(provider is null, "No currently selected RelyingParty was found");
+            var provider = await _rpSelector.GetSelectedRelyingParty();
+            Throw<Exception>.If(provider is null, "No currently selected RelyingParty was found");
+            Throw<Exception>.If(provider!.OpenIdCoreJWKs is null || provider!.OpenIdCoreJWKs.Keys is null,
+                "No OpenIdCore Keys were found in the currently selected RelyingParty");
 
-        var key = provider!.OpenIdCoreJWKs?.Keys?.FirstOrDefault();
-        Throw<Exception>.If(key is null, "No OpenIdCore Key was found in the currently selected RelyingParty");
+            var key = provider!.OpenIdCoreJWKs!.Keys!.FirstOrDefault();
+            Throw<Exception>.If(key is null, "No OpenIdCore Key was found in the currently selected RelyingParty");
 
-        (_, RSA privateKey) = _cryptoService.GetRSAKeys(key!);
+            (_, RSA privateKey) = _cryptoService.GetRSAKeys(key!);
 
-        var decodedToken = _cryptoService.DecodeJWT(_cryptoService.DecodeJose(token, privateKey));
-        Throw<Exception>.If(string.IsNullOrWhiteSpace(decodedToken), $"Unable to decode the Jose token {token}");
+            var decodedToken = _cryptoService.DecodeJWT(_cryptoService.DecodeJose(token, privateKey));
 
-        var httpResponse = new HttpResponseMessage(System.Net.HttpStatusCode.OK);
-        httpResponse.Content = new StringContent(decodedToken, Encoding.UTF8, "application/json");
-        return httpResponse;
+            var httpResponse = new HttpResponseMessage(System.Net.HttpStatusCode.OK);
+            httpResponse.Content = new StringContent(decodedToken, Encoding.UTF8, "application/json");
+            return httpResponse;
+        }
+        return response;
     }
 }

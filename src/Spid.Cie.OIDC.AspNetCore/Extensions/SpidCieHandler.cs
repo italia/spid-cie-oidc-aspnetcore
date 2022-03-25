@@ -24,7 +24,6 @@ internal class SpidCieHandler : OpenIdConnectHandler
 {
     private OpenIdConnectConfiguration? _configuration;
     private const string NonceProperty = "N";
-    private readonly ILogPersister _logPersister;
     private readonly SpidCieEvents _events;
     private readonly IIdentityProvidersHandler _idpHandler;
     private readonly IRelyingPartiesHandler _rpRetriever;
@@ -35,14 +34,12 @@ internal class SpidCieHandler : OpenIdConnectHandler
             HtmlEncoder htmlEncoder,
             UrlEncoder encoder,
             ISystemClock clock,
-            ILogPersister logPersister,
             IIdentityProvidersHandler idpHandler,
             IRelyingPartiesHandler rpRetriever,
             ICryptoService cryptoService,
             SpidCieEvents events)
         : base(options, logger, htmlEncoder, encoder, clock)
     {
-        _logPersister = logPersister;
         _events = events;
         _idpHandler = idpHandler;
         _rpRetriever = rpRetriever;
@@ -176,13 +173,15 @@ internal class SpidCieHandler : OpenIdConnectHandler
             $"No RelyingParty found for the clientId {clientId}");
 
         var keySet = rp!.OpenIdCoreJWKs;
-        var key = keySet?.Keys?.FirstOrDefault();
+        Throw<Exception>.If(keySet is null || keySet.Keys is null,
+            "No OpenIdCore Keys were found in the currently selected RelyingParty");
+        var key = keySet!.Keys!.FirstOrDefault();
         Throw<InvalidOperationException>.If(key is null,
             $"No key found for the RelyingParty with clientId {clientId}");
 
         (RSA publicKey, RSA privateKey) = _cryptoService.GetRSAKeys(key!);
 
-        var revocationEndpoint = idp!.EntityConfiguration.Metadata.OpenIdProvider.AdditionalData[SpidCieConst.RevocationEndpoint] as string;
+        var revocationEndpoint = idp!.EntityConfiguration.Metadata.OpenIdProvider!.AdditionalData[SpidCieConst.RevocationEndpoint] as string;
         Throw<InvalidOperationException>.If(string.IsNullOrWhiteSpace(revocationEndpoint),
             $"No RevocationEndpoint specified in the EntityConfiguration of the IdentityProvider {issuer}");
 
@@ -194,32 +193,16 @@ internal class SpidCieHandler : OpenIdConnectHandler
             ClientAssertion = new ClientAssertion()
             {
                 Type = SpidCieConst.ClientAssertionTypeValue,
-                Value = _cryptoService.CreateJWT(publicKey,
-                    privateKey,
-                    new Dictionary<string, object>() {
-                                                { SpidCieConst.Kid, key!.Kid },
-                                                { SpidCieConst.Typ, SpidCieConst.TypValue }
-                    },
-                    new Dictionary<string, object>() {
-                                                { SpidCieConst.Iss, clientId! },
-                                                { SpidCieConst.Sub, clientId! },
-                                                { SpidCieConst.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds() },
-                                                { SpidCieConst.Exp, DateTimeOffset.UtcNow.AddMinutes(SpidCieConst.EntityConfigurationExpirationInMinutes).ToUnixTimeSeconds() },
-                                                { SpidCieConst.Aud, new string[] { revocationEndpoint! } },
-                                                { SpidCieConst.Jti, Guid.NewGuid().ToString() }
-                    })
+                Value = _cryptoService.CreateClientAssertion(idp!, clientId!, key!, publicKey, privateKey)
             },
             Token = accessToken
         };
 
         var responseMessage = await Backchannel.RevokeTokenAsync(request);
-        if (responseMessage.HttpStatusCode != System.Net.HttpStatusCode.OK)
+        if (responseMessage.HttpStatusCode != System.Net.HttpStatusCode.OK
+            || responseMessage.IsError)
         {
-            Logger.LogWarning($"AccessToken Revocation returned http status {responseMessage.HttpStatusCode}");
-        }
-        if (responseMessage.IsError)
-        {
-            Logger.LogWarning($"AccessToken Revocation returned Error {responseMessage.Error}");
+            Logger.LogWarning($"AccessToken Revocation returned http status {responseMessage.HttpStatusCode} - Error: {responseMessage.Error}");
         }
     }
 }

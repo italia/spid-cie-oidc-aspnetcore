@@ -1,8 +1,13 @@
-﻿using Spid.Cie.OIDC.AspNetCore.Models;
+﻿using Microsoft.IdentityModel.Protocols.OpenIdConnect;
+using Microsoft.IdentityModel.Tokens;
+using Newtonsoft.Json.Linq;
+using Spid.Cie.OIDC.AspNetCore.Models;
 using Spid.Cie.OIDC.AspNetCore.Services;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using static Spid.Cie.OIDC.AspNetCore.Tests.Mocks.TestSettings;
 
 namespace Spid.Cie.OIDC.AspNetCore.Tests.Mocks;
 
@@ -18,17 +23,23 @@ internal class MockIdentityProvidersHandler : IIdentityProvidersHandler
     public async Task<IEnumerable<IdentityProvider>> GetIdentityProviders()
     {
         await Task.CompletedTask;
+
+        var resourceName = "Spid.Cie.OIDC.AspNetCore.Tests.IntegrationTests.jwtOP.json";
+        using var stream = typeof(MockBackchannel).Assembly.GetManifestResourceStream(resourceName);
+        using var reader = new StreamReader(stream);
+        var body = await reader.ReadToEndAsync();
+        var decodedOpJwt = new Mocks.MockCryptoService().DecodeJWT(body);
+        var conf = OpenIdConnectConfiguration.Create(JObject.Parse(decodedOpJwt)["metadata"]["openid_provider"].ToString());
+        conf.JsonWebKeySet = JsonWebKeySet.Create(JObject.Parse(decodedOpJwt)["metadata"]["openid_provider"]["jwks"].ToString());
         return _emptyCollection
-            ? Enumerable.Empty<IdentityProvider>()
-            : await Task.FromResult(new List<IdentityProvider>() {
+        ? Enumerable.Empty<IdentityProvider>()
+        : await Task.FromResult(new List<IdentityProvider>() {
                     new SpidIdentityProvider(){
                         Uri = "http://127.0.0.1:8000/oidc/op/",
                         EntityConfiguration = new IdPEntityConfiguration(){
                             Issuer = "http://127.0.0.1:8000/oidc/op/",
                             Metadata = new IdPMetadata_SpidCieOIDCConfiguration(){
-                                OpenIdProvider = new Microsoft.IdentityModel.Protocols.OpenIdConnect.OpenIdConnectConfiguration(){
-                                    TokenEndpoint = "http://127.0.0.1:8000/oidc/op/token/"
-                                }
+                                OpenIdProvider = conf
                             }
                         }
                     },
@@ -37,12 +48,12 @@ internal class MockIdentityProvidersHandler : IIdentityProvidersHandler
                         EntityConfiguration = new IdPEntityConfiguration(){
                             Issuer = "http://127.0.0.1:8002/oidc/op/",
                             Metadata = new IdPMetadata_SpidCieOIDCConfiguration(){
-                                OpenIdProvider = new Microsoft.IdentityModel.Protocols.OpenIdConnect.OpenIdConnectConfiguration(){
-                                    TokenEndpoint = "http://127.0.0.1:8002/oidc/op/token/"
-                                }
+                                OpenIdProvider = conf
                             }
                         }
                     }
-                });
+            });
     }
+
+
 }
