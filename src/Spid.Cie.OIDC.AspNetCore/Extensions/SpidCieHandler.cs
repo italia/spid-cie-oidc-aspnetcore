@@ -57,7 +57,7 @@ internal class SpidCieHandler : OpenIdConnectHandler
 
     protected override async Task HandleChallengeAsync(AuthenticationProperties properties)
     {
-        if (string.IsNullOrEmpty(properties.RedirectUri))
+        if (string.IsNullOrWhiteSpace(properties.RedirectUri))
         {
             properties.RedirectUri = OriginalPathBase + OriginalPath + Request.QueryString;
         }
@@ -120,7 +120,7 @@ internal class SpidCieHandler : OpenIdConnectHandler
             ProtocolMessage = message
         });
 
-        Throw<InvalidOperationException>.If(string.IsNullOrEmpty(message.IssuerAddress),
+        Throw<InvalidOperationException>.If(string.IsNullOrWhiteSpace(message.IssuerAddress),
             "Cannot redirect to the authorization endpoint, the configuration may be missing or invalid.");
 
         var redirectUri = message.CreateAuthenticationRequestUrl();
@@ -131,7 +131,7 @@ internal class SpidCieHandler : OpenIdConnectHandler
 
     private void WriteNonceCookie(string nonce)
     {
-        Throw<ArgumentNullException>.If(string.IsNullOrEmpty(nonce), nameof(nonce));
+        Throw<ArgumentNullException>.If(string.IsNullOrWhiteSpace(nonce), nameof(nonce));
 
         var cookieOptions = Options.NonceCookie.Build(Context, Clock.UtcNow);
 
@@ -172,14 +172,9 @@ internal class SpidCieHandler : OpenIdConnectHandler
         Throw<InvalidOperationException>.If(rp is null,
             $"No RelyingParty found for the clientId {clientId}");
 
-        var keySet = rp!.OpenIdCoreJWKs;
-        Throw<Exception>.If(keySet is null || keySet.Keys is null,
-            "No OpenIdCore Keys were found in the currently selected RelyingParty");
-        var key = keySet!.Keys!.FirstOrDefault();
-        Throw<InvalidOperationException>.If(key is null,
-            $"No key found for the RelyingParty with clientId {clientId}");
-
-        (RSA publicKey, RSA privateKey) = _cryptoService.GetRSAKeys(key!);
+        Throw<Exception>.If(rp!.OpenIdCoreCertificates is null || rp!.OpenIdCoreCertificates.Count() == 0,
+                "No OpenIdCore certificates were found in the currently selected RelyingParty");
+        var certificate = rp!.OpenIdCoreCertificates!.FirstOrDefault()!;
 
         var revocationEndpoint = idp!.EntityConfiguration.Metadata.OpenIdProvider!.AdditionalData[SpidCieConst.RevocationEndpoint] as string;
         Throw<InvalidOperationException>.If(string.IsNullOrWhiteSpace(revocationEndpoint),
@@ -193,7 +188,7 @@ internal class SpidCieHandler : OpenIdConnectHandler
             ClientAssertion = new ClientAssertion()
             {
                 Type = SpidCieConst.ClientAssertionTypeValue,
-                Value = _cryptoService.CreateClientAssertion(idp!, clientId!, key!, publicKey, privateKey)
+                Value = _cryptoService.CreateClientAssertion(idp!, clientId!, certificate)
             },
             Token = accessToken
         };

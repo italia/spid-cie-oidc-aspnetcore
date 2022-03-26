@@ -4,6 +4,7 @@ using Spid.Cie.OIDC.AspNetCore.Services;
 using System;
 using System.Linq;
 using System.Net;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace Spid.Cie.OIDC.AspNetCore.Middlewares;
@@ -19,7 +20,8 @@ internal class RPOpenIdFederationMiddleware
 
     public async Task Invoke(HttpContext context, IRelyingPartySelector rpSelector, ICryptoService cryptoService)
     {
-        if (!context.Request.Path.Value!.EndsWith(SpidCieConst.EntityConfigurationPath, StringComparison.InvariantCultureIgnoreCase))
+        if (!context.Request.Path.Value!.EndsWith(SpidCieConst.EntityConfigurationPath, StringComparison.InvariantCultureIgnoreCase)
+            && !context.Request.Path.Value!.EndsWith(SpidCieConst.JsonEntityConfigurationPath, StringComparison.InvariantCultureIgnoreCase))
         {
             await _next(context);
             return;
@@ -28,16 +30,26 @@ internal class RPOpenIdFederationMiddleware
         var rp = await rpSelector.GetSelectedRelyingParty();
         if (rp != null)
         {
-            var key = rp.OpenIdFederationJWKs?.Keys?.FirstOrDefault();
-            if (key is not null)
+            var certificate = rp.OpenIdFederationCertificates?.FirstOrDefault();
+            if (certificate is not null)
             {
                 var entityConfiguration = GetEntityConfiguration(rp, cryptoService);
-                string token = cryptoService.JWTEncode(entityConfiguration, key);
+                if (context.Request.Path.Value!.EndsWith(SpidCieConst.EntityConfigurationPath))
+                {
+                    string token = cryptoService.JWTEncode(entityConfiguration, certificate);
 
-                context.Response.ContentType = SpidCieConst.EntityConfigurationContentType;
-                await context.Response.WriteAsync(token);
-                await context.Response.Body.FlushAsync();
-                return;
+                    context.Response.ContentType = SpidCieConst.EntityConfigurationContentType;
+                    await context.Response.WriteAsync(token);
+                    await context.Response.Body.FlushAsync();
+                    return;
+                }
+                else
+                {
+                    context.Response.ContentType = SpidCieConst.JsonEntityConfigurationContentType;
+                    await context.Response.WriteAsync(JsonSerializer.Serialize(entityConfiguration));
+                    await context.Response.Body.FlushAsync();
+                    return;
+                }
             }
         }
         context.Response.StatusCode = (int)HttpStatusCode.NotFound;
@@ -54,7 +66,7 @@ internal class RPOpenIdFederationMiddleware
             Issuer = rp.Issuer,
             Subject = rp.ClientId,
             TrustMarks = rp.TrustMarks,
-            JWKS = cryptoService.GetJWKS(rp.OpenIdFederationJWKs),
+            JWKS = cryptoService.GetJWKS(rp.OpenIdFederationCertificates),
             Metadata = new RPMetadata_SpidCieOIDCConfiguration()
             {
                 OpenIdRelyingParty = new RP_SpidCieOIDCConfiguration()
@@ -64,7 +76,7 @@ internal class RPOpenIdFederationMiddleware
                     GrantTypes = rp.LongSessionsEnabled
                         ? new[] { SpidCieConst.AuthorizationCode, SpidCieConst.RefreshToken }
                         : new[] { SpidCieConst.AuthorizationCode },
-                    JWKS = cryptoService.GetJWKS(rp.OpenIdCoreJWKs),
+                    JWKS = cryptoService.GetJWKS(rp.OpenIdCoreCertificates),
                     RedirectUris = rp.RedirectUris,
                     ResponseTypes = new[] { SpidCieConst.ResponseType }
                 }

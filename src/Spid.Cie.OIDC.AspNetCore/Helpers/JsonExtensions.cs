@@ -4,7 +4,7 @@ using System;
 namespace Spid.Cie.OIDC.AspNetCore.Helpers;
 internal static class JsonExtensions
 {
-    public static bool IsNullOrEmpty(this JToken token)
+    public static bool IsNullOrWhiteSpace(this JToken token)
     {
         return (token == null)
             || (token.Type == JTokenType.Null)

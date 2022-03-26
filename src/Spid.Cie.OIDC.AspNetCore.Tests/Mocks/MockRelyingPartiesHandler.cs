@@ -27,8 +27,8 @@ namespace Spid.Cie.OIDC.AspNetCore.Tests.Mocks
             {
                 foreach (var rp in rps)
                 {
-                    rp.OpenIdCoreJWKs = null;
-                    rp.OpenIdFederationJWKs = null;
+                    rp.OpenIdCoreCertificates = null;
+                    rp.OpenIdFederationCertificates = null;
                 }
             }
             return rps;

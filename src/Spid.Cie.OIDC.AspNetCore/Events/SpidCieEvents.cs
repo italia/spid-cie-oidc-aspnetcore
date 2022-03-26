@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
-using Microsoft.IdentityModel.Tokens;
 using Spid.Cie.OIDC.AspNetCore.Configuration;
 using Spid.Cie.OIDC.AspNetCore.Helpers;
 using Spid.Cie.OIDC.AspNetCore.Models;
@@ -12,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 
 namespace Spid.Cie.OIDC.AspNetCore.Events;
@@ -70,19 +70,22 @@ internal class SpidCieEvents : OpenIdConnectEvents
         var relyingParty = await _rpSelector.GetSelectedRelyingParty();
         Throw<Exception>.If(relyingParty is null, ErrorLocalization.RelyingPartyNotFound);
 
+        Throw<Exception>.If(relyingParty!.OpenIdCoreCertificates is null || relyingParty!.OpenIdCoreCertificates.Count() == 0,
+                "No OpenIdCore certificates were found in the currently selected RelyingParty");
+        var certificate = relyingParty!.OpenIdCoreCertificates!.FirstOrDefault()!;
+
         context.ProtocolMessage.SetParameter(SpidCieConst.RequestParameter,
-            GenerateJWTRequest(identityProvider!, relyingParty!, context.ProtocolMessage, relyingParty!.OpenIdCoreJWKs));
+            GenerateJWTRequest(identityProvider!, relyingParty!, context.ProtocolMessage, certificate));
     }
 
     private string GenerateJWTRequest(IdentityProvider idp,
         RelyingParty relyingParty,
         OpenIdConnectMessage protocolMessage,
-        JsonWebKeySet keySet)
+        X509Certificate2 certificate)
     {
-        var key = keySet?.Keys?.FirstOrDefault();
-        Throw<Exception>.If(key is null, ErrorLocalization.NoSigningKeyFound);
+        (RSA publicKey, RSA privateKey) = _cryptoService.GetRSAKeys(certificate!);
 
-        (RSA publicKey, RSA privateKey) = _cryptoService.GetRSAKeys(key!);
+        var key = _cryptoService.GetJsonWebKey(certificate);
 
         return _cryptoService.CreateJWT(publicKey,
             privateKey,
@@ -142,16 +145,15 @@ internal class SpidCieEvents : OpenIdConnectEvents
 
         var relyingParty = await _rpSelector.GetSelectedRelyingParty();
         Throw<Exception>.If(relyingParty is null, ErrorLocalization.RelyingPartyNotFound);
+        Throw<Exception>.If(relyingParty!.OpenIdCoreCertificates is null || relyingParty!.OpenIdCoreCertificates.Count() == 0,
+                "No OpenIdCore Keys were found in the currently selected RelyingParty");
 
-        var key = relyingParty!.OpenIdCoreJWKs?.Keys?.FirstOrDefault();
-        Throw<Exception>.If(key is null, ErrorLocalization.NoSigningKeyFound);
-
-        (RSA publicKey, RSA privateKey) = _cryptoService.GetRSAKeys(key!);
+        var certificate = relyingParty!.OpenIdCoreCertificates!.FirstOrDefault()!;
 
         Throw<Exception>.If(context.TokenEndpointRequest is null, $"No Token Endpoint Request found in the current context");
 
         context.TokenEndpointRequest!.ClientAssertionType = SpidCieConst.ClientAssertionTypeValue;
-        context.TokenEndpointRequest!.ClientAssertion = _cryptoService.CreateClientAssertion(identityProvider!, relyingParty.ClientId!, key!, publicKey, privateKey);
+        context.TokenEndpointRequest!.ClientAssertion = _cryptoService.CreateClientAssertion(identityProvider!, relyingParty.ClientId!, certificate);
 
         await base.AuthorizationCodeReceived(context);
     }

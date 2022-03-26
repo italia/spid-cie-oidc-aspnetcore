@@ -4,8 +4,8 @@
       "commandName": "Project",
       "dotnetRunMessages": "true",
       "launchBrowser": true,
-      //"launchUrl": "https://127.0.0.1:5001/.well-known/openid-federation",
-      //"launchUrl": "https://127.0.0.1:5001/generatejwk",
+      //"launchUrl": "http://127.0.0.1:5000/.well-known/openid-federation/json",
+      //"launchUrl": "http://127.0.0.1:5000/generatejwk",
       "launchUrl": "http://127.0.0.1:5000/",
       "applicationUrl": "https://127.0.0.1:5001;http://127.0.0.1:5000",
       "environmentVariables": {

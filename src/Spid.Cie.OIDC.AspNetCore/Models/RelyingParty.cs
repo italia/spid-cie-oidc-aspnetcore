@@ -1,5 +1,5 @@
-﻿using Microsoft.IdentityModel.Tokens;
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Security.Cryptography.X509Certificates;
 
 namespace Spid.Cie.OIDC.AspNetCore.Models;
 
@@ -13,8 +13,8 @@ public sealed class RelyingParty
     public string[] AuthorityHints { get; set; }
     public string Issuer { get; set; }
     public TrustMarkDefinition[] TrustMarks { get; set; }
-    public JsonWebKeySet OpenIdFederationJWKs { get; set; }
-    public JsonWebKeySet OpenIdCoreJWKs { get; set; }
+    public X509Certificate2[] OpenIdFederationCertificates { get; set; }
+    public X509Certificate2[] OpenIdCoreCertificates { get; set; }
     public string[] Contacts { get; set; }
     public bool LongSessionsEnabled { get; set; }
     public string[] RedirectUris { get; set; }

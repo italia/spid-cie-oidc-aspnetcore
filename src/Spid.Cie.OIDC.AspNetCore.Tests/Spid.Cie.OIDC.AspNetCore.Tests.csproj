@@ -46,6 +46,12 @@
 		<ProjectReference Include="..\Spid.Cie.OIDC.AspNetCore\Spid.Cie.OIDC.AspNetCore.csproj" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <None Update="ComuneVigata-SPID.pfx">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
+	</ItemGroup>
+
 	<PropertyGroup>
 		<UseDataCollector />
 		<RunSettingsFilePath>$(MSBuildProjectDirectory)\test.runsettings</RunSettingsFilePath>

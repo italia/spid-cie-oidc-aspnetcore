@@ -50,7 +50,7 @@ internal class MetadataPolicyHandler : IMetadataPolicyHandler
 
                     // If the parameter still has no value apply the default if there is one.
                     var defaultClause = GetTokenByName(policyClauses, "default");
-                    if (propertyInConf.Value.IsNullOrEmpty() && defaultClause is not null)
+                    if (propertyInConf.Value.IsNullOrWhiteSpace() && defaultClause is not null)
                     {
                         propertyInConf.Value = defaultClause.First();
                     }
@@ -60,7 +60,7 @@ internal class MetadataPolicyHandler : IMetadataPolicyHandler
                     var essentialClause = GetTokenByName(policyClauses, "essential");
                     Throw<InvalidOperationException>.If(essentialClause != null
                             && (bool)essentialClause.First()
-                            && propertyInConf.Value.IsNullOrEmpty(),
+                            && propertyInConf.Value.IsNullOrWhiteSpace(),
                         $"Metadata Policy 'essential' clause failed for property '{property.Name}'");
 
                     // Do the other checks.
@@ -170,8 +170,7 @@ internal class MetadataPolicyHandler : IMetadataPolicyHandler
                 }
             }
 
-            var result = OpenIdConnectConfiguration.Create(openIdConfigurationObj.ToString());
-            return result;
+            return OpenIdConnectConfiguration.Create(openIdConfigurationObj.ToString());
         }
         catch (Exception ex)
         {

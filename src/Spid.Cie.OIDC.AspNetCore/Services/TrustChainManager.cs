@@ -82,7 +82,7 @@ internal class TrustChainManager : ITrustChainManager
 
                             if (opConf!.Metadata!.OpenIdProvider is not null)
                             {
-                                if (!string.IsNullOrEmpty(opConf!.Metadata!.OpenIdProvider.JwksUri))
+                                if (!string.IsNullOrWhiteSpace(opConf!.Metadata!.OpenIdProvider.JwksUri))
                                 {
                                     var keys = await _httpClient.GetStringAsync(opConf!.Metadata!.OpenIdProvider.JwksUri);
                                     if (!string.IsNullOrWhiteSpace(keys))
@@ -90,7 +90,7 @@ internal class TrustChainManager : ITrustChainManager
                                         opConf!.Metadata!.OpenIdProvider.JsonWebKeySet = JsonConvert.DeserializeObject<JsonWebKeySet>(keys);
                                     }
                                 }
-                                else if (!string.IsNullOrEmpty(JObject.Parse(opDecodedJwt)["metadata"]["openid_provider"]["jwks"].ToString()))
+                                else if (!string.IsNullOrWhiteSpace(JObject.Parse(opDecodedJwt)["metadata"]["openid_provider"]["jwks"].ToString()))
                                 {
                                     opConf!.Metadata!.OpenIdProvider.JsonWebKeySet = JsonWebKeySet.Create(JObject.Parse(opDecodedJwt)["metadata"]["openid_provider"]["jwks"].ToString());
                                 }

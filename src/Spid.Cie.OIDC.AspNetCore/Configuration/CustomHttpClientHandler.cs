@@ -45,13 +45,12 @@ internal class CustomHttpClientHandler : HttpClientHandler
 
             var provider = await _rpSelector.GetSelectedRelyingParty();
             Throw<Exception>.If(provider is null, "No currently selected RelyingParty was found");
-            Throw<Exception>.If(provider!.OpenIdCoreJWKs is null || provider!.OpenIdCoreJWKs.Keys is null,
-                "No OpenIdCore Keys were found in the currently selected RelyingParty");
+            Throw<Exception>.If(provider!.OpenIdCoreCertificates is null || provider!.OpenIdCoreCertificates.Count() == 0,
+                "No OpenIdCore Certificates were found in the currently selected RelyingParty");
 
-            var key = provider!.OpenIdCoreJWKs!.Keys!.FirstOrDefault();
-            Throw<Exception>.If(key is null, "No OpenIdCore Key was found in the currently selected RelyingParty");
+            var certificate = provider!.OpenIdCoreCertificates!.FirstOrDefault()!;
 
-            (_, RSA privateKey) = _cryptoService.GetRSAKeys(key!);
+            (_, RSA privateKey) = _cryptoService.GetRSAKeys(certificate);
 
             var decodedToken = _cryptoService.DecodeJWT(_cryptoService.DecodeJose(token, privateKey));
 

@@ -6,6 +6,10 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <None Remove="ComuneVigata-SPID.pfx" />
+	</ItemGroup>
+
+	<ItemGroup>
 	  <None Include="wwwroot\css\bootstrap-italia.min.css.map" />
 	  <None Include="wwwroot\js\bootstrap-italia.bundle.min.js" />
 	  <None Include="wwwroot\js\bootstrap-italia.bundle.min.js.map" />

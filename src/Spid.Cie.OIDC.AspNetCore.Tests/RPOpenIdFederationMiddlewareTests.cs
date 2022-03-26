@@ -47,4 +47,15 @@ public class RPOpenIdFederationMiddlewareTests
         var middleware = new RPOpenIdFederationMiddleware(next);
         await middleware.Invoke(ctx, new MockRelyingPartySelector(false, true), new MockCryptoService());
     }
+
+    [Fact]
+    public async Task TestRPOpenIdFederationMiddlewareJson()
+    {
+        RequestDelegate next = (HttpContext hc) => Task.CompletedTask;
+        HttpContext ctx = new DefaultHttpContext();
+        ctx.Request.Path = $"/{SpidCieConst.JsonEntityConfigurationPath}";
+        var middleware = new RPOpenIdFederationMiddleware(next);
+        await middleware.Invoke(ctx, new MockRelyingPartySelector(), new MockCryptoService());
+    }
+
 }

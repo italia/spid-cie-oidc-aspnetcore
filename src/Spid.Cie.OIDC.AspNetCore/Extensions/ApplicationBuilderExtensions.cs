@@ -122,7 +122,6 @@ public static class ApplicationBuilderExtensions
 
     public static IApplicationBuilder UseSpidCieOIDC(this IApplicationBuilder builder)
     {
-        return builder.UseMiddleware<RPOpenIdFederationMiddleware>()
-            .UseMiddleware<JWKGeneratorMiddleware>();
+        return builder.UseMiddleware<RPOpenIdFederationMiddleware>();
     }
 }

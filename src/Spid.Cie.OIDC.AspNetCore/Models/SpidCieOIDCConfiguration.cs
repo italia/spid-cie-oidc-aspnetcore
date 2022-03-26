@@ -1,4 +1,5 @@
 ﻿using Microsoft.IdentityModel.Protocols.OpenIdConnect;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
 
@@ -64,7 +65,7 @@ internal sealed class IdPMetadata_SpidCieOIDCConfiguration
 internal sealed class JWKS
 {
     [JsonPropertyName("keys")]
-    public JsonWebKey[] Keys { get; set; }
+    public List<JsonWebKey> Keys { get; set; } = new List<JsonWebKey>();
 }
 
 [ExcludeFromCodeCoverage]
@@ -78,15 +79,5 @@ internal class JsonWebKey
     public string n { get; set; }
     public string[] x5c { get; set; }
     public string alg { get; set; }
-
-    public string x { get; set; }
-    public string y { get; set; }
-    public string crv { get; set; }
-    public string d { get; set; }
-    public string p { get; set; }
-    public string q { get; set; }
-    public string dp { get; set; }
-    public string dq { get; set; }
-    public string qi { get; set; }
 }
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.

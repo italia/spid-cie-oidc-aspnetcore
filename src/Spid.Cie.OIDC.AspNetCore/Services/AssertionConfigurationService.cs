@@ -9,7 +9,6 @@ using Spid.Cie.OIDC.AspNetCore.Helpers;
 using Spid.Cie.OIDC.AspNetCore.Models;
 using System;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Threading.Tasks;
 
 namespace Spid.Cie.OIDC.AspNetCore.Services;
@@ -62,17 +61,14 @@ internal class AssertionConfigurationService : DefaultTokenClientConfigurationSe
         Throw<InvalidOperationException>.If(rp is null,
             $"No RelyingParty found for the clientId {clientId}");
 
-        var keySet = rp!.OpenIdCoreJWKs;
-        var key = keySet?.Keys?.FirstOrDefault();
-        Throw<InvalidOperationException>.If(key is null,
-            $"No key found for the RelyingParty with clientId {clientId}");
-
-        (RSA publicKey, RSA privateKey) = _cryptoService.GetRSAKeys(key!);
+        Throw<Exception>.If(rp!.OpenIdCoreCertificates is null || rp!.OpenIdCoreCertificates.Count() == 0,
+                "No OpenIdCore Keys were found in the currently selected RelyingParty");
+        var certificate = rp!.OpenIdCoreCertificates!.FirstOrDefault()!;
 
         return new ClientAssertion()
         {
             Type = SpidCieConst.ClientAssertionTypeValue,
-            Value = _cryptoService.CreateClientAssertion(idp!, clientId!, key!, publicKey, privateKey)
+            Value = _cryptoService.CreateClientAssertion(idp!, clientId!, certificate)
         };
     }
 }

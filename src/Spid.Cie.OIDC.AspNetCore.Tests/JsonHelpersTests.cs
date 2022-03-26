@@ -6,8 +6,8 @@ namespace Spid.Cie.OIDC.AspNetCore.Tests;
 public class JsonHelpersTests
 {
     [Fact]
-    public void IsNullOrEmpty1()
+    public void IsNullOrWhiteSpace1()
     {
-        Assert.True(JsonExtensions.IsNullOrEmpty(null));
+        Assert.True(JsonExtensions.IsNullOrWhiteSpace(null));
     }
 }

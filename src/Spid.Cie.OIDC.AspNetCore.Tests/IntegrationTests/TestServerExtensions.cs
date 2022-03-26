@@ -21,7 +21,7 @@ internal static class TestServerExtensions
 
     public static async Task<TestTransaction> SendAsync(this TestServer server, HttpRequestMessage request, string? cookieHeader = null, string[]? cookieHeaders = null)
     {
-        if (!string.IsNullOrEmpty(cookieHeader))
+        if (!string.IsNullOrWhiteSpace(cookieHeader))
         {
             request.Headers.Add("Cookie", cookieHeader);
         }

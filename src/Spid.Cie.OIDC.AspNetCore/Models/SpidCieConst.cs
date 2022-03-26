@@ -47,8 +47,10 @@ public sealed class SpidCieConst
     public const string OPListPath = "list/?type=openid_provider";
 
     public const string EntityConfigurationPath = ".well-known/openid-federation";
+    public const string JsonEntityConfigurationPath = ".well-known/openid-federation/json";
 
     public const string EntityConfigurationContentType = "application/entity-statement+jwt";
+    public const string JsonEntityConfigurationContentType = "application/json";
 
     public const int EntityConfigurationExpirationInMinutes = 2880;
 
