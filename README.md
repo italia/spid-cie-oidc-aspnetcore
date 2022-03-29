@@ -134,9 +134,7 @@ services.AddSpidCieOIDC(o => /* ..... */ )
 
 
 ## Sample WebApp
-For the Sample WebApp and Onboarding doc, please read this section
-()[]
-
+For the Sample WebApp doc and how to do a sample Onboarding with the Django OP and TA, please [read this section](SAMPLE.md)
 
 ## Contribute
 
