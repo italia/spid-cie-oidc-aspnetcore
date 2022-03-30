@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
+using Spid.Cie.OIDC.AspNetCore.Helpers;
 using Spid.Cie.OIDC.AspNetCore.Models;
 using Spid.Cie.OIDC.AspNetCore.Services;
 using System;
@@ -31,9 +32,10 @@ internal class RPOpenIdFederationMiddleware
         var rps = await rpHandler.GetRelyingParties();
         var uri = new Uri(UriHelper.GetEncodedUrl(context.Request)
             .Replace(SpidCieConst.JsonEntityConfigurationPath, "")
-            .Replace(SpidCieConst.EntityConfigurationPath, ""));
+            .Replace(SpidCieConst.EntityConfigurationPath, "")
+            .EnsureTrailingSlash());
 
-        var rp = rps.FirstOrDefault(r => uri.Equals(new Uri(r.ClientId)));
+        var rp = rps.FirstOrDefault(r => uri.Equals(new Uri(r.ClientId.EnsureTrailingSlash())));
         if (rp != null)
         {
             var certificate = rp.OpenIdFederationCertificates?.FirstOrDefault();
