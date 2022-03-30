@@ -3,7 +3,6 @@ using Spid.Cie.OIDC.AspNetCore.Services;
 using System;
 using System.Linq;
 using System.Net.Http;
-using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -50,9 +49,7 @@ internal class CustomHttpClientHandler : HttpClientHandler
 
             var certificate = provider!.OpenIdCoreCertificates!.FirstOrDefault()!;
 
-            (_, RSA privateKey) = _cryptoService.GetRSAKeys(certificate);
-
-            var decodedToken = _cryptoService.DecodeJWT(_cryptoService.DecodeJose(token, privateKey));
+            var decodedToken = _cryptoService.DecodeJWT(_cryptoService.DecodeJose(token, certificate));
 
             var httpResponse = new HttpResponseMessage(System.Net.HttpStatusCode.OK);
             httpResponse.Content = new StringContent(decodedToken, Encoding.UTF8, "application/json");
