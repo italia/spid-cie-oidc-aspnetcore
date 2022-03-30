@@ -8,7 +8,7 @@ services:
       dockerfile: Spid.Cie.OIDC.AspNetCore.WebApp/Dockerfile
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_URLS=https://+:443;http://+:80
+      - ASPNETCORE_URLS=http://+:80
     ports:
       - "5000:80"
     volumes:
