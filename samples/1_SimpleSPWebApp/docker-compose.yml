@@ -1,0 +1,16 @@
+version: '3.4'
+
+services:
+  spid.cie.oidc.aspnetcore.webapp:
+    image: ${DOCKER_REGISTRY-}spidcieoidcaspnetcorewebapp
+    build:
+      context: .
+      dockerfile: Spid.Cie.OIDC.AspNetCore.WebApp/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=https://+:443;http://+:80
+    ports:
+      - "5000:80"
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
+      - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
