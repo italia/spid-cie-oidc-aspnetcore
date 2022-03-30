@@ -1,9 +1,10 @@
 # Sample WebApp
 The AspNetCore MVC webapp contained in the `samples/1_SimpleSPWebApp` folder, is a sample implementation of a RelyingParty that uses the SDK.
 You could just clone the repo and execute the webapp as-is (both with `dotnet run` or `docker`), and it will just run and be accessible at the Url: http://127.0.0.1:5000/
-If you have a look at the `Startup.cs`, you can find a basic configuration of a RelyingParty that uses a self-signed X509 signing certificate, and the statements to add the necessary middlewares and services.
+If you have a look at the `Startup.cs`, you can find the statements to add the necessary middlewares and services, and a basic configuration of a RelyingParty that uses a self-signed X509 signing certificate in the `appsettings.json` file (if you need to change some of the settings, e.g. the OPs hostnames, the trustmarks, etc., this is the place).
+Included in the WebApp is also a `docker-compose.yml` file. 
+You could just open a terminal session into the `1_SimpleSPWebApp` folder and run `docker-compose up`. 
 
-![image](https://user-images.githubusercontent.com/58780951/160617044-125cd807-1e89-4eb6-8dc7-a5e2e40b268b.png)
 
 If you run the webapp and navigate to the endpoint that shows the openid federation configuration as a decoded json (http://127.0.0.1:5000/.well-known/openid-federation/json), you will receive the following output.
 
@@ -67,8 +68,21 @@ If you click again on the RP in the "Federation entity descendants assigned prof
 ![image](https://user-images.githubusercontent.com/58780951/160621370-f00f8b50-f3ef-4edc-a460-92cc641cd102.png)
 
 Copy the newly generated Trust Mark in the proper configuration section for the RP.
-
-![image](https://user-images.githubusercontent.com/58780951/160621452-98380f1d-edcf-4ec9-9148-5656a76ed217.png)
+```json
+  "SpidCie": {
+    // ...
+    "RelyingParties": [
+      {
+        // ....
+        "TrustMarks": [
+          {
+            "Id": "https://www.spid.gov.it/openid-federation/agreement/sp-public/",
+            "Issuer": "http://127.0.0.1:8000/",
+            "TrustMark": "eyJhbGciOiJSUzI1NiIsImtpZCI6ImRCNjdnTDdjazNURmlJQWY3TjZfN1NIdnFrME1EWU1FUWNvR0dsa1VBQXciLCJ0eXAiOiJ0cnVzdC1tYXJrK2p3dCJ9.eyJpc3MiOiJodHRwOi8vMTI3LjAuMC4xOjgwMDAvb2lkYy9vcC8iLCJzdWIiOiJodHRwOi8vMTI3LjAuMC4xOjUwMDAvIiwiaWF0IjoxNjQ4NTYwMjgzLCJpZCI6Imh0dHBzOi8vd3d3LnNwaWQuZ292Lml0L2NlcnRpZmljYXRpb24vcnAiLCJtYXJrIjoiaHR0cHM6Ly93d3cuYWdpZC5nb3YuaXQvdGhlbWVzL2N1c3RvbS9hZ2lkL2xvZ28uc3ZnIiwicmVmIjoiaHR0cHM6Ly9kb2NzLml0YWxpYS5pdC9pdGFsaWEvc3BpZC9zcGlkLXJlZ29sZS10ZWNuaWNoZS1vaWRjL2l0L3N0YWJpbGUvaW5kZXguaHRtbCJ9.M6T42JXb9wHBhwy2cueHEFoMNcaHQZKvMTMR3aavZVBvW14hps_IZ_MT3yqA5wTEZTgAC_-M8G33wjpTMw26ITXgOW6rMUqWHWj7639BfbqnGkoZdMuMxo96nSOIaxXElvfPRZu6wQ9LOrXe_kyR3eo6p8iZLKbnp1e1D5VTr_dSEYQsaTlVmiT6I2SyaiWtpXCD1DWZxNw2YKTie0lEmDCMO4WJo3kfr_ak9kvMryF8-5crecOs6o33DYGR5zSzJ3JQYAz2huLKZ_y7nzmvkEjDQNjtg1R2cusNHvxLt8Su3T0hUbT_Vl5-b_VvBqo2yUTc7Z7WOJPwzId8rATujA"
+          }
+        ],
+        // ...
+```
 
 Now you can perform a sample login/logout flow, since the OP will successfully resolve the RP's trust chain.
 
