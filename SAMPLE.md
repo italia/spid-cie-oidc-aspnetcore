@@ -72,12 +72,4 @@ Copy the newly generated Trust Mark in the proper configuration section for the 
 
 Now you can perform a sample login/logout flow, since the OP will successfully resolve the RP's trust chain.
 
-![image](https://user-images.githubusercontent.com/58780951/160621644-ba55d7e6-702e-4e59-b0a0-695020cf3fb0.png)
-
-![image](https://user-images.githubusercontent.com/58780951/160621672-966aed34-e777-443a-a0eb-f92ed7cf857c.png)
-
-![image](https://user-images.githubusercontent.com/58780951/160621694-72a75c4f-3023-4d9e-98ea-0d22abcd5dbd.png)
-
-![image](https://user-images.githubusercontent.com/58780951/160621716-0f425bc4-7260-401d-9490-174797769eaf.png)
-
-![image](https://user-images.githubusercontent.com/58780951/160621737-00090f62-d916-4f8b-a213-512fd87f102d.png)
+![SpidCieOIDCLoginLogout](https://user-images.githubusercontent.com/58780951/160836000-13f7cec8-9ff8-414d-92b8-6c4e69bdc62d.gif)
