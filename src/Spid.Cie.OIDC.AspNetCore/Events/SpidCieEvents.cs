@@ -10,7 +10,6 @@ using Spid.Cie.OIDC.AspNetCore.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 
@@ -83,16 +82,7 @@ internal class SpidCieEvents : OpenIdConnectEvents
         OpenIdConnectMessage protocolMessage,
         X509Certificate2 certificate)
     {
-        (RSA publicKey, RSA privateKey) = _cryptoService.GetRSAKeys(certificate!);
-
-        var key = _cryptoService.GetJsonWebKey(certificate);
-
-        return _cryptoService.CreateJWT(publicKey,
-            privateKey,
-            new Dictionary<string, object>() {
-                    { SpidCieConst.Kid, key!.Kid },
-                    { SpidCieConst.Typ, SpidCieConst.TypValue }
-            },
+        return _cryptoService.CreateJWT(certificate!,
             new Dictionary<string, object>() {
                     { SpidCieConst.Iss, protocolMessage.ClientId },
                     { SpidCieConst.Sub, protocolMessage.ClientId },

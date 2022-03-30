@@ -1,17 +1,24 @@
-﻿{
+{
   "profiles": {
     "Spid.Cie.OIDC.AspNetCore.WebApp": {
       "commandName": "Project",
-      "dotnetRunMessages": "true",
       "launchBrowser": true,
-      //"launchUrl": "http://127.0.0.1:5000/.well-known/openid-federation/json",
-      //"launchUrl": "http://127.0.0.1:5000/generatejwk",
       "launchUrl": "http://127.0.0.1:5000/",
-      "applicationUrl": "https://127.0.0.1:5001;http://127.0.0.1:5000",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
         "ASPNETCORE_HOSTINGSTARTUPASSEMBLIES": "Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation"
-      }
+      },
+      "applicationUrl": "https://127.0.0.1:5001;http://127.0.0.1:5000",
+      "dotnetRunMessages": "true"
+    },
+    "Docker": {
+      "commandName": "Docker",
+      "launchBrowser": true,
+      "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}/",
+      "publishAllPorts": true,
+      "useSSL": true,
+      "httpPort": 5000,
+      "sslPort": 5001
     }
   }
 }

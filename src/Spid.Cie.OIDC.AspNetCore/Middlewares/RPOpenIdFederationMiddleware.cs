@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Extensions;
+using Spid.Cie.OIDC.AspNetCore.Helpers;
 using Spid.Cie.OIDC.AspNetCore.Models;
 using Spid.Cie.OIDC.AspNetCore.Services;
 using System;
@@ -18,7 +20,7 @@ internal class RPOpenIdFederationMiddleware
         _next = next;
     }
 
-    public async Task Invoke(HttpContext context, IRelyingPartySelector rpSelector, ICryptoService cryptoService)
+    public async Task Invoke(HttpContext context, IRelyingPartiesHandler rpHandler, ICryptoService cryptoService)
     {
         if (!context.Request.Path.Value!.EndsWith(SpidCieConst.EntityConfigurationPath, StringComparison.InvariantCultureIgnoreCase)
             && !context.Request.Path.Value!.EndsWith(SpidCieConst.JsonEntityConfigurationPath, StringComparison.InvariantCultureIgnoreCase))
@@ -27,7 +29,13 @@ internal class RPOpenIdFederationMiddleware
             return;
         }
 
-        var rp = await rpSelector.GetSelectedRelyingParty();
+        var rps = await rpHandler.GetRelyingParties();
+        var uri = new Uri(UriHelper.GetEncodedUrl(context.Request)
+            .Replace(SpidCieConst.JsonEntityConfigurationPath, "")
+            .Replace(SpidCieConst.EntityConfigurationPath, "")
+            .EnsureTrailingSlash());
+
+        var rp = rps.FirstOrDefault(r => uri.Equals(new Uri(r.ClientId.EnsureTrailingSlash())));
         if (rp != null)
         {
             var certificate = rp.OpenIdFederationCertificates?.FirstOrDefault();
@@ -36,7 +44,7 @@ internal class RPOpenIdFederationMiddleware
                 var entityConfiguration = GetEntityConfiguration(rp, cryptoService);
                 if (context.Request.Path.Value!.EndsWith(SpidCieConst.EntityConfigurationPath))
                 {
-                    string token = cryptoService.JWTEncode(entityConfiguration, certificate);
+                    string token = cryptoService.CreateJWT(certificate, entityConfiguration);
 
                     context.Response.ContentType = SpidCieConst.EntityConfigurationContentType;
                     await context.Response.WriteAsync(token);
