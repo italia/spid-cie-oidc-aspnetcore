@@ -42,12 +42,12 @@ public class Startup
                 o.CieOPs.Add("http://127.0.0.1:8002/oidc/op/");
                 o.RelyingParties.Add(new RelyingParty()
                 {
-                    ClientId = "http://127.0.0.1:5000/rp1",
+                    ClientId = "http://127.0.0.1:5000/",
                     ClientName = "RP Test",
                     Contacts = new string[] { "info@rptest.it" },
-                    Issuer = "http://127.0.0.1:5000/rp1",
+                    Issuer = "http://127.0.0.1:5000/",
                     AuthorityHints = new string[] { "http://127.0.0.1:8000/" },
-                    RedirectUris = new string[] { "http://127.0.0.1:5000/rp1/signin-spidcie" },
+                    RedirectUris = new string[] { "http://127.0.0.1:5000/signin-spidcie" },
                     SecurityLevel = SecurityLevel.L2,
                     LongSessionsEnabled = false,
                     TrustMarks = new TrustMarkDefinition[] {
