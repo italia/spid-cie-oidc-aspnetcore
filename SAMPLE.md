@@ -1,9 +1,13 @@
 # Sample WebApp
 The AspNetCore MVC webapp contained in the `samples/1_SimpleSPWebApp` folder, is a sample implementation of a RelyingParty that uses the SDK.
+
 You could just clone the repo and execute the webapp as-is (both with `dotnet run` or `docker`), and it will just run and be accessible at the Url: http://127.0.0.1:5000/
+
 If you have a look at the `Startup.cs`, you can find the statements to add the necessary middlewares and services, and a basic configuration of a RelyingParty that uses a self-signed X509 signing certificate in the `appsettings.json` file (if you need to change some of the settings, e.g. the OPs hostnames, the trustmarks, etc., this is the place).
-Included in the WebApp is also a `docker-compose.yml` file. 
-You could just open a terminal session into the `1_SimpleSPWebApp` folder and run `docker-compose up`. 
+
+Included in the WebApp is also a `docker-compose.yml` file, you could just open a terminal session into the `1_SimpleSPWebApp` folder and run `docker-compose up`.
+
+> Please note that if you run the federation with docker o docker-compose, in order to make it discoverable from the OP, you cannot simply use 127.0.0.1. You should map any hostname you like (e.g. 'spid.cie.oidc.aspnetcore.webapp', as reported in the compose file) to 127.0.0.1 into your hosts file, do the same for the TA and the OP as stated [here](https://github.com/italia/spid-cie-oidc-django#docker-compose), and replace any occurrence of the IP-based urls with the hostnames-based urls, both in the appsettings.json file and in the following tutorial, and both for the TA/OP and the RP settings (you should've run the TA/OP with the proper data as stated in the link above).
 
 
 If you run the webapp and navigate to the endpoint that shows the openid federation configuration as a decoded json (http://127.0.0.1:5000/.well-known/openid-federation/json), you will receive the following output.
