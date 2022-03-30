@@ -1,5 +1,4 @@
-﻿using IdentityModel;
-using JWT;
+﻿using JWT;
 using JWT.Algorithms;
 using JWT.Builder;
 using Microsoft.AspNetCore.WebUtilities;
@@ -36,43 +35,39 @@ internal class CryptoService : ICryptoService
             .Decode(jwt);
 
     public virtual string DecodeJose(string jose, X509Certificate2 certificate)
-        => Jose.JWT.Decode(jose, GetPrivateKey(certificate));
-
-    public Microsoft.IdentityModel.Tokens.JsonWebKey GetJsonWebKey(X509Certificate2 certificate)
-        => JsonWebKeyConverter.ConvertFromX509SecurityKey(new X509SecurityKey(certificate));
+        => Jose.JWT.Decode(jose, certificate.GetRSAPrivateKey()!);
 
     public JWKS GetJWKS(X509Certificate2[] certificates)
-    {
-        JWKS result = new JWKS();
-        foreach (var certificate in certificates)
+        => new JWKS()
         {
-            var parameters = certificate.GetRSAPublicKey()!.ExportParameters(false);
-            var jsonWebKey = GetJsonWebKey(certificate);
-            var exponent = Base64Url.Encode(parameters.Exponent);
-            var modulus = Base64Url.Encode(parameters.Modulus);
-            result.Keys.Add(new Models.JsonWebKey()
+            Keys = certificates.Select(c =>
             {
-                kty = jsonWebKey.Kty,
-                use = jsonWebKey.Use ?? "sig",
-                kid = jsonWebKey.Kid,
-                x5t = jsonWebKey.X5t,
-                e = exponent,
-                n = modulus,
-                x5c = jsonWebKey.X5c.ToArray(),
-                alg = jsonWebKey.Alg ?? "RS256",
-            });
-        }
-        return result;
-    }
+                var parameters = c.GetRSAPublicKey()!.ExportParameters(false);
+                var jsonWebKey = GetJsonWebKey(c);
+                var exponent = WebEncoders.Base64UrlEncode(parameters.Exponent!);
+                var modulus = WebEncoders.Base64UrlEncode(parameters.Modulus!);
+                return new Models.JsonWebKey()
+                {
+                    kty = jsonWebKey.Kty,
+                    use = jsonWebKey.Use ?? "sig",
+                    kid = jsonWebKey.Kid,
+                    x5t = jsonWebKey.X5t,
+                    e = exponent,
+                    n = modulus,
+                    x5c = jsonWebKey.X5c.ToArray(),
+                    alg = jsonWebKey.Alg ?? "RS256",
+                };
+            }).ToList()
+        };
 
     public string CreateJWT(X509Certificate2 certificate, object payload)
     {
-        (RSA publicKey, RSA privateKey) = CryptoService.GetRSAKeys(certificate);
+        RSA publicKey = certificate.GetRSAPublicKey()!;
+        RSA privateKey = certificate.GetRSAPrivateKey()!;
 
-        IJwtAlgorithm algorithm = new RS256Algorithm(publicKey, privateKey);
-        IJsonSerializer serializer = new CustomJsonSerializer();
-        IBase64UrlEncoder urlEncoder = new JwtBase64UrlEncoder();
-        IJwtEncoder encoder = new JwtEncoder(algorithm, serializer, urlEncoder);
+        IJwtEncoder encoder = new JwtEncoder(new RS256Algorithm(publicKey, privateKey),
+            new CustomJsonSerializer(),
+            new JwtBase64UrlEncoder());
 
         var key = GetJsonWebKey(certificate);
 
@@ -97,10 +92,7 @@ internal class CryptoService : ICryptoService
                 { SpidCieConst.Jti, Guid.NewGuid().ToString() }
             });
 
-    private static (RSA publicKey, RSA privateKey) GetRSAKeys(X509Certificate2 certificate)
-        => (certificate.GetRSAPublicKey()!, certificate.GetRSAPrivateKey()!);
-
-    private static RSA GetPrivateKey(X509Certificate2 certificate)
-        => certificate.GetRSAPrivateKey()!;
+    private static Microsoft.IdentityModel.Tokens.JsonWebKey GetJsonWebKey(X509Certificate2 certificate)
+        => JsonWebKeyConverter.ConvertFromX509SecurityKey(new X509SecurityKey(certificate));
 
 }
