@@ -27,7 +27,8 @@ public class SpidIdentityProvidersTests
         idp.EntityConfiguration.Metadata.OpenIdProvider.ClaimsSupported.Add(SpidConst.familyName);
 
 
-        var filteredClaims = idp.FilterRequestedClaims(new ClaimTypes[] {
+        var filteredClaims = idp.FilterRequestedClaims(new()
+        {
             ClaimTypes.Name,
             ClaimTypes.FamilyName,
             ClaimTypes.FiscalNumber,
@@ -79,7 +80,7 @@ public class SpidIdentityProvidersTests
             }
         };
 
-        idp.SupportedAcrValues = new string[] { SpidConst.SpidL2, SpidConst.SpidL1, SpidConst.SpidL3 };
+        idp.SupportedAcrValues = new() { SpidConst.SpidL2, SpidConst.SpidL1, SpidConst.SpidL3 };
 
         var acr = idp.GetAcrValue(SecurityLevel.L2);
 

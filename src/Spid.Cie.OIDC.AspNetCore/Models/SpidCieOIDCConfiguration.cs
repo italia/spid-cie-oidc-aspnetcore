@@ -10,7 +10,7 @@ namespace Spid.Cie.OIDC.AspNetCore.Models;
 internal class RequestAuthenticationMethodsSupported
 {
     [JsonPropertyName("ar")]
-    public string[] Ar { get; set; }
+    public List<string> Ar { get; set; }
 
 }
 
@@ -25,7 +25,7 @@ internal sealed class RPMetadata_SpidCieOIDCConfiguration
 internal sealed class RP_SpidCieOIDCConfiguration
 {
     [JsonPropertyName("client_registration_types")]
-    public string[] ClientRegistrationTypes { get; set; } = new[] { SpidCieConst.RPClientRegistrationType };
+    public List<string> ClientRegistrationTypes { get; set; } = new() { SpidCieConst.RPClientRegistrationType };
 
     [JsonPropertyName("application_type")]
     public string ApplicationType { get; set; } = SpidCieConst.RPApplicationType;
@@ -34,19 +34,19 @@ internal sealed class RP_SpidCieOIDCConfiguration
     public string ClientName { get; set; }
 
     [JsonPropertyName("contacts")]
-    public string[] Contacts { get; set; }
+    public List<string> Contacts { get; set; }
 
     [JsonPropertyName("grant_types")]
-    public string[] GrantTypes { get; set; }
+    public List<string> GrantTypes { get; set; }
 
     [JsonPropertyName("jwks")]
     public JWKS JWKS { get; set; }
 
     [JsonPropertyName("redirect_uris")]
-    public string[] RedirectUris { get; set; }
+    public List<string> RedirectUris { get; set; }
 
     [JsonPropertyName("response_types")]
-    public string[] ResponseTypes { get; set; }
+    public List<string> ResponseTypes { get; set; }
 
     [JsonPropertyName("subject_type")]
     public string SubjectType { get; set; } = SpidCieConst.RPSubjectType;
@@ -77,7 +77,7 @@ internal class JsonWebKey
     public string x5t { get; set; }
     public string e { get; set; }
     public string n { get; set; }
-    public string[] x5c { get; set; }
+    public List<string> x5c { get; set; }
     public string alg { get; set; }
 }
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.

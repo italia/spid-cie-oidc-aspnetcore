@@ -22,6 +22,12 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <Compile Remove="OpenIdFederation\**" />
+	  <EmbeddedResource Remove="OpenIdFederation\**" />
+	  <None Remove="OpenIdFederation\**" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<None Include="Mvc\Resources\spid-nuget.png" Pack="true" PackagePath="\" />
 	</ItemGroup>
 
@@ -78,8 +84,5 @@
 			<Generator>ResXFileCodeGenerator</Generator>
 			<LastGenOutput>ErrorLocalization.Designer.cs</LastGenOutput>
 		</EmbeddedResource>
-	</ItemGroup>
-	<ItemGroup>
-	  <Folder Include="OpenIdFederation\" />
 	</ItemGroup>
 </Project>

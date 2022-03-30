@@ -63,6 +63,51 @@ namespace Spid.Cie.OIDC.AspNetCore.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Certificate&apos;s find value is null or whitespace.
+        /// </summary>
+        internal static string CertificateFindValueNullOrEmpty {
+            get {
+                return ResourceManager.GetString("CertificateFindValueNullOrEmpty", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Certificate not found.
+        /// </summary>
+        internal static string CertificateNotFound {
+            get {
+                return ResourceManager.GetString("CertificateNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Certificate&apos;s password is null or whitespace.
+        /// </summary>
+        internal static string CertificatePasswordNullOrEmpty {
+            get {
+                return ResourceManager.GetString("CertificatePasswordNullOrEmpty", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Certificate&apos;s path is null or whitespace.
+        /// </summary>
+        internal static string CertificatePathNullOrEmpty {
+            get {
+                return ResourceManager.GetString("CertificatePathNullOrEmpty", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Certificate&apos;s base64 raw string is null or whitespace.
+        /// </summary>
+        internal static string CertificateRawStringNullOrEmpty {
+            get {
+                return ResourceManager.GetString("CertificateRawStringNullOrEmpty", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error deleting file: {path}.
         /// </summary>
         internal static string FileDeleteError {
@@ -122,15 +167,6 @@ namespace Spid.Cie.OIDC.AspNetCore.Resources {
         internal static string KeyLockFailed {
             get {
                 return ResourceManager.GetString("KeyLockFailed", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to No signing key was found in the OpenIdCore JWKS.
-        /// </summary>
-        internal static string NoSigningKeyFound {
-            get {
-                return ResourceManager.GetString("NoSigningKeyFound", resourceCulture);
             }
         }
         

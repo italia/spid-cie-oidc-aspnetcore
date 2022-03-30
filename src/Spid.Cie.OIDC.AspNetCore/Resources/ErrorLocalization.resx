@@ -117,6 +117,21 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="CertificateFindValueNullOrEmpty" xml:space="preserve">
+    <value>Certificate's find value is null or whitespace</value>
+  </data>
+  <data name="CertificateNotFound" xml:space="preserve">
+    <value>Certificate not found</value>
+  </data>
+  <data name="CertificatePasswordNullOrEmpty" xml:space="preserve">
+    <value>Certificate's password is null or whitespace</value>
+  </data>
+  <data name="CertificatePathNullOrEmpty" xml:space="preserve">
+    <value>Certificate's path is null or whitespace</value>
+  </data>
+  <data name="CertificateRawStringNullOrEmpty" xml:space="preserve">
+    <value>Certificate's base64 raw string is null or whitespace</value>
+  </data>
   <data name="FileDeleteError" xml:space="preserve">
     <value>Error deleting file: {path}</value>
   </data>
@@ -137,9 +152,6 @@
   </data>
   <data name="KeyLockFailed" xml:space="preserve">
     <value>Failed to obtain new key lock</value>
-  </data>
-  <data name="NoSigningKeyFound" xml:space="preserve">
-    <value>No signing key was found in the OpenIdCore JWKS</value>
   </data>
   <data name="ProviderQueryStringParameterNotFound" xml:space="preserve">
     <value>No 'provider' querystring parameter found in the Challenge Url</value>

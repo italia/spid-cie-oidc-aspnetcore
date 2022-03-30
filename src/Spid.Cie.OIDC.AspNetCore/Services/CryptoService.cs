@@ -37,7 +37,7 @@ internal class CryptoService : ICryptoService
     public virtual string DecodeJose(string jose, X509Certificate2 certificate)
         => Jose.JWT.Decode(jose, certificate.GetRSAPrivateKey()!);
 
-    public JWKS GetJWKS(X509Certificate2[] certificates)
+    public JWKS GetJWKS(List<X509Certificate2> certificates)
         => new JWKS()
         {
             Keys = certificates.Select(c =>
@@ -54,7 +54,7 @@ internal class CryptoService : ICryptoService
                     x5t = jsonWebKey.X5t,
                     e = exponent,
                     n = modulus,
-                    x5c = jsonWebKey.X5c.ToArray(),
+                    x5c = jsonWebKey.X5c.ToList(),
                     alg = jsonWebKey.Alg ?? "RS256",
                 };
             }).ToList()

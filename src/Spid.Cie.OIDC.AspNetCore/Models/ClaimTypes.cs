@@ -44,6 +44,11 @@ public sealed class ClaimTypes
         Value = value;
     }
 
+    public static ClaimTypes FromName(string name)
+    {
+        return _types.ContainsKey(name) ? _types[name] : throw new System.Exception($"Invalid ClaimTypes name '{name}'");
+    }
+
     public string Value { get; private set; }
 
     public static ClaimTypes Name { get { return _types[nameof(Name)]; } }

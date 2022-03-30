@@ -25,5 +25,10 @@ public sealed class SpidCieOptions
     public void LoadFromConfiguration(IConfiguration configuration)
     {
         var conf = OptionsHelpers.CreateFromConfiguration(configuration);
+        RequestRefreshToken = conf.RequestRefreshToken;
+        RelyingParties.AddRange(conf.RelyingParties);
+        SpidOPs.AddRange(conf.SpidOPs);
+        CieOPs.AddRange(conf.CieOPs);
+        IdentityProvidersCacheExpirationInMinutes = conf.IdentityProvidersCacheExpirationInMinutes;
     }
 }

@@ -13,11 +13,11 @@ public abstract class IdentityProvider
     public string OrganizationDisplayName { get; set; }
     public string OrganizationUrl { get; set; }
     public string OrganizationLogoUrl { get; set; }
-    public string[] SupportedAcrValues { get; set; }
+    public List<string> SupportedAcrValues { get; set; }
     internal IdPEntityConfiguration EntityConfiguration { get; set; }
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
     public abstract string GetAcrValue(SecurityLevel securityLevel);
 
-    public abstract IEnumerable<string> FilterRequestedClaims(ClaimTypes[] requestedClaims);
+    public abstract IEnumerable<string> FilterRequestedClaims(List<ClaimTypes> requestedClaims);
 }
