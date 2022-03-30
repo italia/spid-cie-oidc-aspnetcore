@@ -53,14 +53,6 @@ public void ConfigureServices(IServiceCollection services)
             .AddSpidCieOIDC(o =>
             {
                 o.LoadFromConfiguration(Configuration);
-
-                o.RequestRefreshToken = true;
-                o.SpidOPs.Add("http://127.0.0.1:8000/oidc/op/"); // Example SPID OP Url
-                o.CieOPs.Add("http://127.0.0.1:8002/oidc/op/"); // Example CIE OP Url
-                o.RelyingParties.Add(new RelyingParty()
-                {
-                    // .... RelyingParty configuration
-                });
             });
             
             // ......
@@ -113,6 +105,77 @@ The library also includes the implementation of a set of TagHelpers for the rend
 
 The `spid-button` and the `cie-button` TagHelpers will automatically generate the HTML code needed to render the OPs list that have been successfully trusted in the initialization phase. The `size` attribute can be set with the values` Small, Medium, Large, ExtraLarge`.
 `<style spid> </style>` and `<script spid> </script>` instead represent the TagHelpers for rendering, respectively, the CSS classes and the JS code needed to execute the button.
+
+It's possible to configure the library by reading the configuration settings from the appsettings.json file, using the command
+
+```csharp
+o.LoadFromConfiguration(Configuration);
+```
+
+In particular, a 'SpidCie' section can be added to the configuration which has the following format
+```json
+  "SpidCie": {
+    "IdentityProvidersCacheExpirationInMinutes": 20,
+    "RequestRefreshToken": true,
+    "SpidOPs": [ "http://127.0.0.1:8000/oidc/op/" ],
+    "CieOPs": [ "http://127.0.0.1:8002/oidc/op/" ],
+    "RelyingParties": [
+      {
+        "ClientId": "http://127.0.0.1:5000/",
+        "ClientName": "RP Test",
+        "Issuer": "http://127.0.0.1:5000/",
+        "SecurityLevel": 2,
+        "Contacts": [ "info@rptest.it" ],
+        "RedirectUris": [ "http://127.0.0.1:5000/signin-spidcie" ],
+        "AuthorityHints": [ "http://127.0.0.1:8000/" ],
+        "LongSessionsEnabled": true,
+        "RequestedClaims": [
+          "Name",
+          "FamilyName",
+          "Email",
+          "FiscalNumber",
+          "DateOfBirth",
+          "PlaceOfBirth"
+        ],
+        "TrustMarks": [
+          {
+            "Id": "https://www.spid.gov.it/openid-federation/agreement/sp-public/",
+            "Issuer": "http://127.0.0.1:8000/",
+            "TrustMark": "eyJhbGciOiJSUzI1NiIsImtpZCI6ImRCNjdnTDdjazNURmlJQWY3TjZfN1NIdnFrME1EWU1FUWNvR0dsa1VBQXciLCJ0eXAiOiJ0cnVzdC1tYXJrK2p3dCJ9.eyJpc3MiOiJodHRwOi8vMTI3LjAuMC4xOjgwMDAvb2lkYy9vcC8iLCJzdWIiOiJodHRwOi8vMTI3LjAuMC4xOjUwMDAvIiwiaWF0IjoxNjQ4NTYwMjgzLCJpZCI6Imh0dHBzOi8vd3d3LnNwaWQuZ292Lml0L2NlcnRpZmljYXRpb24vcnAiLCJtYXJrIjoiaHR0cHM6Ly93d3cuYWdpZC5nb3YuaXQvdGhlbWVzL2N1c3RvbS9hZ2lkL2xvZ28uc3ZnIiwicmVmIjoiaHR0cHM6Ly9kb2NzLml0YWxpYS5pdC9pdGFsaWEvc3BpZC9zcGlkLXJlZ29sZS10ZWNuaWNoZS1vaWRjL2l0L3N0YWJpbGUvaW5kZXguaHRtbCJ9.M6T42JXb9wHBhwy2cueHEFoMNcaHQZKvMTMR3aavZVBvW14hps_IZ_MT3yqA5wTEZTgAC_-M8G33wjpTMw26ITXgOW6rMUqWHWj7639BfbqnGkoZdMuMxo96nSOIaxXElvfPRZu6wQ9LOrXe_kyR3eo6p8iZLKbnp1e1D5VTr_dSEYQsaTlVmiT6I2SyaiWtpXCD1DWZxNw2YKTie0lEmDCMO4WJo3kfr_ak9kvMryF8-5crecOs6o33DYGR5zSzJ3JQYAz2huLKZ_y7nzmvkEjDQNjtg1R2cusNHvxLt8Su3T0hUbT_Vl5-b_VvBqo2yUTc7Z7WOJPwzId8rATujA"
+          }
+        ],
+        "OpenIdCoreCertificates": [
+          {
+            "Source": "File", // Or "Raw"
+            "File": {
+              "Path": "wwwroot/certificates/ComuneVigata-SPID.pfx",
+              "Password": "P@ssW0rd!"
+            },
+            "Raw": {
+              "Certificate": "base64",
+              "Password": "password"
+            }
+          }
+        ],
+        "OpenIdFederationCertificates": [
+          {
+            "Source": "File", // Or "Raw"
+            "File": {
+              "Path": "wwwroot/certificates/ComuneVigata-SPID.pfx",
+              "Password": "P@ssW0rd!"
+            },
+            "Raw": {
+              "Certificate": "base64",
+              "Password": "password"
+            }
+          }
+        ]
+      }
+    ]
+  }
+```
+The configuration of the RP certificates is done by specifying in the `Source` field one of the values `File/Raw` and by filling in the section corresponding to the specified value. The sections not used (e.g. those corresponding to the other values) can be safely deleted from the configuration file, since they will not be read.
+Alternatively, you can configure all of the above options programmatically, from the `AddSpidCieOIDC(options => ...)` method.
 
 ## Extensions
 The library comes with a set of default services that you could override in order to have a different desired behavior for the related core features.
