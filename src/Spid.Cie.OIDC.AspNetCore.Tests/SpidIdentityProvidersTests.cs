@@ -80,18 +80,18 @@ public class SpidIdentityProvidersTests
             }
         };
 
-        idp.SupportedAcrValues = new() { SpidConst.SpidL2, SpidConst.SpidL1, SpidConst.SpidL3 };
+        idp.SupportedAcrValues = new() { SpidCieConst.SpidL2, SpidCieConst.SpidL1, SpidCieConst.SpidL3 };
 
         var acr = idp.GetAcrValue(SecurityLevel.L2);
 
-        Assert.True(acr.Contains(SpidConst.SpidL2));
+        Assert.Contains(SpidCieConst.SpidL2, acr);
 
         acr = idp.GetAcrValue(SecurityLevel.L1);
 
-        Assert.True(acr.Contains(SpidConst.SpidL1));
+        Assert.Contains(SpidCieConst.SpidL1, acr);
 
         acr = idp.GetAcrValue(SecurityLevel.L3);
 
-        Assert.True(acr.Contains(SpidConst.SpidL3));
+        Assert.Contains(SpidCieConst.SpidL3, acr);
     }
 }

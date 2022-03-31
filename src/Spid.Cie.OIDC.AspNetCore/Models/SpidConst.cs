@@ -5,13 +5,6 @@ namespace Spid.Cie.OIDC.AspNetCore.Models;
 [ExcludeFromCodeCoverage]
 internal class SpidConst
 {
-    internal const string SpidLevelBaseURI = "https://www.spid.gov.it/";
-
-    internal const string SpidL1 = $"{SpidLevelBaseURI}{nameof(SpidL1)}";
-    internal const string SpidL2 = $"{SpidLevelBaseURI}{nameof(SpidL2)}";
-    internal const string SpidL3 = $"{SpidLevelBaseURI}{nameof(SpidL3)}";
-    internal const string DefaultAcr = SpidL2;
-
     internal const string AttributesBaseURI = "https://attributes.spid.gov.it/";
 
     internal const string name = $"{AttributesBaseURI}{nameof(name)}";

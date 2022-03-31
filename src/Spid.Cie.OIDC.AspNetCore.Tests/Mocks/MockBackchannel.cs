@@ -30,11 +30,19 @@ internal partial class TestSettings
             {
                 return await ReturnResource("jwtOP.json", "application/jwt");
             }
+            if (request.RequestUri.AbsoluteUri.Equals("http://127.0.0.1:8002/oidc/op/.well-known/openid-federation"))
+            {
+                return await ReturnResource("jwtOP.json", "application/jwt");
+            }
             if (request.RequestUri.AbsoluteUri.Equals("http://127.0.0.1:8000/.well-known/openid-federation"))
             {
                 return await ReturnResource("jwtTA.json", "application/jwt");
             }
             if (request.RequestUri.AbsoluteUri.Equals("http://127.0.0.1:8000/fetch/?sub=http://127.0.0.1:8000/oidc/op/"))
+            {
+                return await ReturnResource("jwtES.json", "application/jwt");
+            }
+            if (request.RequestUri.AbsoluteUri.Equals("http://127.0.0.1:8000/fetch/?sub=http://127.0.0.1:8002/oidc/op/"))
             {
                 return await ReturnResource("jwtES.json", "application/jwt");
             }

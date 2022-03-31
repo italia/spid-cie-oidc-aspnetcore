@@ -120,6 +120,7 @@ internal class TestServerBuilder
                     })
                     .ConfigureServices(services =>
                     {
+                        SpidCieConst.TrustChainExpirationGracePeriod = TimeSpan.FromDays(3650);
                         services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
                             .AddCookie()
                             .AddSpidCieOIDC(options);

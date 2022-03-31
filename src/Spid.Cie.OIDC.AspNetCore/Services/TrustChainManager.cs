@@ -5,6 +5,7 @@ using Newtonsoft.Json.Linq;
 using Spid.Cie.OIDC.AspNetCore.Helpers;
 using Spid.Cie.OIDC.AspNetCore.Models;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -21,7 +22,7 @@ internal class TrustChainManager : ITrustChainManager
     private readonly ILogPersister _logPersister;
     private readonly ILogger<TrustChainManager> _logger;
     private readonly IMetadataPolicyHandler _metadataPolicyHandler;
-    private static readonly Dictionary<string, KeyValuePair<DateTimeOffset, IdPEntityConfiguration>> _trustChainCache = new Dictionary<string, KeyValuePair<DateTimeOffset, IdPEntityConfiguration>>();
+    private static readonly ConcurrentDictionary<string, KeyValuePair<DateTimeOffset, IdPEntityConfiguration>> _trustChainCache = new();
     private static readonly SemaphoreSlim _syncLock = new SemaphoreSlim(1);
 
     public TrustChainManager(IHttpClientFactory httpClientFactory,
@@ -109,9 +110,7 @@ internal class TrustChainManager : ITrustChainManager
 
                             if (opConf is not null && opConf.Metadata?.OpenIdProvider is not null)
                             {
-                                if (esExpiresOn < expiresOn)
-                                    expiresOn = esExpiresOn;
-
+                                expiresOn = esExpiresOn < expiresOn ? esExpiresOn : expiresOn;
                                 opValidated = true;
                                 break;
                             }
@@ -119,7 +118,7 @@ internal class TrustChainManager : ITrustChainManager
                     }
                     if (opValidated && opConf is not null)
                     {
-                        _trustChainCache.Add(url, new KeyValuePair<DateTimeOffset, IdPEntityConfiguration>(expiresOn, opConf));
+                        _trustChainCache.AddOrUpdate(url, new KeyValuePair<DateTimeOffset, IdPEntityConfiguration>(expiresOn, opConf), (oldValue, newValue) => newValue);
                     }
                 }
                 finally
@@ -128,7 +127,9 @@ internal class TrustChainManager : ITrustChainManager
                 }
             }
         }
-        return _trustChainCache.ContainsKey(url) ? _trustChainCache[url].Value : null;
+        return _trustChainCache.ContainsKey(url) && _trustChainCache[url].Key.Add(SpidCieConst.TrustChainExpirationGracePeriod) > DateTimeOffset.UtcNow
+            ? _trustChainCache[url].Value
+            : null;
     }
 
     private async Task<(T? conf, string? decodedJwt, string? jwt)> ValidateAndDecodeEntityConfiguration<T>(string? url)

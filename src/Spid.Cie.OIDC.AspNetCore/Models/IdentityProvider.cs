@@ -17,7 +17,16 @@ public abstract class IdentityProvider
     internal IdPEntityConfiguration EntityConfiguration { get; set; }
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
-    public abstract string GetAcrValue(SecurityLevel securityLevel);
+    public string GetAcrValue(SecurityLevel securityLevel)
+    {
+        return securityLevel == SecurityLevel.L1 && SupportedAcrValues.Contains(SpidCieConst.SpidL1)
+            ? SpidCieConst.SpidL1
+            : securityLevel == SecurityLevel.L2 && SupportedAcrValues.Contains(SpidCieConst.SpidL2)
+            ? SpidCieConst.SpidL2
+            : securityLevel == SecurityLevel.L3 && SupportedAcrValues.Contains(SpidCieConst.SpidL3)
+            ? SpidCieConst.SpidL3
+            : SpidCieConst.DefaultAcr;
+    }
 
     public abstract IEnumerable<string> FilterRequestedClaims(List<ClaimTypes> requestedClaims);
 }

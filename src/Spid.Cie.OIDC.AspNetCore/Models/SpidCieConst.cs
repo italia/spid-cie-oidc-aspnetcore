@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Spid.Cie.OIDC.AspNetCore.Models;
 
@@ -28,6 +29,12 @@ public sealed class SpidCieConst
     /// </summary>
     public const string CookieName = "SpidCieOIDC.Properties";
 
+    public const string SpidLevelBaseURI = "https://www.spid.gov.it/";
+    public const string SpidL1 = $"{SpidLevelBaseURI}{nameof(SpidL1)}";
+    public const string SpidL2 = $"{SpidLevelBaseURI}{nameof(SpidL2)}";
+    public const string SpidL3 = $"{SpidLevelBaseURI}{nameof(SpidL3)}";
+    public const string DefaultAcr = SpidL2;
+
     public const string ResponseType = "code";
 
     public const string AuthorizationCode = "authorization_code";
@@ -53,6 +60,8 @@ public sealed class SpidCieConst
     public const string JsonEntityConfigurationContentType = "application/json";
 
     public const int EntityConfigurationExpirationInMinutes = 2880;
+
+    public static TimeSpan TrustChainExpirationGracePeriod = TimeSpan.FromHours(24);
 
     public const string RPApplicationType = "web";
 

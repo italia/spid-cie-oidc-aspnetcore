@@ -39,15 +39,4 @@ internal sealed class SpidIdentityProvider : IdentityProvider
             .Where(c => _claimsMapping.ContainsKey(c.Value))
             .Select(c => _claimsMapping[c.Value])
             .ToList()!;
-
-    public override string GetAcrValue(SecurityLevel securityLevel)
-    {
-        return securityLevel == SecurityLevel.L1 && base.SupportedAcrValues.Contains(SpidConst.SpidL1)
-            ? SpidConst.SpidL1
-            : securityLevel == SecurityLevel.L2 && base.SupportedAcrValues.Contains(SpidConst.SpidL2)
-            ? SpidConst.SpidL2
-            : securityLevel == SecurityLevel.L3 && base.SupportedAcrValues.Contains(SpidConst.SpidL3)
-            ? SpidConst.SpidL3
-            : SpidConst.DefaultAcr;
-    }
 }

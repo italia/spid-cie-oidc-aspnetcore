@@ -67,34 +67,5 @@ public class CieIdentityProvidersTests
         Assert.True(filteredClaims.Contains(CieConst.family_name));
     }
 
-    [Fact]
-    public async Task TestGetAcrValue()
-    {
-        await Task.CompletedTask;
 
-        var idp = new CieIdentityProvider()
-        {
-            EntityConfiguration = new IdPEntityConfiguration()
-            {
-                Metadata = new IdPMetadata_SpidCieOIDCConfiguration()
-                {
-                    OpenIdProvider = new Microsoft.IdentityModel.Protocols.OpenIdConnect.OpenIdConnectConfiguration()
-                }
-            }
-        };
-
-        idp.SupportedAcrValues = new() { CieConst.Cie_L1, CieConst.Cie_L2, CieConst.Cie_L3 };
-
-        var acr = idp.GetAcrValue(SecurityLevel.L2);
-
-        Assert.True(acr.Contains(CieConst.Cie_L2));
-
-        acr = idp.GetAcrValue(SecurityLevel.L1);
-
-        Assert.True(acr.Contains(CieConst.Cie_L1));
-
-        acr = idp.GetAcrValue(SecurityLevel.L3);
-
-        Assert.True(acr.Contains(CieConst.Cie_L3));
-    }
 }

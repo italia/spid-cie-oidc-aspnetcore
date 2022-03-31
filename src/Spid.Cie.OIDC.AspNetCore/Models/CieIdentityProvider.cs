@@ -30,15 +30,4 @@ internal sealed class CieIdentityProvider : IdentityProvider
             .Where(c => _claimsMapping.ContainsKey(c.Value))
             .Select(c => _claimsMapping[c.Value])
             .ToList()!;
-
-    public override string GetAcrValue(SecurityLevel securityLevel)
-    {
-        return securityLevel == SecurityLevel.L1 && base.SupportedAcrValues.Contains(CieConst.Cie_L1)
-            ? CieConst.Cie_L1
-            : securityLevel == SecurityLevel.L2 && base.SupportedAcrValues.Contains(CieConst.Cie_L2)
-            ? CieConst.Cie_L2
-            : securityLevel == SecurityLevel.L3 && base.SupportedAcrValues.Contains(CieConst.Cie_L3)
-            ? CieConst.Cie_L3
-            : CieConst.DefaultAcr;
-    }
 }
