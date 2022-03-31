@@ -40,8 +40,9 @@ At this point it is sufficient, inside the `Startup.cs`, to add the following li
 ```csharp
 public void ConfigureServices(IServiceCollection services)
     {
-        services.AddControllersWithViews();
-        services
+        // ......
+
+	services
             .AddAuthentication(o =>
             {
                 o.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
@@ -61,19 +62,12 @@ public void ConfigureServices(IServiceCollection services)
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
     {
         // ....
-        app.UseRouting();
-        app.UseAuthentication();
+
+	app.UseAuthentication();
         app.UseAuthorization();
 
         app.UseSpidCieOIDC();
-
-        app.UseEndpoints(endpoints =>
-        {
-            endpoints.MapControllerRoute(
-		name: "default",
-		pattern: "{controller=Home}/{action=Index}/{id?}");
-        });
-        
+       
         // ....
     }
 ```
