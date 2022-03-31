@@ -106,21 +106,27 @@ internal class SpidCieEvents : OpenIdConnectEvents
 
     public override async Task MessageReceived(MessageReceivedContext context)
     {
-        if (string.IsNullOrWhiteSpace(context.ProtocolMessage?.Error))
+        if (!string.IsNullOrWhiteSpace(context.ProtocolMessage!.Error))
         {
-            string? provider = null;
-            context.Properties?.Items.TryGetValue(SpidCieConst.IdPSelectorKey, out provider);
+            var ex = new Exception(context.ProtocolMessage.ErrorDescription ?? context.ProtocolMessage.Error);
+            ex.Data.Add(nameof(context.ProtocolMessage.Error), context.ProtocolMessage.Error);
+            ex.Data.Add(nameof(context.ProtocolMessage.ErrorDescription), context.ProtocolMessage.ErrorDescription);
+            ex.Data.Add(nameof(context.ProtocolMessage.ErrorUri), context.ProtocolMessage.ErrorUri);
+            context.Fail(ex);
+        }
+        else
+        {
+            context.Properties!.Items.TryGetValue(SpidCieConst.IdPSelectorKey, out var provider);
             if (!string.IsNullOrWhiteSpace(provider))
             {
-                _httpContextAccessor.HttpContext?.Items.Add(SpidCieConst.IdPSelectorKey, provider);
+                _httpContextAccessor.HttpContext!.Items.Add(SpidCieConst.IdPSelectorKey, provider);
             }
 
-            string? clientId = null;
-            context.Properties?.Items.TryGetValue(SpidCieConst.RPSelectorKey, out clientId);
+            context.Properties!.Items.TryGetValue(SpidCieConst.RPSelectorKey, out var clientId);
             if (!string.IsNullOrWhiteSpace(clientId))
             {
                 context.Options.ClientId = clientId;
-                _httpContextAccessor.HttpContext?.Items.Add(SpidCieConst.RPSelectorKey, clientId);
+                _httpContextAccessor.HttpContext!.Items.Add(SpidCieConst.RPSelectorKey, clientId);
             }
 
             context.Options.TokenValidationParameters = await _tokenValidationParametersRetriever.RetrieveTokenValidationParameter();

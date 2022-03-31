@@ -4,10 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Spid.Cie.OIDC.AspNetCore.Models;
 using Spid.Cie.OIDC.AspNetCore.WebApp.Models;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 
 namespace Spid.Cie.OIDC.AspNetCore.WebApp.Controllers;
 
@@ -56,37 +53,32 @@ public class HomeController : Controller
         var exceptionHandlerPathFeature =
         HttpContext.Features.Get<IExceptionHandlerPathFeature>();
 
-        string errorMessage = string.Empty;
-
-        if (exceptionHandlerPathFeature?.Error != null)
-        {
-            var messages = FromHierarchy(exceptionHandlerPathFeature?.Error, ex => ex.InnerException)
-                .Select(ex => ex.Message)
-                .ToList();
-            errorMessage = String.Join(" ", messages);
-        }
-
-        return View(new ErrorViewModel
+        var model = new ErrorViewModel
         {
             RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier,
-            Message = errorMessage
-        });
-    }
+        };
 
-    private IEnumerable<TSource> FromHierarchy<TSource>(TSource source,
-            Func<TSource, TSource> nextItem,
-            Func<TSource, bool> canContinue)
-    {
-        for (var current = source; canContinue(current); current = nextItem(current))
+        if (exceptionHandlerPathFeature?.Error?.InnerException != null)
         {
-            yield return current;
-        }
-    }
+            model.Error = exceptionHandlerPathFeature.Error.InnerException.Data.Contains("Error")
+                ? exceptionHandlerPathFeature.Error.InnerException.Data["Error"] as string
+                : exceptionHandlerPathFeature.Error.InnerException.GetType().Name;
 
-    private IEnumerable<TSource> FromHierarchy<TSource>(TSource source,
-        Func<TSource, TSource> nextItem)
-        where TSource : class
-    {
-        return FromHierarchy(source, nextItem, s => s != null);
+            model.ErrorDescription = exceptionHandlerPathFeature.Error.InnerException.Data.Contains("ErrorDescription")
+                ? exceptionHandlerPathFeature.Error.InnerException.Data["ErrorDescription"] as string
+                : exceptionHandlerPathFeature.Error.InnerException.Message;
+        }
+        else if (exceptionHandlerPathFeature?.Error != null)
+        {
+            model.Error = exceptionHandlerPathFeature.Error.Data.Contains("Error")
+                ? exceptionHandlerPathFeature.Error.Data["Error"] as string
+                : exceptionHandlerPathFeature.Error.GetType().Name;
+
+            model.ErrorDescription = exceptionHandlerPathFeature.Error.Data.Contains("ErrorDescription")
+                ? exceptionHandlerPathFeature.Error.Data["ErrorDescription"] as string
+                : exceptionHandlerPathFeature.Error.Message;
+        }
+
+        return View(model);
     }
 }

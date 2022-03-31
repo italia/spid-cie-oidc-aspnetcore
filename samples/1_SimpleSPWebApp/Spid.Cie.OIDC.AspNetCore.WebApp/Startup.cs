@@ -36,16 +36,14 @@ public class Startup
             });
     }
 
-    // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
     {
         app.UseExceptionHandler("/Home/Error");
-        app.UseHsts();
         app.UseStaticFiles();
 
         app.UseCookiePolicy(new CookiePolicyOptions
         {
-            Secure = CookieSecurePolicy.Always
+            Secure = CookieSecurePolicy.None
         });
 
         app.UseRouting();
@@ -53,6 +51,13 @@ public class Startup
         app.UseAuthorization();
 
         app.UseSpidCieOIDC();
+
+        app.UseCookiePolicy(
+            new CookiePolicyOptions
+            {
+                Secure = CookieSecurePolicy.None,
+                MinimumSameSitePolicy = SameSiteMode.Lax
+            });
 
         app.UseEndpoints(endpoints =>
         {

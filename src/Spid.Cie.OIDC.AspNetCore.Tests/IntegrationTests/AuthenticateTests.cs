@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Net.Http.Headers;
+using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
@@ -74,6 +75,26 @@ public class AuthenticateTests
         var response = await GetAsync(server, $"signin-spidcie?state={queryString["state"]}&iss={UrlEncoder.Default.Encode("http://127.0.0.1:8000/oidc/op/")}&code=test_code", cookies);
         Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
         Assert.NotNull(res.Headers.Location);
+    }
+
+    [Fact]
+    public async Task ErrorOnGetRequestToCallbackPath()
+    {
+        var settings = new TestSettings();
+
+        var server = settings.CreateTestServer();
+        var transaction = await server.SendAsync(ChallengeEndpoint);
+
+        var res = transaction.Response;
+        Assert.Equal(HttpStatusCode.Redirect, res.StatusCode);
+        Assert.NotNull(res.Headers.Location);
+
+        var location = res.Headers.Location;
+        var cookies = SetCookieHeaderValue.ParseList(transaction.SetCookie);
+
+        var queryString = QueryHelpers.ParseQuery(location.OriginalString);
+
+        Assert.ThrowsAnyAsync<Exception>(async () => await GetAsync(server, $"signin-spidcie?state={queryString["state"]}&error=test_error&error_description=error_description", cookies));
     }
 
     private Task<HttpResponseMessage> GetAsync(TestServer server, string path, IEnumerable<SetCookieHeaderValue> cookies)

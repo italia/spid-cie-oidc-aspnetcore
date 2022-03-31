@@ -2,25 +2,26 @@
 @{
     ViewData["Title"] = "Error";
 }
+<div class="main-body">
+    <div>
+        <div class="container pt-2 p-3">
+            <div class="row d-lg-flex">
+                <div class="col-12">
+                    <div class="card-wrapper card-space">
+                        <div class="card card-bg no-after">
+                            <div class="card-body">
+                                <div class="row h-100">
+                                    <div class="col-12 col-lg-6 pl-lg-4">
+                                        <div class="callout danger">
+                                            <div class="callout-title">
+                                                @Model.Error
+                                            </div>
 
-<div>
-    <div class="container pt-2 p-3">
-        <div class="row d-lg-flex">
-            <div class="col-12">
-                <div class="card-wrapper card-space">
-                    <div class="card card-bg no-after">
-                        <div class="card-body">
-                            <div class="row h-100">
-
-                                <div class="col-12 p-4">
-                                    <h4 class="text-left">
-                                        Error
-                                    </h4>
-
-                                    <p>
-                                        <code>@Model.Message</code>
-                                    </p>
-
+                                            <p>
+                                                @Model.ErrorDescription
+                                            </p>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -29,4 +30,5 @@
             </div>
         </div>
     </div>
+
 </div>
