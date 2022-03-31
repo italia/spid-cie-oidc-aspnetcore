@@ -79,7 +79,7 @@ Copy the newly generated Trust Mark in the proper configuration section for the 
 ```
 
 Now you should stop and restart the federation in order to have the RP to reload the configuration.
-You can do this by running the following command:
+You can stop the federation by a Ctrl+C in the terminal window where the compose is running, and by running the following command:
 
 `docker-compose build aspnetcore.relying-party.org && docker-compose up`
 
