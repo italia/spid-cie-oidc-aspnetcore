@@ -36,9 +36,74 @@ Now you should be able to run the entire federation by just opening a Terminal s
 
 Now your relying party should respond to http://aspnetcore.relying-party.org:5000/ and the Trust Anchor should respond to http://trust-anchor.org:8000/ 
 
-Now navigate to the endpoint that shows the openid federation configuration of the RP as a decoded json (http://aspnetcore.relying-party.org:5000/.well-known/openid-federation/json), you will receive the following output.
+Now navigate to the endpoint that shows the openid federation configuration of the RP as a decoded json (http://aspnetcore.relying-party.org:5000/.well-known/openid-federation/json), you will receive something like the following output.
 
-![image](https://user-images.githubusercontent.com/58780951/160616885-4047c644-d017-46b3-b68f-4d09dd986877.png)
+```json
+{
+  "metadata": {
+    "openid_relying_party": {
+      "client_registration_types": [
+        "automatic"
+      ],
+      "application_type": "web",
+      "client_name": "RP Test",
+      "contacts": [
+        "info@rptest.it"
+      ],
+      "grant_types": [
+        "authorization_code",
+        "refresh_token"
+      ],
+      "jwks": {
+        "keys": [
+          {
+            "kty": "RSA",
+            "use": "sig",
+            "kid": "B5D9B00247B14DF93690A2E4F763C12357EF69F8",
+            "x5t": "tdmwAkexTfk2kKLk92PBI1fvafg",
+            "e": "AQAB",
+            "n": "mGLk2E8AziGBAmj8XuU-....",
+            "x5c": [
+              "MIIGIjCCBAqgAwIBAg...."
+            ],
+            "alg": "RS256"
+          }
+        ]
+      },
+      "redirect_uris": [
+        "http://aspnetcore.relying-party.org:5000/signin-spidcie"
+      ],
+      "response_types": [
+        "code"
+      ],
+      "subject_type": "pairwise"
+    }
+  },
+  "authority_hints": [
+    "http://trust-anchor.org:8000/"
+  ],
+  "iss": "http://aspnetcore.relying-party.org:5000/",
+  "sub": "http://aspnetcore.relying-party.org:5000/",
+  "iat": 1648737995,
+  "exp": 1648910795,
+  "jwks": {
+    "keys": [
+      {
+        "kty": "RSA",
+        "use": "sig",
+        "kid": "B5D9B00247B14DF93690A2E4F763C12357EF69F8",
+        "x5t": "tdmwAkexTfk2kKLk92PBI1fvafg",
+        "e": "AQAB",
+        "n": "mGLk2E8AziGBAmj8XuU-....",
+        "x5c": [
+          "MIIGIjCCBAqgAwIBAg...."
+        ],
+        "alg": "RS256"
+      }
+    ]
+  }
+}
+```
 
 Please, take note of the `keys` field value in the json, you will need it later in the onboarding phase.
 
