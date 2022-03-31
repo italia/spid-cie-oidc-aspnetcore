@@ -5,6 +5,7 @@
 		<CopyRefAssembliesToPublishDirectory>false</CopyRefAssembliesToPublishDirectory>
 		<UserSecretsId>4ed0da3d-4a93-4f8b-ae96-a1d393405202</UserSecretsId>
 		<DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+		<DockerComposeProjectPath>..\docker-compose.dcproj</DockerComposeProjectPath>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -27,16 +28,17 @@
 		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.16.0" />
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="6.0.3" />
 		<PackageReference Include="JWT" Version="8.9.0" />
-		<PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.14.0" />
+		<PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.15.0" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
 		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.16.0" />
 		<PackageReference Include="jose-jwt" Version="3.2.0" />
+		<PackageReference Include="Spid.Cie.OIDC.AspNetCore" Version="0.4.0-prerelease" />
 	</ItemGroup>
 
-	<ItemGroup>
+	<!--<ItemGroup>
 	  <Reference Include="Spid.Cie.OIDC.AspNetCore">
 	    <HintPath>..\..\..\src\Spid.Cie.OIDC.AspNetCore\bin\Debug\net6.0\Spid.Cie.OIDC.AspNetCore.dll</HintPath>
 	  </Reference>
-	</ItemGroup>
+	</ItemGroup>-->
 
 </Project>

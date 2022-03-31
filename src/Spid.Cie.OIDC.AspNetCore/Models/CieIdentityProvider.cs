@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 
 namespace Spid.Cie.OIDC.AspNetCore.Models;
@@ -26,7 +25,7 @@ internal sealed class CieIdentityProvider : IdentityProvider
 
     internal override IdentityProviderType Type { get => IdentityProviderType.CIE; }
 
-    public override IEnumerable<string> FilterRequestedClaims(ClaimTypes[] requestedClaims)
+    public override IEnumerable<string> FilterRequestedClaims(List<ClaimTypes> requestedClaims)
         => requestedClaims
             .Where(c => _claimsMapping.ContainsKey(c.Value))
             .Select(c => _claimsMapping[c.Value])

@@ -82,11 +82,11 @@ internal class RPOpenIdFederationMiddleware
                     ClientName = rp.ClientName,
                     Contacts = rp.Contacts,
                     GrantTypes = rp.LongSessionsEnabled
-                        ? new[] { SpidCieConst.AuthorizationCode, SpidCieConst.RefreshToken }
-                        : new[] { SpidCieConst.AuthorizationCode },
+                        ? new() { SpidCieConst.AuthorizationCode, SpidCieConst.RefreshToken }
+                        : new() { SpidCieConst.AuthorizationCode },
                     JWKS = cryptoService.GetJWKS(rp.OpenIdCoreCertificates),
                     RedirectUris = rp.RedirectUris,
-                    ResponseTypes = new[] { SpidCieConst.ResponseType }
+                    ResponseTypes = new() { SpidCieConst.ResponseType }
                 }
             }
         };

@@ -96,7 +96,7 @@ internal class IdentityProvidersHandler : IIdentityProvidersHandler
            OrganizationUrl = conf.Metadata.OpenIdProvider.AdditionalData["op_uri"] as string ?? string.Empty,
            OrganizationLogoUrl = conf.Metadata.OpenIdProvider.AdditionalData["logo_uri"] as string ?? string.Empty,
            OrganizationName = conf.Metadata.OpenIdProvider.AdditionalData["organization_name"] as string ?? string.Empty,
-           SupportedAcrValues = conf.Metadata.OpenIdProvider.AcrValuesSupported.ToArray(),
+           SupportedAcrValues = conf.Metadata.OpenIdProvider.AcrValuesSupported.ToList(),
        };
 
     private static IdentityProvider CreateCieIdentityProvider(IdPEntityConfiguration conf)
@@ -108,6 +108,6 @@ internal class IdentityProvidersHandler : IIdentityProvidersHandler
            OrganizationUrl = conf.Metadata.OpenIdProvider.AdditionalData["op_uri"] as string ?? string.Empty,
            OrganizationLogoUrl = conf.Metadata.OpenIdProvider.AdditionalData["logo_uri"] as string ?? string.Empty,
            OrganizationName = conf.Metadata.OpenIdProvider.AdditionalData["organization_name"] as string ?? string.Empty,
-           SupportedAcrValues = conf.Metadata.OpenIdProvider.AcrValuesSupported.ToArray(),
+           SupportedAcrValues = conf.Metadata.OpenIdProvider.AcrValuesSupported.ToList(),
        };
 }

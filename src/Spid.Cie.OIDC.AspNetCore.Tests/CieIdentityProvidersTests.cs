@@ -28,7 +28,8 @@ public class CieIdentityProvidersTests
         idp.EntityConfiguration.Metadata.OpenIdProvider.ClaimsSupported.Add(CieConst.family_name);
 
 
-        var filteredClaims = idp.FilterRequestedClaims(new ClaimTypes[] {
+        var filteredClaims = idp.FilterRequestedClaims(new()
+        {
             ClaimTypes.Name,
             ClaimTypes.FamilyName,
             ClaimTypes.FiscalNumber,
@@ -82,7 +83,7 @@ public class CieIdentityProvidersTests
             }
         };
 
-        idp.SupportedAcrValues = new string[] { CieConst.Cie_L1, CieConst.Cie_L2, CieConst.Cie_L3 };
+        idp.SupportedAcrValues = new() { CieConst.Cie_L1, CieConst.Cie_L2, CieConst.Cie_L3 };
 
         var acr = idp.GetAcrValue(SecurityLevel.L2);
 
