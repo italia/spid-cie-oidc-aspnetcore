@@ -40,8 +40,6 @@ At this point it is sufficient, inside the `Startup.cs`, to add the following li
 ```csharp
 public void ConfigureServices(IServiceCollection services)
     {
-        var certificate = new X509Certificate2("wwwroot/certificates/ComuneVigata-SPID.pfx", "P@ssW0rd!");
-
         services.AddControllersWithViews();
         services
             .AddAuthentication(o =>
@@ -72,8 +70,8 @@ public void ConfigureServices(IServiceCollection services)
         app.UseEndpoints(endpoints =>
         {
             endpoints.MapControllerRoute(
-                                name: "default",
-                                pattern: "{controller=Home}/{action=Index}/{id?}");
+		name: "default",
+		pattern: "{controller=Home}/{action=Index}/{id?}");
         });
         
         // ....
