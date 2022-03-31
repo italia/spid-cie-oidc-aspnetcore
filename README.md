@@ -17,6 +17,7 @@ The SPID/CIE OIDC Federation Relying Party SDK, written in C# for AspNetCore. Th
 * [Features](#features)
 * [Setup](#setup)
 * [Extensions](#extensions)
+* [Error Handling](#error-handling)
 * [Sample WebApp](#sample-webapp)
 * [Contribute](#contribute)
     * [Contribute as end user](#contribute-as-end-user)
@@ -195,6 +196,61 @@ services.AddSpidCieOIDC(o => /* ..... */ )
    .AddRelyingPartySelector<CustomRelyingPartySelector>()
 ```
 
+## Error Handling
+The library can, at any stage (both in the Request creation stage and in the Response management stage), raise exceptions.
+A typical scenario is the one in which the error codes provided by the SPID protocol are received (n.19, n.20, etc ....), in this case the library raises an exception containing the corresponding localized error message, required by the SPID specifications, which can be managed (for example for visualization) using the normal flow provided for AspNetCore. The following example uses AspNetCore's ExceptionHandling middleware.
+
+```csharp
+public void Configure(IApplicationBuilder app, IHostEnvironment env)
+{
+    ...
+    app.UseExceptionHandler("/Home/Error");
+    ...
+}
+
+.......
+
+// HomeController
+[AllowAnonymous]
+public async Task<IActionResult> Error()
+{
+    var exceptionHandlerPathFeature =
+        HttpContext.Features.Get<IExceptionHandlerPathFeature>();
+
+    string errorMessage = string.Empty;
+
+    if (exceptionHandlerPathFeature?.Error != null)
+    {
+        var messages = FromHierarchy(exceptionHandlerPathFeature?.Error, ex => ex.InnerException)
+            .Select(ex => ex.Message)
+            .ToList();
+        errorMessage = String.Join(" ", messages);
+    }
+
+    return View(new ErrorViewModel
+    {
+        RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier,
+        Message = errorMessage
+    });
+}
+
+private IEnumerable<TSource> FromHierarchy<TSource>(TSource source,
+            Func<TSource, TSource> nextItem,
+            Func<TSource, bool> canContinue)
+{
+    for (var current = source; canContinue(current); current = nextItem(current))
+    {
+        yield return current;
+    }
+}
+
+private IEnumerable<TSource> FromHierarchy<TSource>(TSource source,
+    Func<TSource, TSource> nextItem)
+    where TSource : class
+{
+    return FromHierarchy(source, nextItem, s => s != null);
+}
+```
 
 ## Sample WebApp
 For the Sample WebApp doc and how to do a sample Onboarding with the Django OP and TA, please [read this section](SAMPLE.md)
