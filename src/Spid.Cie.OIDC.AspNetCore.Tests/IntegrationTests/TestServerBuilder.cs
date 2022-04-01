@@ -28,7 +28,7 @@ internal class TestServerBuilder
     public static readonly string DefaultAuthority = @"http://127.0.0.1:8000/oidc/op/";
     public static readonly string TestHost = @"http://127.0.0.1:5000";
     public static readonly string Challenge = "/challenge";
-    public static readonly string ChallengeWithProvider = "/challenge?provider=https://www.agid.gov.it";
+    public static readonly string ChallengeWithProvider = "/challenge?provider=http://127.0.0.1:8000/oidc/op/";
     public static readonly string ChallengeWithOutContext = "/challengeWithOutContext";
     public static readonly string ChallengeWithProperties = "/challengeWithProperties";
     public static readonly string Signin = "/signin";
