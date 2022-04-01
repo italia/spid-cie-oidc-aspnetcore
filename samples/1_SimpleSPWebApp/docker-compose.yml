@@ -1,8 +1,7 @@
 version: '3.4'
 
 services:
-  spid.cie.oidc.aspnetcore.webapp:
-    image: ${DOCKER_REGISTRY-}spidcieoidcaspnetcorewebapp
+  aspnetcore.relying-party.org:
     build:
       context: .
       dockerfile: Spid.Cie.OIDC.AspNetCore.WebApp/Dockerfile
