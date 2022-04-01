@@ -10,6 +10,8 @@ on:
       - CHANGELOG.md  # Should never be edited anyway
       - .gitignore
       - .github/**
+    tags-ignore:
+      - '**'
   workflow_dispatch:
 
 jobs:
