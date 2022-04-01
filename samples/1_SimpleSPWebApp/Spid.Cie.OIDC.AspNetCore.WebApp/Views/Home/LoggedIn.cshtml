@@ -19,8 +19,20 @@
                                     </h4>
 
                                     <dl class="mt-4 mb-4">
-                                        @foreach (var claim in User.Claims.Where(c => c.Type.StartsWith("https://attributes.spid.gov.it/")
-                                            || c.Type.StartsWith("https://idserver.servizicie.interno.gov.it/")))
+                                        @foreach (var claim in User.Claims.Where(c => !new string[]
+                                         {
+                                            "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier",
+                                            "nonce",
+                                            "at_hash",
+                                            "c_hash",
+                                            "aud",
+                                            "iss",
+                                            "http://schemas.microsoft.com/claims/authnclassreference",
+                                            "jti",
+                                            "exp",
+                                            "iat",
+                                            "sub"
+                                         }.Contains(c.Type)))
                                         {
                                             <dt>@claim.Type:</dt>
                                             <dd>@claim.Value</dd>

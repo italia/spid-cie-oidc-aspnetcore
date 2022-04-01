@@ -91,8 +91,8 @@ internal class IdentityProvidersHandler : IIdentityProvidersHandler
        => new SpidIdentityProvider()
        {
            EntityConfiguration = conf,
-           Uri = conf.Metadata.OpenIdProvider!.AdditionalData["op_uri"] as string ?? string.Empty,
-           OrganizationDisplayName = conf.Metadata.OpenIdProvider.AdditionalData["op_name"] as string ?? string.Empty,
+           Uri = conf.Subject ?? string.Empty,
+           OrganizationDisplayName = conf.Metadata.OpenIdProvider!.AdditionalData["op_name"] as string ?? string.Empty,
            OrganizationUrl = conf.Metadata.OpenIdProvider.AdditionalData["op_uri"] as string ?? string.Empty,
            OrganizationLogoUrl = conf.Metadata.OpenIdProvider.AdditionalData["logo_uri"] as string ?? string.Empty,
            OrganizationName = conf.Metadata.OpenIdProvider.AdditionalData["organization_name"] as string ?? string.Empty,
@@ -103,8 +103,8 @@ internal class IdentityProvidersHandler : IIdentityProvidersHandler
        => new CieIdentityProvider()
        {
            EntityConfiguration = conf,
-           Uri = conf.Metadata.OpenIdProvider!.AdditionalData["op_uri"] as string ?? string.Empty,
-           OrganizationDisplayName = conf.Metadata.OpenIdProvider.AdditionalData["op_name"] as string ?? string.Empty,
+           Uri = conf.Subject ?? string.Empty,
+           OrganizationDisplayName = conf.Metadata.OpenIdProvider!.AdditionalData["op_name"] as string ?? string.Empty,
            OrganizationUrl = conf.Metadata.OpenIdProvider.AdditionalData["op_uri"] as string ?? string.Empty,
            OrganizationLogoUrl = conf.Metadata.OpenIdProvider.AdditionalData["logo_uri"] as string ?? string.Empty,
            OrganizationName = conf.Metadata.OpenIdProvider.AdditionalData["organization_name"] as string ?? string.Empty,
