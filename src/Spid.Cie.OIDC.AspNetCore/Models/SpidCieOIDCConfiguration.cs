@@ -65,7 +65,7 @@ internal sealed class IdPMetadata_SpidCieOIDCConfiguration
 internal sealed class JWKS
 {
     [JsonPropertyName("keys")]
-    public List<JsonWebKey> Keys { get; set; } = new List<JsonWebKey>();
+    public List<JsonWebKey> Keys { get; set; } = new();
 }
 
 [ExcludeFromCodeCoverage]
