@@ -11,7 +11,7 @@ on:
       - .gitignore
       - .github/**
     tags-ignore:
-      - '**'
+      - v*
   workflow_dispatch:
 
 jobs:
