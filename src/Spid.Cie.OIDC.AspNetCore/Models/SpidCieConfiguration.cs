@@ -8,11 +8,11 @@ internal sealed class SpidCieConfiguration
 {
     public bool RequestRefreshToken { get; set; } = false;
 
-    public List<RelyingParty> RelyingParties { get; set; } = new List<RelyingParty>();
+    public List<RelyingParty> RelyingParties { get; set; } = new();
 
-    public List<string> SpidOPs { get; set; } = new List<string>();
+    public List<string> SpidOPs { get; set; } = new();
 
-    public List<string> CieOPs { get; set; } = new List<string>();
+    public List<string> CieOPs { get; set; } = new();
 
     public int IdentityProvidersCacheExpirationInMinutes { get; set; }
 }
