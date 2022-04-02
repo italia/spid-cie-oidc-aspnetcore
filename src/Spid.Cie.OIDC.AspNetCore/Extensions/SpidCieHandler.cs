@@ -53,8 +53,6 @@ internal class SpidCieHandler : OpenIdConnectHandler
         set { base.Events = value; }
     }
 
-    protected override Task<object> CreateEventsAsync() => Task.FromResult<object>(_events);
-
     protected override async Task HandleChallengeAsync(AuthenticationProperties properties)
     {
         if (string.IsNullOrWhiteSpace(properties.RedirectUri))

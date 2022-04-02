@@ -47,6 +47,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <None Update="appsettings.nocertificates.json">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
 	  <None Update="appsettings.test.json">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </None>

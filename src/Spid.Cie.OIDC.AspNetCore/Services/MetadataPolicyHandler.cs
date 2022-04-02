@@ -168,6 +168,14 @@ internal class MetadataPolicyHandler : IMetadataPolicyHandler
                                 .SequenceEqual((JArray)supersetOfClause.First()),
                         $"Metadata Policy 'superset_of' clause failed for '{property.Name}'");
                 }
+                else
+                {
+                    var policyClauses = property.Values();
+                    var essentialClause = GetTokenByName(policyClauses, "essential");
+                    Throw<InvalidOperationException>.If(essentialClause != null
+                            && (bool)essentialClause.First(),
+                        $"Metadata Policy 'essential' clause failed for property '{property.Name}'");
+                }
             }
 
             return OpenIdConnectConfiguration.Create(openIdConfigurationObj.ToString());

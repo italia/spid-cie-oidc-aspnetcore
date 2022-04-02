@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Spid.Cie.OIDC.AspNetCore.Configuration;
+using System;
 using System.Collections.Generic;
 using Xunit;
 
@@ -21,5 +22,21 @@ public class SpidCieOptionsTests
         new SpidCieOptions().LoadFromConfiguration(configuration);
     }
 
+    [Fact]
+    public void LoadFromConfigurationOK()
+    {
+        IConfiguration configuration = new ConfigurationBuilder()
+            .AddJsonFile("appsettings.test.json")
+            .Build();
+        new SpidCieOptions().LoadFromConfiguration(configuration);
+    }
 
+    [Fact]
+    public void LoadFromConfigurationNoCertificates()
+    {
+        IConfiguration configuration = new ConfigurationBuilder()
+            .AddJsonFile("appsettings.nocertificates.json")
+            .Build();
+        Assert.ThrowsAny<Exception>(() => new SpidCieOptions().LoadFromConfiguration(configuration));
+    }
 }
