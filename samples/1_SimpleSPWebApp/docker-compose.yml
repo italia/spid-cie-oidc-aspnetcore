@@ -3,13 +3,13 @@ version: '3.4'
 services:
   aspnetcore.relying-party.org:
     build:
-      context: .
+      context: /<path_to_cloned_repo>/samples/1_SimpleSPWebApp
       dockerfile: Spid.Cie.OIDC.AspNetCore.WebApp/Dockerfile
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_URLS=http://+:80
+      - ASPNETCORE_URLS=http://+:5000
     ports:
-      - "5000:80"
+      - "5000:5000"
     volumes:
       - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
       - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
