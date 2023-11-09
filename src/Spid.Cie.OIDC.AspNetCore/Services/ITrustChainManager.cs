@@ -6,4 +6,5 @@ namespace Spid.Cie.OIDC.AspNetCore.Services;
 internal interface ITrustChainManager
 {
     Task<IdPEntityConfiguration?> BuildTrustChain(string url);
+    TrustChain? GetResolvedTrustChain(string sub, string anchor);
 }

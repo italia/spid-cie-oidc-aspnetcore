@@ -49,14 +49,15 @@ internal class SpidCieEvents : OpenIdConnectEvents
         Throw<Exception>.If(relyingParty is null, ErrorLocalization.RelyingPartyNotFound);
 
         context.ProtocolMessage.IssuerAddress = identityProvider!.EntityConfiguration.Metadata.OpenIdProvider!.AuthorizationEndpoint;
-        context.ProtocolMessage.ClientId = relyingParty!.ClientId;
+        context.ProtocolMessage.ClientId = relyingParty!.Id;
+        context.ProtocolMessage.RedirectUri = $"{relyingParty!.Id.RemoveTrailingSlash()}{SpidCieConst.CallbackPath}";
         context.ProtocolMessage.AcrValues = identityProvider.GetAcrValue(relyingParty.SecurityLevel);
 
         if (_options.CurrentValue.RequestRefreshToken)
             context.ProtocolMessage.Scope += $" {SpidCieConst.OfflineScope}";
 
         context.Properties.Items[SpidCieConst.IdPSelectorKey] = identityProvider.Uri;
-        context.Properties.Items[SpidCieConst.RPSelectorKey] = relyingParty.ClientId;
+        context.Properties.Items[SpidCieConst.RPSelectorKey] = relyingParty.Id;
 
         await base.RedirectToIdentityProvider(context);
     }
@@ -149,7 +150,9 @@ internal class SpidCieEvents : OpenIdConnectEvents
         Throw<Exception>.If(context.TokenEndpointRequest is null, $"No Token Endpoint Request found in the current context");
 
         context.TokenEndpointRequest!.ClientAssertionType = SpidCieConst.ClientAssertionTypeValue;
-        context.TokenEndpointRequest!.ClientAssertion = _cryptoService.CreateClientAssertion(identityProvider!, relyingParty.ClientId!, certificate);
+        context.TokenEndpointRequest!.ClientAssertion = _cryptoService.CreateClientAssertion(identityProvider!.EntityConfiguration.Metadata.OpenIdProvider!.TokenEndpoint!,
+            relyingParty.Id!,
+            certificate);
 
         await base.AuthorizationCodeReceived(context);
     }

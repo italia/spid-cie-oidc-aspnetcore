@@ -1,0 +1,51 @@
+﻿@using Spid.Cie.OIDC.AspNetCore.Models
+@{
+    ViewData["Title"] = "Logged in";
+}
+<h1>@ViewData["Title"]</h1>
+
+<div>
+    <div class="container pt-2 p-3">
+        <div class="row d-lg-flex">
+            <div class="col-12">
+                <div class="card-wrapper card-space">
+                    <div class="card card-bg no-after">
+                        <div class="card-body">
+                            <div class="row h-100">
+
+                                <div class="col-12 p-4">
+                                    <h4 class="text-left">
+                                        User attributes
+                                    </h4>
+
+                                    <dl class="mt-4 mb-4">
+                                        @foreach (var claim in User.Claims.Where(c => !new string[]
+                                         {
+                                            "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier",
+                                            "nonce",
+                                            "at_hash",
+                                            "c_hash",
+                                            "aud",
+                                            "iss",
+                                            "http://schemas.microsoft.com/claims/authnclassreference",
+                                            "jti",
+                                            "exp",
+                                            "iat",
+                                            "sub"
+                                         }.Contains(c.Type)))
+                                        {
+                                            <dt>@claim.Type:</dt>
+                                            <dd>@claim.Value</dd>
+                                        }
+
+                                    </dl>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

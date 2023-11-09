@@ -23,8 +23,8 @@ public class SpidIdentityProvidersTests
             }
         };
 
-        idp.EntityConfiguration.Metadata.OpenIdProvider.ClaimsSupported.Add(SpidConst.name);
-        idp.EntityConfiguration.Metadata.OpenIdProvider.ClaimsSupported.Add(SpidConst.familyName);
+        idp.EntityConfiguration.Metadata.OpenIdProvider.ClaimsSupported.Add(SpidConst.given_name);
+        idp.EntityConfiguration.Metadata.OpenIdProvider.ClaimsSupported.Add(SpidConst.family_name);
 
 
         var filteredClaims = idp.FilterRequestedClaims(new()
@@ -47,11 +47,6 @@ public class SpidIdentityProvidersTests
             ClaimTypes.RegisteredOffice,
             ClaimTypes.SpidCode,
             ClaimTypes.CompanyFiscalNumber,
-            ClaimTypes.DomicileStreetAddress,
-            ClaimTypes.DomicilePostalCode,
-            ClaimTypes.DomicileMunicipality,
-            ClaimTypes.DomicileProvince,
-            ClaimTypes.DomicileNation,
             ClaimTypes.DocumentDetails,
             ClaimTypes.EmailVerified,
             ClaimTypes.IdANPR,
@@ -61,7 +56,7 @@ public class SpidIdentityProvidersTests
             ClaimTypes.PhysicalPhoneNumber,
         });
 
-        Assert.True(filteredClaims.Contains(SpidConst.name));
+        Assert.True(filteredClaims.Contains(SpidConst.given_name));
     }
 
     [Fact]

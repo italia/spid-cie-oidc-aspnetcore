@@ -13,7 +13,7 @@ public class DefaultRelyingPartySelectorTests
     {
         var _options = new MockOptionsMonitorSpidCieOptions();
         var _retriever = new RelyingPartiesHandler(_options, new DefaultRelyingPartiesRetriever());
-        var _selector = new DefaultRelyingPartySelector(_retriever);
+        var _selector = new DefaultRelyingPartySelector(_retriever, new MockHttpContextAccessor(false));
         var rp = await _selector.GetSelectedRelyingParty();
         Assert.NotNull(rp);
     }

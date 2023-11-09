@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.OAuth;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -9,6 +10,7 @@ using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Spid.Cie.OIDC.AspNetCore.Events;
 using Spid.Cie.OIDC.AspNetCore.Helpers;
 using Spid.Cie.OIDC.AspNetCore.Models;
+using Spid.Cie.OIDC.AspNetCore.Resources;
 using Spid.Cie.OIDC.AspNetCore.Services;
 using System;
 using System.Collections.Generic;
@@ -25,24 +27,30 @@ internal class SpidCieHandler : OpenIdConnectHandler
     private OpenIdConnectConfiguration? _configuration;
     private const string NonceProperty = "N";
     private readonly SpidCieEvents _events;
+    private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IIdentityProvidersHandler _idpHandler;
-    private readonly IRelyingPartiesHandler _rpRetriever;
+    private readonly IRelyingPartiesHandler _rpHandler;
+    private readonly IRelyingPartySelector _relyingPartySelector;
     private readonly ICryptoService _cryptoService;
 
     public SpidCieHandler(IOptionsMonitor<OpenIdConnectOptions> options,
+            IHttpContextAccessor httpContextAccessor,
             ILoggerFactory logger,
             HtmlEncoder htmlEncoder,
             UrlEncoder encoder,
             ISystemClock clock,
             IIdentityProvidersHandler idpHandler,
-            IRelyingPartiesHandler rpRetriever,
+            IRelyingPartiesHandler rpHandler,
+            IRelyingPartySelector relyingPartySelector,
             ICryptoService cryptoService,
             SpidCieEvents events)
         : base(options, logger, htmlEncoder, encoder, clock)
     {
         _events = events;
+        _httpContextAccessor = httpContextAccessor;
         _idpHandler = idpHandler;
-        _rpRetriever = rpRetriever;
+        _rpHandler = rpHandler;
+        _relyingPartySelector = relyingPartySelector;
         _cryptoService = cryptoService;
         Events = events;
     }
@@ -93,8 +101,15 @@ internal class SpidCieHandler : OpenIdConnectHandler
         #endregion
 
 
+        var relyingParty = await _relyingPartySelector.GetSelectedRelyingParty();
+        Throw<Exception>.If(relyingParty is null, ErrorLocalization.RelyingPartyNotFound);
+
+        Options.NonceCookie.Path = $"{new Uri(relyingParty!.Id).AbsolutePath.RemoveTrailingSlash()}/{SpidCieConst.CallbackPath.RemoveLeadingSlash()}";
+
         message.Nonce = Options.ProtocolValidator.GenerateNonce();
         WriteNonceCookie(message.Nonce);
+
+        Options.CorrelationCookie.Path = $"{new Uri(relyingParty!.Id).AbsolutePath.RemoveTrailingSlash()}/{SpidCieConst.CallbackPath.RemoveLeadingSlash()}";
 
         GenerateCorrelationId(properties);
 
@@ -125,6 +140,48 @@ internal class SpidCieHandler : OpenIdConnectHandler
 
         Response.Redirect(redirectUri);
         return;
+    }
+
+    private void RestoreOriginalPath()
+    {
+        if (_httpContextAccessor.HttpContext.Request.Headers.ContainsKey("X-Replaced-Path"))
+            _httpContextAccessor.HttpContext.Request.Path = _httpContextAccessor.HttpContext.Request.Headers["X-Replaced-Path"].FirstOrDefault();
+    }
+
+    protected override Task<AuthenticateResult> HandleAuthenticateAsync()
+    {
+        RestoreOriginalPath();
+        return base.HandleAuthenticateAsync();
+    }
+
+    protected override Task<HandleRequestResult> HandleRemoteAuthenticateAsync()
+    {
+        RestoreOriginalPath();
+        return base.HandleRemoteAuthenticateAsync();
+    }
+
+    protected override Task<bool> HandleSignOutCallbackAsync()
+    {
+        RestoreOriginalPath();
+        return base.HandleSignOutCallbackAsync();
+    }
+
+    protected override Task<bool> HandleRemoteSignOutAsync()
+    {
+        RestoreOriginalPath();
+        return base.HandleRemoteSignOutAsync();
+    }
+
+    protected override Task HandleForbiddenAsync(AuthenticationProperties properties)
+    {
+        RestoreOriginalPath();
+        return base.HandleForbiddenAsync(properties);
+    }
+
+    protected override Task<HandleRequestResult> HandleAccessDeniedErrorAsync(AuthenticationProperties properties)
+    {
+        RestoreOriginalPath();
+        return base.HandleAccessDeniedErrorAsync(properties);
     }
 
     private void WriteNonceCookie(string nonce)
@@ -165,8 +222,8 @@ internal class SpidCieHandler : OpenIdConnectHandler
         Throw<InvalidOperationException>.If(string.IsNullOrWhiteSpace(clientId),
             "Current authenticated User doesn't have an 'aud' claim.");
 
-        var rps = await _rpRetriever.GetRelyingParties();
-        var rp = rps.FirstOrDefault(r => r.ClientId.Equals(clientId));
+        var rps = await _rpHandler.GetRelyingParties();
+        var rp = rps.FirstOrDefault(r => r.Id.Equals(clientId));
         Throw<InvalidOperationException>.If(rp is null,
             $"No RelyingParty found for the clientId {clientId}");
 
@@ -186,7 +243,7 @@ internal class SpidCieHandler : OpenIdConnectHandler
             ClientAssertion = new ClientAssertion()
             {
                 Type = SpidCieConst.ClientAssertionTypeValue,
-                Value = _cryptoService.CreateClientAssertion(idp!, clientId!, certificate)
+                Value = _cryptoService.CreateClientAssertion(idp!.EntityConfiguration.Metadata.OpenIdProvider!.AdditionalData["revocation_endpoint"] as string, clientId!, certificate)
             },
             Token = accessToken
         };

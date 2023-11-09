@@ -24,4 +24,22 @@ internal class MockTrustChainManager : ITrustChainManager
         result.Metadata.OpenIdProvider.AcrValuesSupported.Add("test");
         return result;
     }
+
+    public TrustChain? GetResolvedTrustChain(string sub, string anchor)
+    {
+        return new TrustChain()
+        {
+            ExpiresOn = System.DateTimeOffset.MaxValue,
+            Chain = new System.Collections.Generic.List<string> { "test1", "test2" },
+            OpConf = new IdPEntityConfiguration()
+            {
+                Issuer = sub,
+                Metadata = new IdPMetadata_SpidCieOIDCConfiguration()
+                {
+                    OpenIdProvider = new Microsoft.IdentityModel.Protocols.OpenIdConnect.OpenIdConnectConfiguration()
+                }
+            },
+            TrustAnchorUsed = anchor
+        };
+    }
 }

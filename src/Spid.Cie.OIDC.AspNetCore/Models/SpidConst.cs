@@ -5,31 +5,26 @@ namespace Spid.Cie.OIDC.AspNetCore.Models;
 [ExcludeFromCodeCoverage]
 internal class SpidConst
 {
-    internal const string AttributesBaseURI = "https://attributes.spid.gov.it/";
+    internal const string AttributesBaseURI = "https://attributes.eid.gov.it";
 
-    internal const string name = $"{AttributesBaseURI}{nameof(name)}";
-    internal const string familyName = $"{AttributesBaseURI}{nameof(familyName)}";
-    internal const string fiscalNumber = $"{AttributesBaseURI}{nameof(fiscalNumber)}";
-    internal const string email = $"{AttributesBaseURI}{nameof(email)}";
-    internal const string digitalAddress = $"{AttributesBaseURI}{nameof(digitalAddress)}";
+    internal const string given_name = nameof(given_name);
+    internal const string family_name = nameof(family_name);
+    internal const string fiscal_number = $"{AttributesBaseURI}{nameof(fiscal_number)}";
+    internal const string email = nameof(email);
+    internal const string e_delivery_service = $"{AttributesBaseURI}{nameof(e_delivery_service)}";
     internal const string mail = $"{AttributesBaseURI}{nameof(mail)}";
     internal const string address = $"{AttributesBaseURI}{nameof(address)}";
-    internal const string companyName = $"{AttributesBaseURI}{nameof(companyName)}";
+    internal const string company_name = $"{AttributesBaseURI}{nameof(company_name)}";
     internal const string countyOfBirth = $"{AttributesBaseURI}{nameof(countyOfBirth)}";
-    internal const string dateOfBirth = $"{AttributesBaseURI}{nameof(dateOfBirth)}";
-    internal const string expirationDate = $"{AttributesBaseURI}{nameof(expirationDate)}";
-    internal const string gender = $"{AttributesBaseURI}{nameof(gender)}";
+    internal const string birthdate = nameof(birthdate);
+    internal const string eid_exp_date = $"{AttributesBaseURI}{nameof(eid_exp_date)}";
+    internal const string gender = nameof(gender);
     internal const string idCard = $"{AttributesBaseURI}{nameof(idCard)}";
-    internal const string ivaCode = $"{AttributesBaseURI}{nameof(ivaCode)}";
-    internal const string mobilePhone = $"{AttributesBaseURI}{nameof(mobilePhone)}";
-    internal const string placeOfBirth = $"{AttributesBaseURI}{nameof(placeOfBirth)}";
-    internal const string registeredOffice = $"{AttributesBaseURI}{nameof(registeredOffice)}";
-    internal const string spidCode = $"{AttributesBaseURI}{nameof(spidCode)}";
-
-    internal const string companyFiscalNumber = $"{AttributesBaseURI}{nameof(companyFiscalNumber)}";
-    internal const string domicileStreetAddress = $"{AttributesBaseURI}{nameof(domicileStreetAddress)}";
-    internal const string domicilePostalCode = $"{AttributesBaseURI}{nameof(domicilePostalCode)}";
-    internal const string domicileMunicipality = $"{AttributesBaseURI}{nameof(domicileMunicipality)}";
-    internal const string domicileProvince = $"{AttributesBaseURI}{nameof(domicileProvince)}";
-    internal const string domicileNation = $"{AttributesBaseURI}{nameof(domicileNation)}";
+    internal const string vat_number = $"{AttributesBaseURI}{nameof(vat_number)}";
+    internal const string phone_number = nameof(phone_number);
+    internal const string place_of_birth = nameof(place_of_birth);
+    internal const string document_details = nameof(document_details);
+    internal const string registered_office = $"{AttributesBaseURI}{nameof(registered_office)}";
+    internal const string spid_code = $"{AttributesBaseURI}{nameof(spid_code)}";
+    internal const string company_fiscal_number = $"{AttributesBaseURI}{nameof(company_fiscal_number)}";
 }

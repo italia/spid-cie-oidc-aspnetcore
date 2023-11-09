@@ -26,11 +26,6 @@ public sealed class ClaimTypes
         { nameof(RegisteredOffice), new ClaimTypes(nameof(RegisteredOffice)) },
         { nameof(SpidCode), new ClaimTypes(nameof(SpidCode)) },
         { nameof(CompanyFiscalNumber), new ClaimTypes(nameof(CompanyFiscalNumber)) },
-        { nameof(DomicileStreetAddress), new ClaimTypes(nameof(DomicileStreetAddress)) },
-        { nameof(DomicilePostalCode), new ClaimTypes(nameof(DomicilePostalCode)) },
-        { nameof(DomicileMunicipality), new ClaimTypes(nameof(DomicileMunicipality)) },
-        { nameof(DomicileProvince), new ClaimTypes(nameof(DomicileProvince)) },
-        { nameof(DomicileNation), new ClaimTypes(nameof(DomicileNation)) },
         { nameof(DocumentDetails), new ClaimTypes(nameof(DocumentDetails)) },
         { nameof(IdANPR), new ClaimTypes(nameof(IdANPR)) },
         { nameof(EDeliveryService), new ClaimTypes(nameof(EDeliveryService)) },
@@ -69,11 +64,6 @@ public sealed class ClaimTypes
     public static ClaimTypes RegisteredOffice { get { return _types[nameof(RegisteredOffice)]; } }
     public static ClaimTypes SpidCode { get { return _types[nameof(SpidCode)]; } }
     public static ClaimTypes CompanyFiscalNumber { get { return _types[nameof(CompanyFiscalNumber)]; } }
-    public static ClaimTypes DomicileStreetAddress { get { return _types[nameof(DomicileStreetAddress)]; } }
-    public static ClaimTypes DomicilePostalCode { get { return _types[nameof(DomicilePostalCode)]; } }
-    public static ClaimTypes DomicileMunicipality { get { return _types[nameof(DomicileMunicipality)]; } }
-    public static ClaimTypes DomicileProvince { get { return _types[nameof(DomicileProvince)]; } }
-    public static ClaimTypes DomicileNation { get { return _types[nameof(DomicileNation)]; } }
     public static ClaimTypes DocumentDetails { get { return _types[nameof(DocumentDetails)]; } }
     public static ClaimTypes EmailVerified { get { return _types[nameof(EmailVerified)]; } }
     public static ClaimTypes IdANPR { get { return _types[nameof(IdANPR)]; } }

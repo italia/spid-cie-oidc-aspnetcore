@@ -87,12 +87,12 @@ public class SpidButtonTagHelper : TagHelper
 
             var span = new TagBuilder("span");
             span.AddCssClass("spid-sr-only");
-            span.InnerHtml.Append(idp.OrganizationDisplayName);
+            span.InnerHtml.Append(idp.OrganizationName);
 
             var img = new TagBuilder("img");
             img.Attributes.Add("src", idp.OrganizationLogoUrl);
-            img.Attributes.Add("alt", idp.OrganizationDisplayName);
-            span.InnerHtml.Append(idp.OrganizationDisplayName);
+            img.Attributes.Add("alt", idp.OrganizationName);
+            span.InnerHtml.Append(idp.OrganizationName);
 
             item.InnerHtml.AppendHtml(span).AppendHtml(img);
             itemContainer.InnerHtml.AppendHtml(item);

@@ -11,11 +11,12 @@ public sealed class SpidCieOptions
 
     public List<RelyingParty> RelyingParties { get; } = new List<RelyingParty>();
 
+    public List<Aggregator> Aggregators { get; } = new List<Aggregator>();
+
     public List<string> SpidOPs { get; } = new List<string>();
 
     public List<string> CieOPs { get; } = new List<string>();
 
-    public int IdentityProvidersCacheExpirationInMinutes { get; set; } = 10;
 
     /// <summary>
     /// Loads from configuration.
@@ -29,6 +30,6 @@ public sealed class SpidCieOptions
         RelyingParties.AddRange(conf.RelyingParties);
         SpidOPs.AddRange(conf.SpidOPs);
         CieOPs.AddRange(conf.CieOPs);
-        IdentityProvidersCacheExpirationInMinutes = conf.IdentityProvidersCacheExpirationInMinutes;
+        Aggregators.AddRange(conf.Aggregators);
     }
 }

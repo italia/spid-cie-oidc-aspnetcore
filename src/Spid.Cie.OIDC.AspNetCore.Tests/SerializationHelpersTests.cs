@@ -1,5 +1,9 @@
-﻿using Spid.Cie.OIDC.AspNetCore.Helpers;
-using System.Linq;
+﻿using Microsoft.Extensions.Configuration;
+using Spid.Cie.OIDC.AspNetCore.Helpers;
+using System.IO;
+using System.Text;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using Xunit;
 
 namespace Spid.Cie.OIDC.AspNetCore.Tests;
@@ -7,15 +11,33 @@ namespace Spid.Cie.OIDC.AspNetCore.Tests;
 public class SerializationHelpersTests
 {
     [Fact]
-    public void Serialize()
+    public void ToJsonStringTest()
     {
-        Assert.Equal("[0,1]", new CustomJsonSerializer().Serialize(new int[] { 0, 1 }));
+        Assert.Equal("[\r\n  0,\r\n  1\r\n]", SerializationHelpers.ToJsonString(JsonDocument.Parse("[0,1]")));
     }
 
     [Fact]
     public void Deserialize()
     {
-        Assert.True(new CustomJsonSerializer().Deserialize<int[]>("[0,1]")!.SequenceEqual(new int[] { 0, 1 }));
+        var appSettings = @"{""AppSettings"":{
+            ""Key1"" : [""Value1"", ""Value1""],
+            ""Key2"" : true,
+            ""Key3"" : 3
+            }}";
+
+        var appSettingsSection = @"{
+            ""Key1"" : [""Value1"", ""Value1""],
+            ""Key2"" : true,
+            ""Key3"" : 3
+            }";
+
+        var builder = new ConfigurationBuilder();
+
+        builder.AddJsonStream(new MemoryStream(Encoding.UTF8.GetBytes(appSettings)));
+
+        var configuration = builder.Build();
+
+        Assert.True(SerializationHelpers.Serialize(configuration.GetSection("AppSettings")).ToJsonString().Equals(JsonNode.Parse(appSettingsSection).ToJsonString()));
     }
 
 }

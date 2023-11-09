@@ -75,6 +75,7 @@ internal class TestServerBuilder
                 builder.UseTestServer()
                     .Configure(app =>
                     {
+                        app.UseSpidCieOIDC();
                         app.UseAuthentication();
                         app.Use(async (context, next) =>
                         {
@@ -116,7 +117,6 @@ internal class TestServerBuilder
                                 await next(context);
                             }
                         });
-                        app.UseSpidCieOIDC();
                     })
                     .ConfigureServices(services =>
                     {
@@ -129,6 +129,8 @@ internal class TestServerBuilder
                             .ConfigurePrimaryHttpMessageHandler(srv => (srv.GetService(typeof(MockBackchannel)) as MockBackchannel)!);
                         services.AddScoped<ICryptoService, MockCryptoService>();
                         services.AddScoped<ITokenValidationParametersRetriever, MockTokenValidationParametersRetriever>();
+                        services.AddScoped<IIdentityProviderSelector>(srv => new MockIdentityProviderSelector(false));
+                        services.AddScoped<IIdentityProvidersHandler>(srv => new MockIdentityProvidersHandler(false));
                         services.TryAddEnumerable(ServiceDescriptor.Singleton<IPostConfigureOptions<OpenIdConnectOptions>, MockOpenIdConnectPostConfigureOptions>());
                     }))
             .Build();

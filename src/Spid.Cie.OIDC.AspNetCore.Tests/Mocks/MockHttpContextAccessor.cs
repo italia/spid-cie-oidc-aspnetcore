@@ -21,6 +21,9 @@ internal class MockHttpContextAccessor : IHttpContextAccessor
         get
         {
             var context = new DefaultHttpContext();
+            context.Request.Host = new HostString("127.0.0.1", 5000);
+            context.Request.Scheme = "http";
+
             if (_addClaims)
                 context.User = new System.Security.Claims.ClaimsPrincipal(new ClaimsIdentity(new List<Claim>() {
                     new Claim("iss", "http://127.0.0.1:8000/oidc/op/"),

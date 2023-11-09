@@ -1,5 +1,4 @@
-﻿using IdentityModel.AspNetCore.AccessTokenManagement;
-using Microsoft.AspNetCore.Authentication;
+﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -64,11 +63,12 @@ public static class ApplicationBuilderExtensions
         internalBuilder.Services.AddHttpContextAccessor();
         internalBuilder.Services.TryAddScoped<CustomHttpClientHandler>();
         internalBuilder.Services.AddHttpClient(SpidCieConst.BackchannelClientName)
-            .ConfigurePrimaryHttpMessageHandler(srv => (srv.GetService(typeof(CustomHttpClientHandler)) as CustomHttpClientHandler)!);
+            .ConfigurePrimaryHttpMessageHandler(srv => srv.GetRequiredService<CustomHttpClientHandler>()!);
 
         internalBuilder.Services.TryAddScoped<SpidCieEvents>();
         internalBuilder.Services.TryAddScoped<IIdentityProvidersHandler, IdentityProvidersHandler>();
         internalBuilder.Services.TryAddScoped<IRelyingPartiesHandler, RelyingPartiesHandler>();
+        internalBuilder.Services.TryAddScoped<IAggregatorsHandler, AggregatorsHandler>();
         internalBuilder.Services.TryAddScoped<ITrustChainManager, TrustChainManager>();
         internalBuilder.Services.TryAddScoped<IMetadataPolicyHandler, MetadataPolicyHandler>();
 
@@ -76,16 +76,12 @@ public static class ApplicationBuilderExtensions
         internalBuilder.Services.TryAddScoped<IIdentityProviderSelector, DefaultIdentityProviderSelector>();
         internalBuilder.Services.TryAddScoped<IRelyingPartySelector, DefaultRelyingPartySelector>();
         internalBuilder.Services.TryAddScoped<IRelyingPartiesRetriever, DefaultRelyingPartiesRetriever>();
+        internalBuilder.Services.TryAddScoped<IAggregatorsRetriever, DefaultAggregatorsRetriever>();
         internalBuilder.Services.TryAddScoped<ILogPersister, DefaultLogPersister>();
 
         internalBuilder.Services.TryAddScoped<IOptionsMonitor<OpenIdConnectOptions>, OpenIdConnectOptionsProvider>();
         internalBuilder.Services.TryAddScoped<IConfigurationManager<OpenIdConnectConfiguration>, ConfigurationManager>();
 
-        internalBuilder.Services.AddAccessTokenManagement();
-        internalBuilder.Services.AddHttpClient(AccessTokenManagementDefaults.BackChannelHttpClientName)
-            .ConfigurePrimaryHttpMessageHandler(srv => (srv.GetService(typeof(CustomHttpClientHandler)) as CustomHttpClientHandler)!);
-
-        internalBuilder.Services.AddScoped<ITokenClientConfigurationService, AssertionConfigurationService>();
         internalBuilder.Services.AddScoped<ICryptoService, CryptoService>();
         internalBuilder.Services.AddScoped<ITokenValidationParametersRetriever, TokenValidationParametersRetriever>();
 
@@ -96,13 +92,6 @@ public static class ApplicationBuilderExtensions
         where T : class, ILogPersister
     {
         builder.Services.AddScoped<ILogPersister, T>();
-        return builder;
-    }
-
-    public static ISpidCieOIDCBuilder AddRelyingPartySelector<T>(this ISpidCieOIDCBuilder builder)
-        where T : class, IRelyingPartySelector
-    {
-        builder.Services.AddScoped<IRelyingPartySelector, T>();
         return builder;
     }
 
@@ -120,8 +109,20 @@ public static class ApplicationBuilderExtensions
         return builder;
     }
 
+    internal const string AuthenticationMiddlewareSetKey = "__AuthenticationMiddlewareSet";
     public static IApplicationBuilder UseSpidCieOIDC(this IApplicationBuilder builder)
     {
-        return builder.UseMiddleware<RPOpenIdFederationMiddleware>();
+        if (builder.Properties.ContainsKey(AuthenticationMiddlewareSetKey)
+            && (bool)builder.Properties[AuthenticationMiddlewareSetKey])
+        {
+            throw new Exception($"{nameof(UseSpidCieOIDC)}() must be called before UseAuthentication()");
+        }
+
+        return builder.UseMiddleware<CallbackRewriteMiddleware>()
+            .UseMiddleware<RPOpenIdFederationMiddleware>()
+            .UseMiddleware<ResolveOpenIdFederationMiddleware>()
+            .UseMiddleware<FetchOpenIdFederationMiddleware>()
+            .UseMiddleware<ListOpenIdFederationMiddleware>()
+            .UseMiddleware<TrustMarkStatusOpenIdFederationMiddleware>();
     }
 }

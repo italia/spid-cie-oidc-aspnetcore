@@ -46,11 +46,11 @@ public class Startup
             Secure = CookieSecurePolicy.None
         });
 
+        app.UseSpidCieOIDC();
+
         app.UseRouting();
         app.UseAuthentication();
         app.UseAuthorization();
-
-        app.UseSpidCieOIDC();
 
         app.UseCookiePolicy(
             new CookiePolicyOptions

@@ -56,8 +56,19 @@ public sealed class SpidCieConst
     public const string EntityConfigurationPath = ".well-known/openid-federation";
     public const string JsonEntityConfigurationPath = ".well-known/openid-federation/json";
 
+    public const string ResolveEndpointPath = "resolve";
+
+    public const string FetchEndpointPath = "fetch";
+
+    public const string ListEndpointPath = "list";
+
+    public const string TrustMarkStatusEndpointPath = "trust_mark_status";
+
+
     public const string EntityConfigurationContentType = "application/entity-statement+jwt";
-    public const string JsonEntityConfigurationContentType = "application/json";
+    public const string JsonContentType = "application/json";
+
+    public const string ResolveContentType = "application/resolve-response+jwt";
 
     public const int EntityConfigurationExpirationInMinutes = 2880;
 

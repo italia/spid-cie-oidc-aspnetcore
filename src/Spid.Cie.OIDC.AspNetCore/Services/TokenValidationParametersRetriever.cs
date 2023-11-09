@@ -37,7 +37,7 @@ internal class TokenValidationParametersRetriever : ITokenValidationParametersRe
             RequireExpirationTime = true,
             ValidateLifetime = true,
             ValidateAudience = true,
-            ValidAudience = relyingParty!.ClientId,
+            ValidAudience = relyingParty!.Id,
             ValidateIssuer = true,
             ValidIssuer = identityProvider.EntityConfiguration.Issuer
         };

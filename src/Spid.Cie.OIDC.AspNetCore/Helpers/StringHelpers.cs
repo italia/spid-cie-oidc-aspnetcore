@@ -22,4 +22,15 @@ internal static class StringHelpers
         return url;
     }
 
+    public static string RemoveTrailingSlash(this string url)
+    {
+        if (url.EndsWith("/"))
+        {
+            url = url.Substring(0, url.Length - 1);
+        }
+
+        return url;
+    }
+
+
 }

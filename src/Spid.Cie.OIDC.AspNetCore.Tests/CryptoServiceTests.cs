@@ -69,7 +69,7 @@ public class CryptoServiceTests
     {
         var service = new CryptoService();
         var idp = (await new Mocks.MockIdentityProvidersHandler().GetIdentityProviders()).FirstOrDefault();
-        var result = service.CreateClientAssertion(idp, "http://127.0.0.1:5000/", certificate);
+        var result = service.CreateClientAssertion(idp!.EntityConfiguration.Metadata.OpenIdProvider!.TokenEndpoint, "http://127.0.0.1:5000/", certificate);
         Assert.NotNull(result);
     }
 

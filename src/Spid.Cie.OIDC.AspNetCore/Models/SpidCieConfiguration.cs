@@ -10,9 +10,10 @@ internal sealed class SpidCieConfiguration
 
     public List<RelyingParty> RelyingParties { get; set; } = new();
 
+    public List<Aggregator> Aggregators { get; set; } = new();
+
     public List<string> SpidOPs { get; set; } = new();
 
     public List<string> CieOPs { get; set; } = new();
 
-    public int IdentityProvidersCacheExpirationInMinutes { get; set; }
 }

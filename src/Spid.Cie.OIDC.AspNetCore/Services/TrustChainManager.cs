@@ -22,8 +22,8 @@ internal class TrustChainManager : ITrustChainManager
     private readonly ILogPersister _logPersister;
     private readonly ILogger<TrustChainManager> _logger;
     private readonly IMetadataPolicyHandler _metadataPolicyHandler;
-    private static readonly ConcurrentDictionary<string, KeyValuePair<DateTimeOffset, IdPEntityConfiguration>> _trustChainCache = new();
-    private static readonly SemaphoreSlim _syncLock = new SemaphoreSlim(1);
+    private static readonly ConcurrentDictionary<string, TrustChain> _trustChainCache = new();
+    private static readonly SemaphoreSlim _syncLock = new SemaphoreSlim(1, 1);
 
     public TrustChainManager(IHttpClientFactory httpClientFactory,
         ICryptoService cryptoService,
@@ -38,21 +38,35 @@ internal class TrustChainManager : ITrustChainManager
         _metadataPolicyHandler = metadataPolicyHandler;
     }
 
+    public TrustChain? GetResolvedTrustChain(string sub, string anchor)
+    {
+        if (_trustChainCache.ContainsKey(sub)
+            && _trustChainCache[sub].TrustAnchorUsed.Equals(anchor, StringComparison.OrdinalIgnoreCase)
+            && _trustChainCache[sub].ExpiresOn >= DateTimeOffset.UtcNow)
+        {
+            return _trustChainCache[sub];
+        }
+        return null;
+    }
+
     public async Task<IdPEntityConfiguration?> BuildTrustChain(string url)
     {
-        if (!_trustChainCache.ContainsKey(url) || _trustChainCache[url].Key < DateTimeOffset.UtcNow)
+        if (!_trustChainCache.ContainsKey(url) || _trustChainCache[url].ExpiresOn < DateTimeOffset.UtcNow)
         {
             if (!await _syncLock.WaitAsync(TimeSpan.FromSeconds(10)))
             {
                 _logger.LogWarning("TrustChain cache Sync Lock expired.");
                 return default;
             }
-            if (!_trustChainCache.ContainsKey(url) || _trustChainCache[url].Key < DateTimeOffset.UtcNow)
+            if (!_trustChainCache.ContainsKey(url) || _trustChainCache[url].ExpiresOn < DateTimeOffset.UtcNow)
             {
                 try
                 {
-                    (IdPEntityConfiguration? opConf, string? opDecodedJwt, string? opJwt) = await ValidateAndDecodeEntityConfiguration<IdPEntityConfiguration>(url);
-                    if (opConf is null || opJwt is null)
+                    List<string> trustChain = new();
+                    string? trustAnchorUsed = default;
+
+                    (IdPEntityConfiguration? opConf, string? decodedOPJwt, string? opJwt) = await ValidateAndDecodeEntityConfiguration<IdPEntityConfiguration>(url);
+                    if (opConf is null || opJwt is null || opConf.ExpiresOn < DateTime.UtcNow)
                     {
                         _logger.LogWarning($"EntityConfiguration not retrieved for OP {url}");
                         return default;
@@ -63,63 +77,88 @@ internal class TrustChainManager : ITrustChainManager
                     bool opValidated = false;
                     foreach (var authorityHint in opConf.AuthorityHints)
                     {
-                        (TAEntityConfiguration? taConf, string? taDecodedJwt, string? taJwt) = await ValidateAndDecodeEntityConfiguration<TAEntityConfiguration>(authorityHint);
-                        if (taConf is null)
+                        trustChain.Clear();
+
+                        (TAEntityConfiguration? taConf, string? decodedTAJwt, string? taJwt) = await ValidateAndDecodeEntityConfiguration<TAEntityConfiguration>(authorityHint);
+                        if (taConf is null || taJwt is null || taConf.ExpiresOn < DateTime.UtcNow)
                         {
                             _logger.LogWarning($"EntityConfiguration not retrieved for TA {authorityHint}");
                             continue;
                         }
+
+                        trustChain.Add(taJwt);
+
                         if (taConf.ExpiresOn < expiresOn)
                             expiresOn = taConf.ExpiresOn;
 
-                        var fetchUrl = $"{taConf.Metadata.FederationEntity.FederationFetchEndpoint.EnsureTrailingSlash()}?sub={url}";
-                        var entityStatement = await GetAndValidateEntityStatement(fetchUrl, opJwt);
-                        if (entityStatement is not null)
+                        var fetchUrl = $"{taConf.Metadata.FederationEntity.FederationFetchEndpoint}?sub={url}";
+                        (EntityStatement? entityStatement, string? decodedEsJwt, string? esJwt) = await GetAndValidateEntityStatement(fetchUrl, opJwt);
+
+                        if (entityStatement is null || esJwt is null || entityStatement.ExpiresOn < DateTime.UtcNow)
                         {
-                            var esExpiresOn = entityStatement.ExpiresOn;
+                            _logger.LogWarning($"EntityStatement not retrieved for OP {url}");
+                            continue;
+                        }
 
-                            // Apply policy
-                            opConf!.Metadata!.OpenIdProvider = _metadataPolicyHandler.ApplyMetadataPolicy(opDecodedJwt!, entityStatement.MetadataPolicy.ToJsonString());
+                        trustChain.Add(esJwt);
 
-                            if (opConf!.Metadata!.OpenIdProvider is not null)
+                        var esExpiresOn = entityStatement.ExpiresOn;
+
+                        // Apply policy
+                        opConf!.Metadata!.OpenIdProvider = _metadataPolicyHandler.ApplyMetadataPolicy(decodedOPJwt!, entityStatement.MetadataPolicy.ToJsonString());
+
+                        if (opConf!.Metadata!.OpenIdProvider is not null)
+                        {
+                            if (!string.IsNullOrWhiteSpace(opConf!.Metadata!.OpenIdProvider.JwksUri))
                             {
-                                if (!string.IsNullOrWhiteSpace(opConf!.Metadata!.OpenIdProvider.JwksUri))
+                                var keys = await _httpClient.GetStringAsync(opConf!.Metadata!.OpenIdProvider.JwksUri);
+                                if (!string.IsNullOrWhiteSpace(keys))
                                 {
-                                    var keys = await _httpClient.GetStringAsync(opConf!.Metadata!.OpenIdProvider.JwksUri);
-                                    if (!string.IsNullOrWhiteSpace(keys))
-                                    {
-                                        opConf!.Metadata!.OpenIdProvider.JsonWebKeySet = JsonConvert.DeserializeObject<JsonWebKeySet>(keys);
-                                    }
-                                }
-                                else if (!string.IsNullOrWhiteSpace(JObject.Parse(opDecodedJwt)["metadata"]["openid_provider"]["jwks"].ToString()))
-                                {
-                                    opConf!.Metadata!.OpenIdProvider.JsonWebKeySet = JsonWebKeySet.Create(JObject.Parse(opDecodedJwt)["metadata"]["openid_provider"]["jwks"].ToString());
-                                }
-                                if (opConf!.Metadata!.OpenIdProvider.JsonWebKeySet is null)
-                                {
-                                    _logger.LogWarning($"No jwks found for the OP {url} validated by the authorityHint {authorityHint}");
-                                    continue;
-                                }
-
-                                foreach (SecurityKey key in opConf!.Metadata!.OpenIdProvider.JsonWebKeySet.GetSigningKeys())
-                                {
-                                    opConf!.Metadata!.OpenIdProvider.SigningKeys.Add(key);
+                                    opConf!.Metadata!.OpenIdProvider.JsonWebKeySet = JsonConvert.DeserializeObject<JsonWebKeySet>(keys);
                                 }
                             }
-
-
-                            if (opConf is not null && opConf.Metadata?.OpenIdProvider is not null)
+                            else if (!string.IsNullOrWhiteSpace(JObject.Parse(decodedOPJwt)["metadata"]["openid_provider"]["jwks"].ToString()))
                             {
-                                expiresOn = esExpiresOn < expiresOn ? esExpiresOn : expiresOn;
-                                opValidated = true;
-                                break;
+                                opConf!.Metadata!.OpenIdProvider.JsonWebKeySet = JsonWebKeySet.Create(JObject.Parse(decodedOPJwt)["metadata"]["openid_provider"]["jwks"].ToString());
+                            }
+                            if (opConf!.Metadata!.OpenIdProvider.JsonWebKeySet is null)
+                            {
+                                _logger.LogWarning($"No jwks found for the OP {url} validated by the authorityHint {authorityHint}");
+                                continue;
+                            }
+
+                            foreach (SecurityKey key in opConf!.Metadata!.OpenIdProvider.JsonWebKeySet.GetSigningKeys())
+                            {
+                                opConf!.Metadata!.OpenIdProvider.SigningKeys.Add(key);
                             }
                         }
+
+
+                        if (opConf is not null && opConf.Metadata?.OpenIdProvider is not null)
+                        {
+                            trustChain.Add(opJwt);
+
+                            expiresOn = esExpiresOn < expiresOn ? esExpiresOn : expiresOn;
+                            opValidated = true;
+                            trustAnchorUsed = authorityHint;
+                            break;
+                        }
                     }
-                    if (opValidated && opConf is not null)
+                    if (opValidated && opConf is not null && trustAnchorUsed is not null)
                     {
-                        _trustChainCache.AddOrUpdate(url, new KeyValuePair<DateTimeOffset, IdPEntityConfiguration>(expiresOn, opConf), (oldValue, newValue) => newValue);
+                        _trustChainCache.AddOrUpdate(url, new TrustChain()
+                        {
+                            ExpiresOn = expiresOn,
+                            OpConf = opConf,
+                            Chain = trustChain,
+                            TrustAnchorUsed = trustAnchorUsed
+                        }, (oldValue, newValue) => newValue);
                     }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, ex.Message);
+                    throw;
                 }
                 finally
                 {
@@ -127,8 +166,8 @@ internal class TrustChainManager : ITrustChainManager
                 }
             }
         }
-        return _trustChainCache.ContainsKey(url) && _trustChainCache[url].Key.Add(SpidCieConst.TrustChainExpirationGracePeriod) > DateTimeOffset.UtcNow
-            ? _trustChainCache[url].Value
+        return _trustChainCache.ContainsKey(url) && _trustChainCache[url].ExpiresOn.Add(SpidCieConst.TrustChainExpirationGracePeriod) > DateTimeOffset.UtcNow
+            ? _trustChainCache[url].OpConf
             : null;
     }
 
@@ -139,7 +178,7 @@ internal class TrustChainManager : ITrustChainManager
         {
             Throw<Exception>.If(string.IsNullOrWhiteSpace(url), "Url parameter is not defined");
 
-            var metadataAddress = $"{url!.EnsureTrailingSlash()}{SpidCieConst.EntityConfigurationPath}";
+            var metadataAddress = $"{url.EnsureTrailingSlash()!}{SpidCieConst.EntityConfigurationPath}";
             var jwt = await _httpClient.GetStringAsync(metadataAddress);
             Throw<Exception>.If(string.IsNullOrWhiteSpace(jwt), $"EntityConfiguration JWT not retrieved from url {metadataAddress}");
 
@@ -169,12 +208,12 @@ internal class TrustChainManager : ITrustChainManager
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, ex.Message);
+            _logger.LogError(ex, ex.Message);
             return default;
         }
     }
 
-    private async Task<EntityStatement?> GetAndValidateEntityStatement(string? url, string opJwt)
+    private async Task<(EntityStatement?, string? decodedEsJwt, string esJwt)> GetAndValidateEntityStatement(string? url, string opJwt)
     {
         try
         {
@@ -203,10 +242,10 @@ internal class TrustChainManager : ITrustChainManager
 
             RSA publicKey = _cryptoService.GetRSAPublicKey(key!);
             var decodedOpJwt = _cryptoService.DecodeJWT(opJwt);
-            Throw<Exception>.If(string.IsNullOrWhiteSpace(decodedOpJwt) || !decodedOpJwt.Equals(_cryptoService.ValidateJWTSignature(opJwt, publicKey)),
+            Throw<Exception>.If(!decodedOpJwt.Equals(_cryptoService.ValidateJWTSignature(opJwt, publicKey)),
                 $"Invalid Signature for the EntityConfiguration JWT verified with the EntityStatement at url {url}: EntityConfiguration JWT {opJwt} - EntityStatement JWT {esJwt}");
 
-            return entityStatement;
+            return (entityStatement, decodedEsJwt, esJwt);
         }
         catch (Exception ex)
         {

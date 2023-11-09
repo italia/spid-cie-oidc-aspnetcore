@@ -17,7 +17,7 @@ public class RPOpenIdFederationMiddlewareTests
         RequestDelegate next = (HttpContext hc) => Task.CompletedTask;
         HttpContext ctx = new DefaultHttpContext();
         var middleware = new RPOpenIdFederationMiddleware(next);
-        await middleware.Invoke(ctx, new RelyingPartiesHandler(new MockOptionsMonitorSpidCieOptions(), new DefaultRelyingPartiesRetriever()), new MockCryptoService());
+        await middleware.Invoke(ctx, new RelyingPartiesHandler(new MockOptionsMonitorSpidCieOptions(), new DefaultRelyingPartiesRetriever()), new MockAggregatorsHandler(), new MockCryptoService());
     }
 
     [Fact]
@@ -29,7 +29,7 @@ public class RPOpenIdFederationMiddlewareTests
         ctx.Request.Host = new HostString("127.0.0.1:5000");
         ctx.Request.Path = $"/{SpidCieConst.EntityConfigurationPath}";
         var middleware = new RPOpenIdFederationMiddleware(next);
-        await middleware.Invoke(ctx, new RelyingPartiesHandler(new MockOptionsMonitorSpidCieOptions(), new DefaultRelyingPartiesRetriever()), new MockCryptoService());
+        await middleware.Invoke(ctx, new RelyingPartiesHandler(new MockOptionsMonitorSpidCieOptions(), new DefaultRelyingPartiesRetriever()), new MockAggregatorsHandler(), new MockCryptoService());
     }
 
     [Fact]
@@ -41,7 +41,7 @@ public class RPOpenIdFederationMiddlewareTests
         ctx.Request.Host = new HostString("127.0.0.1:5000");
         ctx.Request.Path = $"/{SpidCieConst.EntityConfigurationPath}";
         var middleware = new RPOpenIdFederationMiddleware(next);
-        await middleware.Invoke(ctx, new RelyingPartiesHandler(new MockOptionsMonitorSpidCieOptions(true), new DefaultRelyingPartiesRetriever()), new MockCryptoService());
+        await middleware.Invoke(ctx, new RelyingPartiesHandler(new MockOptionsMonitorSpidCieOptions(true), new DefaultRelyingPartiesRetriever()), new MockAggregatorsHandler(), new MockCryptoService());
     }
 
     [Fact]
@@ -53,7 +53,7 @@ public class RPOpenIdFederationMiddlewareTests
         ctx.Request.Host = new HostString("127.0.0.1:5000");
         ctx.Request.Path = $"/{SpidCieConst.EntityConfigurationPath}";
         var middleware = new RPOpenIdFederationMiddleware(next);
-        await middleware.Invoke(ctx, new RelyingPartiesHandler(new MockOptionsMonitorSpidCieOptions(false, true), new DefaultRelyingPartiesRetriever()), new MockCryptoService());
+        await middleware.Invoke(ctx, new RelyingPartiesHandler(new MockOptionsMonitorSpidCieOptions(false, true), new DefaultRelyingPartiesRetriever()), new MockAggregatorsHandler(), new MockCryptoService());
     }
 
     [Fact]
@@ -65,7 +65,7 @@ public class RPOpenIdFederationMiddlewareTests
         ctx.Request.Host = new HostString("127.0.0.1:5000");
         ctx.Request.Path = $"/{SpidCieConst.JsonEntityConfigurationPath}";
         var middleware = new RPOpenIdFederationMiddleware(next);
-        await middleware.Invoke(ctx, new RelyingPartiesHandler(new MockOptionsMonitorSpidCieOptions(), new DefaultRelyingPartiesRetriever()), new MockCryptoService());
+        await middleware.Invoke(ctx, new RelyingPartiesHandler(new MockOptionsMonitorSpidCieOptions(), new DefaultRelyingPartiesRetriever()), new MockAggregatorsHandler(), new MockCryptoService());
     }
 
 }

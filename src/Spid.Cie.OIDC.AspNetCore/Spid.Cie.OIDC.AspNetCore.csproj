@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net6.0;net5.0;netcoreapp3.1</TargetFrameworks>
+		<TargetFrameworks>net7.0;net6.0;net5.0;netcoreapp3.1</TargetFrameworks>
 		<LangVersion>latest</LangVersion>
 		<Nullable>enable</Nullable>
 		<Description>Spid/Cie OIDC Federation AspNetCore SDK</Description>
@@ -13,17 +13,16 @@
 		<PackageProjectUrl>https://github.com/italia/spid-cie-oidc-aspnetcore</PackageProjectUrl>
 		<PackageIcon>spid-nuget.png</PackageIcon>
 		<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-		<PackageVersion>0.6.0-prerelease</PackageVersion>
+		<PackageVersion>1.0.0</PackageVersion>
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
 	</PropertyGroup>
 
-	<ItemGroup>
-	  <Compile Remove="OpenIdFederation\**" />
-	  <EmbeddedResource Remove="OpenIdFederation\**" />
-	  <None Remove="OpenIdFederation\**" />
-	</ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
 
-	<ItemGroup>
+  <ItemGroup>
 		<None Include="Mvc\Resources\spid-nuget.png" Pack="true" PackagePath="\" />
 	</ItemGroup>
 
@@ -43,20 +42,16 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="IdentityModel" Version="6.0.0" />
-		<PackageReference Include="IdentityModel.AspNetCore" Version="4.1.3" />
-		<PackageReference Include="jose-jwt" Version="3.2.0" />
-		<PackageReference Include="JWT" Version="8.9.0" />
-		<PackageReference Include="Microsoft.AspNetCore.Authentication" Version="2.2.0" />
-		<PackageReference Include="Microsoft.AspNetCore.Mvc.ViewFeatures" Version="2.2.0" />
-		<PackageReference Include="Microsoft.AspNetCore.Razor" Version="2.2.0" />
-		<PackageReference Include="Microsoft.AspNetCore.Razor.Language" Version="6.0.3" />
-		<PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="6.0.0" />
-		<PackageReference Include="Microsoft.Extensions.Http" Version="6.0.0" />
-		<PackageReference Include="Microsoft.Extensions.Identity.Core" Version="6.0.3" />
+		<PackageReference Include="IdentityModel.AspNetCore" Version="4.3.0" />
+		<PackageReference Include="jose-jwt" Version="4.1.0" />
+		<PackageReference Include="JWT" Version="10.1.1" />
 	</ItemGroup>
 
-	<ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net7.0'">
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="7.0.13" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="6.0.3" />
 	</ItemGroup>
 

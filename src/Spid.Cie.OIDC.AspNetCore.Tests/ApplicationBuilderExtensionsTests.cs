@@ -41,15 +41,6 @@ public class ApplicationBuilderExtensionsTests
     }
 
     [Fact]
-    public void DefaultRelyingPartySelector()
-    {
-        IServiceCollection service = new ServiceCollection();
-        service.AddAuthentication()
-            .AddSpidCieOIDC()
-            .AddRelyingPartySelector<DefaultRelyingPartySelector>();
-    }
-
-    [Fact]
     public void ILogPersister()
     {
         IServiceCollection service = new ServiceCollection();

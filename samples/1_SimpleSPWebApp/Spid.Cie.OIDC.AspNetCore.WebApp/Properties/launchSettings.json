@@ -3,7 +3,7 @@
     "Spid.Cie.OIDC.AspNetCore.WebApp": {
       "commandName": "Project",
       "launchBrowser": true,
-      "launchUrl": "http://127.0.0.1:5000/",
+      "launchUrl": "http://aspnetcore.relying-party.org:5000/",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
         "ASPNETCORE_HOSTINGSTARTUPASSEMBLIES": "Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation"
@@ -19,6 +19,16 @@
       "useSSL": true,
       "httpPort": 5000,
       "sslPort": 5001
+    },
+    "WSL 2": {
+      "commandName": "WSL2",
+      "launchBrowser": true,
+      "launchUrl": "http://aspnetcore.relying-party.org:5000/",
+      "environmentVariables": {
+        "ASPNETCORE_URLS": "https://localhost:5001;http://localhost:5000",
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "distributionName": "Ubuntu"
     }
   }
 }

@@ -3,6 +3,7 @@ using Spid.Cie.OIDC.AspNetCore.Models;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
+using System.Text.Json;
 
 namespace Spid.Cie.OIDC.AspNetCore.Helpers;
 
@@ -11,62 +12,127 @@ internal static class OptionsHelpers
     internal static SpidCieConfiguration CreateFromConfiguration(IConfiguration configuration)
     {
         var section = configuration.GetSection("SpidCie");
-        var options = new SpidCieConfiguration();
+        var options = new SpidCieConfiguration
+        {
+            RequestRefreshToken = section?.GetValue<bool?>("RequestRefreshToken") ?? false,
+            SpidOPs = section?.GetSection("SpidOPs")?.Get<List<string>?>() ?? new List<string>(),
+            CieOPs = section?.GetSection("CieOPs")?.Get<List<string>?>() ?? new List<string>(),
+        };
 
-        options.IdentityProvidersCacheExpirationInMinutes = section.GetValue<int?>("IdentityProvidersCacheExpirationInMinutes") ?? 10;
-        options.RequestRefreshToken = section.GetValue<bool?>("RequestRefreshToken") ?? false;
-
-        options.SpidOPs = section.GetSection("SpidOPs").Get<List<string>?>() ?? new List<string>();
-        options.CieOPs = section.GetSection("CieOPs").Get<List<string>?>() ?? new List<string>();
+        if (section is null)
+            return options;
 
         foreach (var relyingPartySection in section
-               .GetSection("RelyingParties")
-               .GetChildren()
-               .ToList())
+               .GetSection("RelyingParties")?
+               .GetChildren()?
+               .ToList() ?? Enumerable.Empty<IConfigurationSection>())
         {
-            var relyingParty = new RelyingParty();
             var securityLevel = relyingPartySection.GetValue<int?>("SecurityLevel") ?? 2;
-            relyingParty.SecurityLevel = securityLevel == 1 ? SecurityLevel.L1 : securityLevel == 3 ? SecurityLevel.L3 : SecurityLevel.L2;
-            relyingParty.Contacts = relyingPartySection.GetSection("Contacts").Get<List<string>?>() ?? new List<string>();
-            relyingParty.RedirectUris = relyingPartySection.GetSection("RedirectUris").Get<List<string>?>() ?? new List<string>();
-            relyingParty.Issuer = relyingPartySection.GetValue<string?>("Issuer") ?? string.Empty;
-            relyingParty.ClientId = relyingPartySection.GetValue<string?>("ClientId") ?? string.Empty;
-            relyingParty.ClientName = relyingPartySection.GetValue<string?>("ClientName") ?? string.Empty;
-
-            relyingParty.RequestedClaims.AddRange((relyingPartySection.GetSection("RequestedClaims").Get<List<string>?>() ?? new List<string>())
-                .Select(c => ClaimTypes.FromName(c)).ToList());
-
-            relyingParty.LongSessionsEnabled = relyingPartySection.GetValue<bool?>("LongSessionsEnabled") ?? false;
-            relyingParty.AuthorityHints = relyingPartySection.GetSection("AuthorityHints").Get<List<string>?>() ?? new List<string>();
-
-            foreach (var trustMarksSection in relyingPartySection.GetSection("TrustMarks")
-                .GetChildren()
-                .ToList())
+            var relyingParty = new RelyingParty
             {
-                relyingParty.TrustMarks.Add(new TrustMarkDefinition()
-                {
-                    Id = trustMarksSection.GetValue<string>("Id"),
-                    Issuer = trustMarksSection.GetValue<string>("Issuer"),
-                    TrustMark = trustMarksSection.GetValue<string>("TrustMark")
-                });
-            }
-
-            foreach (var openIdFederationCertificatesSection in relyingPartySection.GetSection("OpenIdFederationCertificates")
-                .GetChildren()
-                .ToList())
-            {
-                relyingParty.OpenIdFederationCertificates.Add(GetCertificate(openIdFederationCertificatesSection));
-            }
-
-            foreach (var openIdCoreCertificatesSection in relyingPartySection.GetSection("OpenIdCoreCertificates")
-                .GetChildren()
-                .ToList())
-            {
-                relyingParty.OpenIdCoreCertificates.Add(GetCertificate(openIdCoreCertificatesSection));
-            }
+                Id = relyingPartySection.GetValue<string?>("Id") ?? string.Empty,
+                Name = relyingPartySection.GetValue<string?>("Name") ?? string.Empty,
+                OrganizationName = relyingPartySection.GetValue<string?>("OrganizationName") ?? string.Empty,
+                OrganizationType = relyingPartySection.GetValue<string?>("OrganizationType") ?? string.Empty,
+                HomepageUri = relyingPartySection.GetValue<string?>("HomepageUri") ?? string.Empty,
+                LogoUri = relyingPartySection.GetValue<string?>("LogoUri") ?? string.Empty,
+                PolicyUri = relyingPartySection.GetValue<string?>("PolicyUri") ?? string.Empty,
+                SecurityLevel = securityLevel == 1 ? SecurityLevel.L1 : securityLevel == 3 ? SecurityLevel.L3 : SecurityLevel.L2,
+                Contacts = relyingPartySection.GetSection("Contacts").Get<List<string>?>() ?? new List<string>(),
+                RedirectUris = new List<string>() { $"{(relyingPartySection.GetValue<string?>("Id") ?? string.Empty).RemoveTrailingSlash()}{SpidCieConst.CallbackPath}" },
+                LongSessionsEnabled = relyingPartySection.GetValue<bool?>("LongSessionsEnabled") ?? false,
+                AuthorityHints = relyingPartySection.GetSection("AuthorityHints").Get<List<string>?>() ?? new List<string>(),
+                TrustMarks = relyingPartySection.GetSection("TrustMarks").GetChildren()
+                    .Select(trustMarksSection => new TrustMarkDefinition()
+                    {
+                        Id = trustMarksSection.GetValue<string>("Id"),
+                        Issuer = trustMarksSection.GetValue<string>("Issuer"),
+                        TrustMark = trustMarksSection.GetValue<string>("TrustMark")
+                    }).ToList(),
+                OpenIdFederationCertificates = relyingPartySection.GetSection("OpenIdFederationCertificates").GetChildren()
+                    .Select(GetCertificate)
+                    .ToList(),
+                OpenIdCoreCertificates = relyingPartySection.GetSection("OpenIdCoreCertificates").GetChildren()
+                    .Select(GetCertificate)
+                    .ToList(),
+                RequestedClaims = (relyingPartySection.GetSection("RequestedClaims").Get<List<string>?>() ?? new List<string>())
+                    .Select(c => ClaimTypes.FromName(c))
+                    .ToList()
+            };
 
             options.RelyingParties.Add(relyingParty);
         }
+
+        foreach (var aggregatorSection in section
+               .GetSection("Aggregators")?
+               .GetChildren()?
+               .ToList() ?? Enumerable.Empty<IConfigurationSection>())
+        {
+            var aggregator = new Aggregator
+            {
+                Id = aggregatorSection.GetValue<string?>("Id") ?? string.Empty,
+                Name = aggregatorSection.GetValue<string?>("Name") ?? string.Empty,
+                OrganizationName = aggregatorSection.GetValue<string?>("OrganizationName") ?? string.Empty,
+                HomepageUri = aggregatorSection.GetValue<string?>("HomepageUri") ?? string.Empty,
+                LogoUri = aggregatorSection.GetValue<string?>("LogoUri") ?? string.Empty,
+                PolicyUri = aggregatorSection.GetValue<string?>("PolicyUri") ?? string.Empty,
+                Contacts = aggregatorSection.GetSection("Contacts").Get<List<string>?>() ?? new List<string>(),
+                AuthorityHints = aggregatorSection.GetSection("AuthorityHints").Get<List<string>?>() ?? new List<string>(),
+                OrganizationType = aggregatorSection.GetValue<string?>("OrganizationType") ?? string.Empty,
+                Extension = aggregatorSection.GetValue<string?>("Extension") ?? string.Empty,
+                TrustMarks = aggregatorSection.GetSection("TrustMarks").GetChildren()
+                    .Select(trustMarksSection => new TrustMarkDefinition()
+                    {
+                        Id = trustMarksSection.GetValue<string>("Id"),
+                        Issuer = trustMarksSection.GetValue<string>("Issuer"),
+                        TrustMark = trustMarksSection.GetValue<string>("TrustMark")
+                    }).ToList(),
+                OpenIdFederationCertificates = aggregatorSection.GetSection("OpenIdFederationCertificates").GetChildren()
+                    .Select(GetCertificate)
+                    .ToList(),
+                MetadataPolicy = JsonDocument.Parse(SerializationHelpers.Serialize(aggregatorSection.GetSection("MetadataPolicy"))?.ToString() ?? "{}")
+            };
+
+            foreach (var relyingPartySection in aggregatorSection
+               .GetSection("RelyingParties")?
+               .GetChildren()?
+               .ToList() ?? Enumerable.Empty<IConfigurationSection>())
+            {
+                var securityLevel = relyingPartySection.GetValue<int?>("SecurityLevel") ?? 2;
+                var relyingParty = new RelyingParty
+                {
+                    Id = relyingPartySection.GetValue<string?>("Id") ?? string.Empty,
+                    SecurityLevel = securityLevel == 1 ? SecurityLevel.L1 : securityLevel == 3 ? SecurityLevel.L3 : SecurityLevel.L2,
+                    Contacts = relyingPartySection.GetSection("Contacts").Get<List<string>?>() ?? new List<string>(),
+                    RedirectUris = new List<string>() { $"{(relyingPartySection.GetValue<string?>("Id") ?? string.Empty).RemoveTrailingSlash()}{SpidCieConst.CallbackPath}" },
+                    OrganizationType = relyingPartySection.GetValue<string?>("OrganizationType") ?? string.Empty,
+                    Name = relyingPartySection.GetValue<string?>("Name") ?? string.Empty,
+                    OrganizationName = relyingPartySection.GetValue<string?>("OrganizationName") ?? string.Empty,
+                    HomepageUri = relyingPartySection.GetValue<string?>("HomepageUri") ?? string.Empty,
+                    LogoUri = relyingPartySection.GetValue<string?>("LogoUri") ?? string.Empty,
+                    PolicyUri = relyingPartySection.GetValue<string?>("PolicyUri") ?? string.Empty,
+                    LongSessionsEnabled = relyingPartySection.GetValue<bool?>("LongSessionsEnabled") ?? false,
+                    AuthorityHints = new List<string>() { aggregator.Id },
+                    TrustMarks = relyingPartySection.GetSection("TrustMarks").GetChildren()
+                        .Select(trustMarksSection => new TrustMarkDefinition()
+                        {
+                            Id = trustMarksSection.GetValue<string>("Id"),
+                            Issuer = trustMarksSection.GetValue<string>("Issuer"),
+                            TrustMark = trustMarksSection.GetValue<string>("TrustMark")
+                        }).ToList(),
+                    OpenIdFederationCertificates = aggregator.OpenIdFederationCertificates,
+                    OpenIdCoreCertificates = aggregator.OpenIdFederationCertificates,
+                    RequestedClaims = (relyingPartySection.GetSection("RequestedClaims").Get<List<string>?>() ?? new List<string>())
+                        .Select(c => ClaimTypes.FromName(c))
+                        .ToList()
+                };
+
+                aggregator.RelyingParties.Add(relyingParty);
+            }
+
+            options.Aggregators.Add(aggregator);
+        }
+
         return options;
     }
 

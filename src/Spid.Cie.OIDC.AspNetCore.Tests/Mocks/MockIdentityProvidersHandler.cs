@@ -36,6 +36,7 @@ internal class MockIdentityProvidersHandler : IIdentityProvidersHandler
         : await Task.FromResult(new List<IdentityProvider>() {
                     new SpidIdentityProvider(){
                         Uri = "http://127.0.0.1:8000/oidc/op/",
+                        SupportedAcrValues = new() { SpidCieConst.SpidL2, SpidCieConst.SpidL1, SpidCieConst.SpidL3 },
                         EntityConfiguration = new IdPEntityConfiguration(){
                             Issuer = "http://127.0.0.1:8000/oidc/op/",
                             Metadata = new IdPMetadata_SpidCieOIDCConfiguration(){
@@ -45,6 +46,7 @@ internal class MockIdentityProvidersHandler : IIdentityProvidersHandler
                     },
                     new CieIdentityProvider(){
                         Uri = "http://127.0.0.1:8002/oidc/op/",
+                        SupportedAcrValues = new() { SpidCieConst.SpidL2, SpidCieConst.SpidL1, SpidCieConst.SpidL3 },
                         EntityConfiguration = new IdPEntityConfiguration(){
                             Issuer = "http://127.0.0.1:8002/oidc/op/",
                             Metadata = new IdPMetadata_SpidCieOIDCConfiguration(){

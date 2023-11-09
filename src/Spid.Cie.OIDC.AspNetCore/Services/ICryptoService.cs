@@ -7,7 +7,7 @@ namespace Spid.Cie.OIDC.AspNetCore.Services;
 
 internal interface ICryptoService
 {
-    string CreateClientAssertion(IdentityProvider idp, string clientId, X509Certificate2 certificate);
+    string CreateClientAssertion(string aud, string clientId, X509Certificate2 certificate);
     string DecodeJose(string jose, X509Certificate2 certificate);
     string DecodeJWT(string jwt);
     string DecodeJWTHeader(string jwt);

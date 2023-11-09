@@ -17,7 +17,7 @@ internal class CieConst
     internal const string place_of_birth = nameof(place_of_birth);
     internal const string document_details = nameof(document_details);
 
-    internal const string AttributesBaseURI = "https://idserver.servizicie.interno.gov.it/";
+    internal const string AttributesBaseURI = "https://attributes.eid.gov.it/";
 
     internal const string e_delivery_service = $"{AttributesBaseURI}{nameof(e_delivery_service)}";
     internal const string fiscal_number = $"{AttributesBaseURI}{nameof(fiscal_number)}";

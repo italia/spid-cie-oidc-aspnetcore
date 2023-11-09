@@ -21,6 +21,8 @@ internal class RelyingPartiesHandler : IRelyingPartiesHandler
 
     public async Task<IEnumerable<RelyingParty>> GetRelyingParties()
     {
-        return _options.CurrentValue.RelyingParties.Union(await _rpRetriever.GetRelyingParties());
+        return _options.CurrentValue.RelyingParties
+            .Union(_options.CurrentValue.Aggregators?.SelectMany(a => a.RelyingParties))
+            .Union(await _rpRetriever.GetRelyingParties()).ToList();
     }
 }

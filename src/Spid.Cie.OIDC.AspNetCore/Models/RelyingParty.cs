@@ -8,11 +8,10 @@ namespace Spid.Cie.OIDC.AspNetCore.Models;
 public sealed class RelyingParty
 {
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-    public string ClientId { get; set; }
-    public string ClientName { get; set; }
+    public string Id { get; set; }
+    public string Name { get; set; }
     public SecurityLevel SecurityLevel { get; set; }
     public List<string> AuthorityHints { get; set; } = new();
-    public string Issuer { get; set; }
     public List<TrustMarkDefinition> TrustMarks { get; set; } = new();
     public List<X509Certificate2> OpenIdFederationCertificates { get; set; } = new();
     public List<X509Certificate2> OpenIdCoreCertificates { get; set; } = new();
@@ -20,5 +19,10 @@ public sealed class RelyingParty
     public bool LongSessionsEnabled { get; set; }
     public List<string> RedirectUris { get; set; } = new();
     public List<ClaimTypes> RequestedClaims { get; set; } = new();
+    public string HomepageUri { get; set; }
+    public string LogoUri { get; set; }
+    public string OrganizationName { get; set; }
+    public string PolicyUri { get; set; }
+    public string OrganizationType { get; set; }
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 }
