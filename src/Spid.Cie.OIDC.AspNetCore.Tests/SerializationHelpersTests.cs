@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Spid.Cie.OIDC.AspNetCore.Helpers;
+using System;
 using System.IO;
 using System.Text;
 using System.Text.Json;
@@ -13,7 +14,7 @@ public class SerializationHelpersTests
     [Fact]
     public void ToJsonStringTest()
     {
-        Assert.Equal("[\r\n  0,\r\n  1\r\n]", SerializationHelpers.ToJsonString(JsonDocument.Parse("[0,1]")));
+        Assert.Equal($"[{Environment.NewLine}  0,{Environment.NewLine}  1{Environment.NewLine}]", SerializationHelpers.ToJsonString(JsonDocument.Parse("[0,1]")));
     }
 
     [Fact]
