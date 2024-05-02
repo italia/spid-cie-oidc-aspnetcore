@@ -75,7 +75,7 @@ internal class TrustChainManager : ITrustChainManager
                     DateTimeOffset expiresOn = opConf.ExpiresOn;
 
                     bool opValidated = false;
-                    foreach (var authorityHint in opConf.AuthorityHints)
+                    foreach (var authorityHint in opConf.AuthorityHints ?? new())
                     {
                         trustChain.Clear();
 
