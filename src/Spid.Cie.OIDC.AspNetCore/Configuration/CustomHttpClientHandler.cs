@@ -37,23 +37,26 @@ internal class CustomHttpClientHandler : HttpClientHandler
 
     public async Task<HttpResponseMessage> DecodeJoseResponse(HttpResponseMessage response)
     {
-        if (response.Content.Headers.ContentType!.MediaType == "application/jose")
+        if (("application/jose").Equals(response.Content.Headers.ContentType!.MediaType, StringComparison.OrdinalIgnoreCase)
+        || ("application/jwt").Equals(response.Content.Headers.ContentType!.MediaType, StringComparison.OrdinalIgnoreCase))
         {
-            var token = await response.Content.ReadAsStringAsync();
-            Throw<Exception>.If(string.IsNullOrWhiteSpace(token), "No Body Content found in the Jose response");
+             var token = await response.Content.ReadAsStringAsync();
+             Throw<Exception>.If(string.IsNullOrWhiteSpace(token), "No Body Content found in the Jose response");
+ 
+            /* as suggested at https://www.rfc-editor.org/rfc/rfc7516#section-9  */
+            if (token.Count(c => c == '.') == 4)
+            {
+                var provider = await _rpSelector.GetSelectedRelyingParty();
+                Throw<Exception>.If(provider is null, "No currently selected RelyingParty was found");
+                Throw<Exception>.If(provider!.OpenIdCoreCertificates is null || provider!.OpenIdCoreCertificates.Count() == 0,
+                    "No OpenIdCore Certificates were found in the currently selected RelyingParty");
 
-            var provider = await _rpSelector.GetSelectedRelyingParty();
-            Throw<Exception>.If(provider is null, "No currently selected RelyingParty was found");
-            Throw<Exception>.If(provider!.OpenIdCoreCertificates is null || provider!.OpenIdCoreCertificates.Count() == 0,
-                "No OpenIdCore Certificates were found in the currently selected RelyingParty");
+                var certificate = provider!.OpenIdCoreCertificates!.FirstOrDefault()!;
+                var decodedToken = _cryptoService.DecodeJose(token, certificate);
 
-            var certificate = provider!.OpenIdCoreCertificates!.FirstOrDefault()!;
-
-            var decodedToken = _cryptoService.DecodeJWT(_cryptoService.DecodeJose(token, certificate));
-
-            var httpResponse = new HttpResponseMessage(System.Net.HttpStatusCode.OK);
-            httpResponse.Content = new StringContent(decodedToken, Encoding.UTF8, "application/json");
-            return httpResponse;
+                /* edit response to mantain detail of original request */
+                response.Content = new StringContent(decodedToken, Encoding.UTF8, "application/jwt"); 
+            }
         }
         return response;
     }
