@@ -94,7 +94,7 @@ public class AuthenticateTests
 
         var queryString = QueryHelpers.ParseQuery(location.OriginalString);
 
-        Assert.ThrowsAnyAsync<Exception>(async () => await GetAsync(server, $"signin-spidcie?state={queryString["state"]}&error=test_error&error_description=error_description", cookies));
+        await Assert.ThrowsAnyAsync<Exception>(async () => await GetAsync(server, $"signin-spidcie?state={queryString["state"]}&error=test_error&error_description=error_description", cookies));
     }
 
     private Task<HttpResponseMessage> GetAsync(TestServer server, string path, IEnumerable<SetCookieHeaderValue> cookies)
