@@ -1,4 +1,5 @@
-﻿using Microsoft.IdentityModel.Tokens;
+﻿using Microsoft.IdentityModel.JsonWebTokens;
+using Microsoft.IdentityModel.Tokens;
 using Spid.Cie.OIDC.AspNetCore.Models;
 using System;
 using System.Threading.Tasks;
@@ -28,6 +29,12 @@ internal class MockTokenValidationParametersRetriever : ITokenValidationParamete
             ValidateActor = false,
             ValidateIssuerSigningKey = false,
             ValidateTokenReplay = false,
+            SignatureValidator = (string token, TokenValidationParameters validationParameters) =>
+            {
+                var handler = new JsonWebTokenHandler();
+                var securityToken = handler.ReadToken(token);
+                return securityToken;
+            }
         };
     }
 }

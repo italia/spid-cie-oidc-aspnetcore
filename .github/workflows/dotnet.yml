@@ -19,10 +19,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - name: Setup .NET 7.0.x
+    - name: Setup .NET 8.0.x
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 7.0.x
+        dotnet-version: 8.0.x
     - name: Restore dependencies
       run: dotnet restore
       working-directory: src
@@ -33,12 +33,14 @@ jobs:
       run: dotnet test --no-build --verbosity normal -p:CollectCoverage=true -p:CoverletOutput=TestResults/ -p:CoverletOutputFormat=opencover
       working-directory: src
     - name: Copy the opencover.xml file
+      if: github.event_name != 'pull_request'
       run: |
         find ./ -type f -name "coverage.opencover.xml" | while read fname; do
           dirname=`dirname "$fname"`
           cp "${dirname}/coverage.opencover.xml" "./coverage.opencover.xml"
         done
     - name: Create Test Coverage Badge Data
+      if: github.event_name != 'pull_request'
       uses: simon-k/dotnet-code-coverage-badge@v1.0.0
       id: create_coverage_badge
       with:
@@ -46,12 +48,14 @@ jobs:
         color: brightgreen
         path: ./coverage.opencover.xml      
     - name: Create the Coverage Badge Data File
+      if: github.event_name != 'pull_request'
       uses: 1arp/create-a-file-action@0.2
       with:
         path: ./.github
         file: coverage_badge.json
         content: ${{steps.create_coverage_badge.outputs.badge}}
     - name: Commit coverage_badge.json
+      if: github.event_name != 'pull_request'
       run: |
         git config --global user.name 'GitHub Action'
         git config --global user.email 'githubaction@users.noreply.github.com'

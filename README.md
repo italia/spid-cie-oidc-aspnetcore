@@ -1,6 +1,6 @@
 # SPID/CIE OIDC Federation SDK for AspNetCore
 
-![aspnetcore-versions](https://img.shields.io/badge/aspnetcore-7.0%20%7C%206.0%20%7C%205.0%20%7C%203.1-brightgreen)
+![aspnetcore-versions](https://img.shields.io/badge/aspnetcore-8.0%20%7C%207.0%20%7C%206.0%20%7C%205.0%20%7C%203.1-brightgreen)
 ![CI build](https://github.com/italia/spid-cie-oidc-aspnetcore/workflows/spid_cie_oidc/badge.svg)
 ![badge](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/italia/spid-cie-oidc-aspnetcore/main/.github/coverage_badge.json)
 ![Apache license](https://img.shields.io/badge/license-Apache%202-blue.svg)
