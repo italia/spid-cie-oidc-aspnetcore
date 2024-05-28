@@ -59,23 +59,23 @@ internal class IdentityProvidersHandler : IIdentityProvidersHandler
         return result;
     }
 
-    private static IdentityProvider CreateSpidIdentityProvider(IdPEntityConfiguration conf)
-       => new SpidIdentityProvider()
-       {
-           EntityConfiguration = conf,
-           Uri = conf.Subject ?? string.Empty,
-           OrganizationLogoUrl = conf.Metadata.OpenIdProvider.AdditionalData["logo_uri"] as string ?? string.Empty,
-           OrganizationName = conf.Metadata.OpenIdProvider.AdditionalData["organization_name"] as string ?? string.Empty,
-           SupportedAcrValues = conf.Metadata.OpenIdProvider.AcrValuesSupported.ToList(),
-       };
+	private static IdentityProvider CreateSpidIdentityProvider(IdPEntityConfiguration conf)
+		=> new SpidIdentityProvider()
+		{
+			EntityConfiguration = conf,
+			Uri = conf.Subject ?? string.Empty,
+			OrganizationLogoUrl = conf.Metadata.OpenIdProvider.AdditionalData.TryGetValue("logo_uri", out object? logoUri) ? logoUri as string ?? string.Empty : string.Empty,
+			OrganizationName = conf.Metadata.OpenIdProvider.AdditionalData.TryGetValue("organization_name", out object? organizationName) ? organizationName as string ?? string.Empty : string.Empty,
+			SupportedAcrValues = conf.Metadata.OpenIdProvider.AcrValuesSupported.ToList(),
+		};
 
-    private static IdentityProvider CreateCieIdentityProvider(IdPEntityConfiguration conf)
-       => new CieIdentityProvider()
-       {
-           EntityConfiguration = conf,
-           Uri = conf.Subject ?? string.Empty,
-           OrganizationLogoUrl = conf.Metadata.OpenIdProvider.AdditionalData["logo_uri"] as string ?? string.Empty,
-           OrganizationName = conf.Metadata.OpenIdProvider.AdditionalData["organization_name"] as string ?? string.Empty,
-           SupportedAcrValues = conf.Metadata.OpenIdProvider.AcrValuesSupported.ToList(),
-       };
+	private static IdentityProvider CreateCieIdentityProvider(IdPEntityConfiguration conf)
+		=> new CieIdentityProvider()
+		{
+			EntityConfiguration = conf,
+			Uri = conf.Subject ?? string.Empty,
+			OrganizationLogoUrl = conf.Metadata.OpenIdProvider.AdditionalData.TryGetValue("logo_uri", out object? logoUri) ? logoUri as string ?? string.Empty : string.Empty,
+			OrganizationName = conf.Metadata.OpenIdProvider.AdditionalData.TryGetValue("organization_name", out object? organizationName) ? organizationName as string ?? string.Empty : string.Empty,
+			SupportedAcrValues = conf.Metadata.OpenIdProvider.AcrValuesSupported.ToList(),
+		};
 }
