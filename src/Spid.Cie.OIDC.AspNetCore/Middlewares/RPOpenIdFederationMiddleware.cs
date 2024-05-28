@@ -132,34 +132,35 @@ internal class RPOpenIdFederationMiddleware
     }
 
     private SAEntityConfiguration GetEntityConfiguration(Aggregator agg, ICryptoService cryptoService)
-    {
-        return new SAEntityConfiguration()
-        {
-            ExpiresOn = DateTimeOffset.UtcNow.AddMinutes(SpidCieConst.EntityConfigurationExpirationInMinutes),
-            IssuedAt = DateTimeOffset.UtcNow,
-            AuthorityHints = agg.AuthorityHints,
-            Issuer = agg.Id,
-            Subject = agg.Id,
-            TrustMarks = agg.TrustMarks,
-            JWKS = cryptoService.GetJWKS(agg.OpenIdFederationCertificates),
-            Metadata = new SAMetadata_SpidCieOIDCConfiguration()
-            {
-                FederationEntity = new SA_SpidCieOIDCFederationEntity()
-                {
-                    Contacts = agg.Contacts,
-                    HomepageUri = agg.HomepageUri,
-                    LogoUri = agg.LogoUri,
-                    OrganizationName = agg.OrganizationName,
-                    PolicyUri = agg.PolicyUri,
-                    FederationResolveEndpoint = $"{agg.Id.EnsureTrailingSlash()}{SpidCieConst.ResolveEndpointPath}",
-                    FederationFetchEndpoint = $"{agg.Id.EnsureTrailingSlash()}{SpidCieConst.FetchEndpointPath}",
-                    FederationListEndpoint = $"{agg.Id.EnsureTrailingSlash()}{SpidCieConst.ListEndpointPath}",
-                },
-                TrustMarkIssuer = new SA_TrustMarkIssuer()
-                {
-                    FederationStatusEndpoint = $"{agg.Id.EnsureTrailingSlash()}{SpidCieConst.TrustMarkStatusEndpointPath}"
-                }
-            }
-        };
-    }
+	{
+		return new SAEntityConfiguration()
+		{
+			ExpiresOn = DateTimeOffset.UtcNow.AddMinutes(SpidCieConst.EntityConfigurationExpirationInMinutes),
+			IssuedAt = DateTimeOffset.UtcNow,
+			AuthorityHints = agg.AuthorityHints,
+			Issuer = agg.Id,
+			Subject = agg.Id,
+			TrustMarks = agg.TrustMarks,
+			JWKS = cryptoService.GetJWKS(agg.OpenIdFederationCertificates),
+			Metadata = new SAMetadata_SpidCieOIDCConfiguration()
+			{
+				FederationEntity = new SA_SpidCieOIDCFederationEntity()
+				{
+					Contacts = agg.Contacts,
+					HomepageUri = agg.HomepageUri,
+					LogoUri = agg.LogoUri,
+					OrganizationName = agg.OrganizationName,
+					PolicyUri = agg.PolicyUri,
+					FederationResolveEndpoint = $"{agg.Id.EnsureTrailingSlash()}{SpidCieConst.ResolveEndpointPath}",
+					FederationFetchEndpoint = $"{agg.Id.EnsureTrailingSlash()}{SpidCieConst.FetchEndpointPath}",
+					FederationListEndpoint = $"{agg.Id.EnsureTrailingSlash()}{SpidCieConst.ListEndpointPath}",
+					FederationTrustMarkStatusEndpoint = $"{agg.Id.EnsureTrailingSlash()}{SpidCieConst.TrustMarkStatusEndpointPath}"
+				}//,
+				//TrustMarkIssuer = new SA_TrustMarkIssuer()
+				//{
+				//    FederationStatusEndpoint = $"{agg.Id.EnsureTrailingSlash()}{SpidCieConst.TrustMarkStatusEndpointPath}"
+				//}
+			}
+		};
+	}
 }

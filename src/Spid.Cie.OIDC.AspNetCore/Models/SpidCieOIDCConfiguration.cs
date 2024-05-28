@@ -26,8 +26,8 @@ internal sealed class SAMetadata_SpidCieOIDCConfiguration
 [ExcludeFromCodeCoverage]
 internal sealed class SA_TrustMarkIssuer
 {
-    [JsonPropertyName("federation_status_endpoint")]
-    public string FederationStatusEndpoint { get; set; }
+    //[JsonPropertyName("federation_status_endpoint")]
+    //public string FederationStatusEndpoint { get; set; }
 }
 
 [ExcludeFromCodeCoverage]
@@ -118,6 +118,9 @@ internal sealed class SA_SpidCieOIDCFederationEntity
 
     [JsonPropertyName("federation_list_endpoint")]
     public string FederationListEndpoint { get; set; }
+
+    [JsonPropertyName("federation_trust_mark_status_endpoint")]
+    public string FederationTrustMarkStatusEndpoint { get; set; }
 }
 
 [ExcludeFromCodeCoverage]
