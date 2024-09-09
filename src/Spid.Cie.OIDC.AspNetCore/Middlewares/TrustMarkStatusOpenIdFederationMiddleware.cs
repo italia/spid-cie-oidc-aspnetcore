@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
+using Spid.Cie.OIDC.AspNetCore.Enums;
 using Spid.Cie.OIDC.AspNetCore.Helpers;
 using Spid.Cie.OIDC.AspNetCore.Models;
 using Spid.Cie.OIDC.AspNetCore.Services;
@@ -11,9 +12,9 @@ using System.Threading.Tasks;
 
 namespace Spid.Cie.OIDC.AspNetCore.Middlewares;
 
-internal class TrustMarkStatusOpenIdFederationMiddleware
+class TrustMarkStatusOpenIdFederationMiddleware
 {
-    private readonly RequestDelegate _next;
+    readonly RequestDelegate _next;
 
     public TrustMarkStatusOpenIdFederationMiddleware(RequestDelegate next)
     {
@@ -38,19 +39,32 @@ internal class TrustMarkStatusOpenIdFederationMiddleware
             .EnsureTrailingSlash()
             .ToString();
 
-        string? sub = context.Request.Form.ContainsKey("sub") ? context.Request.Form["sub"] : default;
-        string? id = context.Request.Form.ContainsKey("id") ? context.Request.Form["id"] : default;
+        string? sub, id;
 
-        if (string.IsNullOrWhiteSpace(sub) || string.IsNullOrWhiteSpace(id))
+        if (context.Request.Form.ContainsKey("trust_mark"))
+        {
+            var trustmarkPayload = JsonSerializer.Deserialize<TrustMarkPayload>(cryptoService.DecodeJWT(context.Request.Form["trust_mark"]));
+
+            sub = trustmarkPayload?.Subject;
+            id = trustmarkPayload?.Id;
+
+        }
+        else if (context.Request.Form.ContainsKey("sub") && (context.Request.Form.ContainsKey("id") || context.Request.Form.ContainsKey("trust_mark_id")))
+        {
+            sub = context.Request.Form["sub"];
+            id = context.Request.Form.ContainsKey("trust_mark_id") ? context.Request.Form["trust_mark_id"] : context.Request.Form["id"];
+        }
+        else
         {
             context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
             context.Response.ContentType = SpidCieConst.JsonContentType;
             await context.Response.WriteAsync(JsonSerializer.Serialize(new GenericError()
             {
-                ErrorCode = ErrorCode.invalid_request,
-                ErrorDescription = $"'{nameof(sub)}' and '{nameof(id)}' query parameters are mandatory"
+                ErrorCode = ErrorCodes.invalid_request,
+                ErrorDescription = "If 'trust_mark' is used, then 'sub' and 'trust_mark_id' are not needed. If 'trust_mark' is not used, then 'sub' and 'trust_mark_id' are REQUIRED."
             }));
             await context.Response.Body.FlushAsync();
+
             return;
         }
 
@@ -59,13 +73,14 @@ internal class TrustMarkStatusOpenIdFederationMiddleware
         var relyingParty = aggs
             .SelectMany(s => s.RelyingParties)
             .FirstOrDefault(r => sub.EnsureTrailingSlash().Equals(r.Id.EnsureTrailingSlash(), StringComparison.OrdinalIgnoreCase));
+
         if (relyingParty is null)
         {
             context.Response.StatusCode = (int)HttpStatusCode.NotFound;
             context.Response.ContentType = SpidCieConst.JsonContentType;
             await context.Response.WriteAsync(JsonSerializer.Serialize(new GenericError()
             {
-                ErrorCode = ErrorCode.invalid_request,
+                ErrorCode = ErrorCodes.invalid_request,
                 ErrorDescription = "'sub' not found"
             }));
             await context.Response.Body.FlushAsync();

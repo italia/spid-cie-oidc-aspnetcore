@@ -3,7 +3,7 @@ using System;
 
 namespace Spid.Cie.OIDC.AspNetCore.Extensions;
 
-internal class SpidCieOIDCBuilder : ISpidCieOIDCBuilder
+class SpidCieOIDCBuilder : ISpidCieOIDCBuilder
 {
     public SpidCieOIDCBuilder(IServiceCollection services)
     {

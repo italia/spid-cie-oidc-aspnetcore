@@ -5,9 +5,9 @@ using System.Threading.Tasks;
 
 namespace Spid.Cie.OIDC.AspNetCore.Services.Defaults;
 
-internal class DefaultLogPersister : ILogPersister
+class DefaultLogPersister : ILogPersister
 {
-    private readonly ILogger<DefaultLogPersister> _logger;
+    readonly ILogger<DefaultLogPersister> _logger;
 
     public DefaultLogPersister(ILogger<DefaultLogPersister> logger)
     {

@@ -8,10 +8,10 @@ using System.Threading.Tasks;
 
 namespace Spid.Cie.OIDC.AspNetCore.Services.Defaults;
 
-internal class DefaultRelyingPartySelector : IRelyingPartySelector
+class DefaultRelyingPartySelector : IRelyingPartySelector
 {
-    private readonly IRelyingPartiesHandler _retriever;
-    private readonly IHttpContextAccessor _httpContextAccessor;
+    readonly IRelyingPartiesHandler _retriever;
+    readonly IHttpContextAccessor _httpContextAccessor;
 
     public DefaultRelyingPartySelector(IRelyingPartiesHandler retriever,
         IHttpContextAccessor httpContextAccessor)

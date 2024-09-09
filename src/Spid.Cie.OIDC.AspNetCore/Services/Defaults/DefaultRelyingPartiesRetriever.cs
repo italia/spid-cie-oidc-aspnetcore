@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Spid.Cie.OIDC.AspNetCore.Services.Defaults;
 
-internal class DefaultRelyingPartiesRetriever : IRelyingPartiesRetriever
+class DefaultRelyingPartiesRetriever : IRelyingPartiesRetriever
 {
     public async Task<IEnumerable<RelyingParty>> GetRelyingParties()
     {

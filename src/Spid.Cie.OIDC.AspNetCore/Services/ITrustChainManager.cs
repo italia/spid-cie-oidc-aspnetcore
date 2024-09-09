@@ -3,8 +3,11 @@ using System.Threading.Tasks;
 
 namespace Spid.Cie.OIDC.AspNetCore.Services;
 
-internal interface ITrustChainManager
+interface ITrustChainManager
 {
-    Task<IdPEntityConfiguration?> BuildTrustChain(string url);
-    TrustChain? GetResolvedTrustChain(string sub, string anchor);
+    Task<OPEntityConfiguration?> BuildTrustChain(string url);
+
+    Task<RPEntityConfiguration?> BuildRPTrustChain(string url);
+
+    TrustChain<T>? GetResolvedTrustChain<T>(string sub, string anchor) where T : EntityConfiguration;
 }

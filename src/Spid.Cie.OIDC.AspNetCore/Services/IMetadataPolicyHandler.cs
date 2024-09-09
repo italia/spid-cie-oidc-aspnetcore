@@ -2,7 +2,7 @@
 
 namespace Spid.Cie.OIDC.AspNetCore.Services;
 
-internal interface IMetadataPolicyHandler
+interface IMetadataPolicyHandler
 {
     OpenIdConnectConfiguration? ApplyMetadataPolicy(string opDecodedJwt, string metadataPolicy);
 }

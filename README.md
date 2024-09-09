@@ -180,7 +180,8 @@ In particular, a 'SpidCie' section can be added to the configuration which has t
         "AuthorityHints": [ "http://trust-anchor.org:8000" ],
         "TrustMarks": [
           {
-            "id": "https://www.spid.gov.it/openid-federation/agreement/sp-private",
+            "id": "https://preprod.oidc.registry.servizicie.interno.gov.it/intermediate/private",
+            "issuer": "https://preprod.oidc.registry.servizicie.interno.gov.it"
             "trust_mark": "eyJhbGc...."
           }
         ],
@@ -200,8 +201,18 @@ In particular, a 'SpidCie' section can be added to the configuration which has t
         "MetadataPolicy": {},
         "RelyingParties": [
           {
+            "AuthorityHints": [
+                "http://aspnetcore.aggregator.org:5000/"
+            ],
             "Id": "http://aspnetcore.aggregator.org:5000/TestRP/",
             "Name": "RP Test",
+            "OpenIdCoreCertificates": [
+                {
+                    "Algorithm": "RS256", //Or RSA-OAEP-256
+                    "Certificate": "base64",
+                    "KeyUsage": "Signature" //Or Encryption
+                }
+            ],
             "OrganizationName": "RP Test",
             "OrganizationType": "Public", // or Private
             "HomepageUri": "http://aspnetcore.aggregator.org:5000/TestRP/",
@@ -210,6 +221,9 @@ In particular, a 'SpidCie' section can be added to the configuration which has t
             "SecurityLevel": 2,
             "Contacts": [ "info@rptest.it" ],
             "LongSessionsEnabled": true,
+            "RedirectUris": [
+                "http://aspnetcore.aggregator.org:5000/TestRP/signin-oidc-spidcie"
+            ]
             "RequestedClaims": [
               "Name",
               "FamilyName",
@@ -218,9 +232,11 @@ In particular, a 'SpidCie' section can be added to the configuration which has t
               "DateOfBirth",
               "PlaceOfBirth"
             ],
+            "SecurityLevel": "L1", //Or L2 or L3
             "TrustMarks": [
               {
                 "Id": "https://registry.interno.gov.it/openid_relying_party/public/",
+                "Issuer": "http://aspnetcore.aggregator.org:5000",
                 "TrustMark": "eyJhbGc...."
               }
             ]

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
+using Spid.Cie.OIDC.AspNetCore.Enums;
 using Spid.Cie.OIDC.AspNetCore.Helpers;
 using Spid.Cie.OIDC.AspNetCore.Models;
 using Spid.Cie.OIDC.AspNetCore.Services;
@@ -13,9 +14,9 @@ using System.Threading.Tasks;
 
 namespace Spid.Cie.OIDC.AspNetCore.Middlewares;
 
-internal class FetchOpenIdFederationMiddleware
+class FetchOpenIdFederationMiddleware
 {
-    private readonly RequestDelegate _next;
+    readonly RequestDelegate _next;
 
     public FetchOpenIdFederationMiddleware(RequestDelegate next)
     {
@@ -34,10 +35,10 @@ internal class FetchOpenIdFederationMiddleware
         }
 
         var uri = new Uri(UriHelper.GetEncodedUrl(context.Request))
-            .GetLeftPart(UriPartial.Path)
-            .Replace(SpidCieConst.FetchEndpointPath, "")
-            .EnsureTrailingSlash()
-            .ToString();
+           .GetLeftPart(UriPartial.Path)
+           .Replace(SpidCieConst.FetchEndpointPath, "")
+           .EnsureTrailingSlash()
+           .ToString();
 
         string? sub = context.Request.Query.ContainsKey("sub") ? context.Request.Query["sub"] : default;
         string? iss = context.Request.Query.ContainsKey("iss") ? context.Request.Query["iss"] : uri;
@@ -48,7 +49,7 @@ internal class FetchOpenIdFederationMiddleware
             context.Response.ContentType = SpidCieConst.JsonContentType;
             await context.Response.WriteAsync(JsonSerializer.Serialize(new GenericError()
             {
-                ErrorCode = ErrorCode.invalid_request,
+                ErrorCode = ErrorCodes.invalid_request,
                 ErrorDescription = "'sub' and 'iss' query parameters are mandatory"
             }));
             await context.Response.Body.FlushAsync();
@@ -64,7 +65,7 @@ internal class FetchOpenIdFederationMiddleware
             context.Response.ContentType = SpidCieConst.JsonContentType;
             await context.Response.WriteAsync(JsonSerializer.Serialize(new GenericError()
             {
-                ErrorCode = ErrorCode.invalid_request,
+                ErrorCode = ErrorCodes.invalid_request,
                 ErrorDescription = "'iss' not found"
             }));
             await context.Response.Body.FlushAsync();
@@ -79,21 +80,22 @@ internal class FetchOpenIdFederationMiddleware
             context.Response.ContentType = SpidCieConst.JsonContentType;
             await context.Response.WriteAsync(JsonSerializer.Serialize(new GenericError()
             {
-                ErrorCode = ErrorCode.invalid_request,
+                ErrorCode = ErrorCodes.invalid_request,
                 ErrorDescription = "'iss' doesn't have a signing certificate"
             }));
             await context.Response.Body.FlushAsync();
             return;
         }
 
-        var relyingParty = aggregate.RelyingParties.FirstOrDefault(r => sub.Equals(r.Id.EnsureTrailingSlash(), StringComparison.OrdinalIgnoreCase));
+        var relyingParty = aggregate.RelyingParties.FirstOrDefault(r => sub.EnsureTrailingSlash().Equals(r.Id.EnsureTrailingSlash(), StringComparison.OrdinalIgnoreCase));
+
         if (relyingParty is null)
         {
             context.Response.StatusCode = (int)HttpStatusCode.NotFound;
             context.Response.ContentType = SpidCieConst.JsonContentType;
             await context.Response.WriteAsync(JsonSerializer.Serialize(new GenericError()
             {
-                ErrorCode = ErrorCode.invalid_request,
+                ErrorCode = ErrorCodes.invalid_request,
                 ErrorDescription = "'sub' not found"
             }));
             await context.Response.Body.FlushAsync();
@@ -106,7 +108,7 @@ internal class FetchOpenIdFederationMiddleware
             context.Response.ContentType = SpidCieConst.JsonContentType;
             await context.Response.WriteAsync(JsonSerializer.Serialize(new GenericError()
             {
-                ErrorCode = ErrorCode.invalid_request,
+                ErrorCode = ErrorCodes.invalid_request,
                 ErrorDescription = "Invalid TrustMarks for 'sub'"
             }));
             await context.Response.Body.FlushAsync();
@@ -121,12 +123,20 @@ internal class FetchOpenIdFederationMiddleware
             Subject = sub,
             JWKS = cryptoService.GetJWKS(new List<X509Certificate2>() { certificate }),
             MetadataPolicy = aggregate.MetadataPolicy,
-            TrustMarks = relyingParty.TrustMarks.ToArray()
+            TrustMarks = relyingParty.TrustMarks,
+            AuthorityHints = relyingParty.AuthorityHints,
+            OpenIdRelyingParty = new SA_SpidCieOIDCConfiguration
+            {
+                Value = new SAJWKSValue
+                {
+                    JWKS = cryptoService.GetJWKS(relyingParty.OpenIdCoreCertificates)
+                }
+            }
         };
 
         string token = cryptoService.CreateJWT(certificate, response);
 
-        context.Response.ContentType = SpidCieConst.ResolveContentType;
+        context.Response.ContentType = SpidCieConst.EntityConfigurationContentType;
         await context.Response.WriteAsync(token);
         await context.Response.Body.FlushAsync();
         return;

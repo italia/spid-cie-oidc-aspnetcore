@@ -4,42 +4,61 @@ using System.Threading.Tasks;
 
 namespace Spid.Cie.OIDC.AspNetCore.Tests.Mocks;
 
-internal class MockTrustChainManager : ITrustChainManager
+class MockTrustChainManager : ITrustChainManager
 {
-    public async Task<IdPEntityConfiguration?> BuildTrustChain(string url)
+    public async Task<OPEntityConfiguration?> BuildTrustChain(string url)
     {
         await Task.CompletedTask;
-        var result = new IdPEntityConfiguration()
+
+        var result = new OPEntityConfiguration()
         {
             Issuer = url,
-            Metadata = new IdPMetadata_SpidCieOIDCConfiguration()
+            Metadata = new OPMetadata_SpidCieOIDCConfiguration()
             {
                 OpenIdProvider = new Microsoft.IdentityModel.Protocols.OpenIdConnect.OpenIdConnectConfiguration()
             }
         };
+
         result.Metadata.OpenIdProvider.AdditionalData.Add("op_uri", "test");
         result.Metadata.OpenIdProvider.AdditionalData.Add("op_name", "test");
         result.Metadata.OpenIdProvider.AdditionalData.Add("logo_uri", "test");
         result.Metadata.OpenIdProvider.AdditionalData.Add("organization_name", "test");
         result.Metadata.OpenIdProvider.AcrValuesSupported.Add("test");
+
         return result;
     }
 
-    public TrustChain? GetResolvedTrustChain(string sub, string anchor)
+    public async Task<RPEntityConfiguration?> BuildRPTrustChain(string url)
     {
-        return new TrustChain()
+        await Task.CompletedTask;
+
+        var result = new RPEntityConfiguration()
+        {
+            Issuer = url,
+            Metadata = new RPMetadata_SpidCieOIDCConfiguration()
+            {
+                FederationEntity = new RP_SpidCieOIDCFederationEntity
+                {
+                    
+                },
+                OpenIdRelyingParty = new RP_SpidCieOIDCConfiguration
+                {
+                    
+                }
+            }
+        };
+
+        return result;
+    }
+
+    public TrustChain<T>? GetResolvedTrustChain<T>(string sub, string anchor) where T : EntityConfiguration
+    {
+        return typeof(T).Equals(typeof(OPEntityConfiguration)) ? new OPEntityConfiguration()
         {
             ExpiresOn = System.DateTimeOffset.MaxValue,
-            Chain = new System.Collections.Generic.List<string> { "test1", "test2" },
-            OpConf = new IdPEntityConfiguration()
-            {
-                Issuer = sub,
-                Metadata = new IdPMetadata_SpidCieOIDCConfiguration()
-                {
-                    OpenIdProvider = new Microsoft.IdentityModel.Protocols.OpenIdConnect.OpenIdConnectConfiguration()
-                }
-            },
-            TrustAnchorUsed = anchor
-        };
+        } as TrustChain<T> : typeof(T).Equals(typeof(RPEntityConfiguration)) ? new RPEntityConfiguration
+        {
+            ExpiresOn = System.DateTimeOffset.MaxValue,
+        } as TrustChain<T> : default;
     }
 }

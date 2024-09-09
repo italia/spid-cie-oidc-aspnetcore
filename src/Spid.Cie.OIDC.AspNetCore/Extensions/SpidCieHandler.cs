@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.OAuth;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -22,37 +23,32 @@ using System.Threading.Tasks;
 
 namespace Spid.Cie.OIDC.AspNetCore.Extensions;
 
-internal class SpidCieHandler : OpenIdConnectHandler
+class SpidCieHandler : OpenIdConnectHandler
 {
-    private OpenIdConnectConfiguration? _configuration;
-    private const string NonceProperty = "N";
-    private readonly SpidCieEvents _events;
-    private readonly IHttpContextAccessor _httpContextAccessor;
-    private readonly IIdentityProvidersHandler _idpHandler;
-    private readonly IRelyingPartiesHandler _rpHandler;
-    private readonly IRelyingPartySelector _relyingPartySelector;
-    private readonly ICryptoService _cryptoService;
+    readonly SpidCieEvents _events;
+    const string NonceProperty = "N";
+    readonly ICryptoService _cryptoService;
+    readonly IAggregatorsHandler _aggHandler;
+    readonly IRelyingPartiesHandler _rpHandler;
+    OpenIdConnectConfiguration? _configuration;
+    readonly IIdentityProvidersHandler _idpHandler;
+    readonly IHttpContextAccessor _httpContextAccessor;
+    readonly IRelyingPartySelector _relyingPartySelector;
 
-    public SpidCieHandler(IOptionsMonitor<OpenIdConnectOptions> options,
-            IHttpContextAccessor httpContextAccessor,
-            ILoggerFactory logger,
-            HtmlEncoder htmlEncoder,
-            UrlEncoder encoder,
-            ISystemClock clock,
-            IIdentityProvidersHandler idpHandler,
-            IRelyingPartiesHandler rpHandler,
-            IRelyingPartySelector relyingPartySelector,
-            ICryptoService cryptoService,
-            SpidCieEvents events)
+
+    public SpidCieHandler(IOptionsMonitor<OpenIdConnectOptions> options, IHttpContextAccessor httpContextAccessor, ILoggerFactory logger, HtmlEncoder htmlEncoder,
+                            UrlEncoder encoder, ISystemClock clock, IIdentityProvidersHandler idpHandler, IRelyingPartiesHandler rpHandler,
+                            IRelyingPartySelector relyingPartySelector, ICryptoService cryptoService, IAggregatorsHandler aggHandler, SpidCieEvents events)
         : base(options, logger, htmlEncoder, encoder, clock)
     {
-        _events = events;
-        _httpContextAccessor = httpContextAccessor;
-        _idpHandler = idpHandler;
-        _rpHandler = rpHandler;
-        _relyingPartySelector = relyingPartySelector;
-        _cryptoService = cryptoService;
         Events = events;
+        _events = events;
+        _rpHandler = rpHandler;
+        _aggHandler = aggHandler;
+        _idpHandler = idpHandler;
+        _cryptoService = cryptoService;
+        _httpContextAccessor = httpContextAccessor;
+        _relyingPartySelector = relyingPartySelector;
     }
 
     protected new SpidCieEvents Events
@@ -86,6 +82,7 @@ internal class SpidCieHandler : OpenIdConnectHandler
         };
 
         #region Pkce
+
         var bytes = new byte[32];
         RandomNumberGenerator.Fill(bytes);
         var codeVerifier = Microsoft.AspNetCore.Authentication.Base64UrlTextEncoder.Encode(bytes);
@@ -98,10 +95,28 @@ internal class SpidCieHandler : OpenIdConnectHandler
 
         message.Parameters.Add(OAuthConstants.CodeChallengeKey, codeChallenge);
         message.Parameters.Add(OAuthConstants.CodeChallengeMethodKey, OAuthConstants.CodeChallengeMethodS256);
+
         #endregion
 
-
         var relyingParty = await _relyingPartySelector.GetSelectedRelyingParty();
+
+        if (relyingParty == default)
+        {
+            var aggregators = await _aggHandler.GetAggregators();
+            var uri = new Uri(UriHelper.GetEncodedUrl(_httpContextAccessor.HttpContext.Request))
+                        .GetLeftPart(UriPartial.Path)
+                        .Replace(SpidCieConst.JsonEntityConfigurationPath, "")
+                        .Replace(SpidCieConst.EntityConfigurationPath, "")
+                        .Replace(SpidCieConst.CallbackPath, "")
+                        .Replace(SpidCieConst.SignedOutCallbackPath, "")
+                        .Replace(SpidCieConst.RemoteSignOutPath, "")
+                        .EnsureTrailingSlash();
+
+            relyingParty = aggregators.SelectMany(a => a.RelyingParties)
+                            .OrderByDescending(r => r.Id.Length)
+                            .FirstOrDefault(r => uri.StartsWith(r.Id.EnsureTrailingSlash(), StringComparison.OrdinalIgnoreCase));
+        }
+
         Throw<Exception>.If(relyingParty is null, ErrorLocalization.RelyingPartyNotFound);
 
         Options.NonceCookie.Path = $"{new Uri(relyingParty!.Id).AbsolutePath.RemoveTrailingSlash()}/{SpidCieConst.CallbackPath.RemoveLeadingSlash()}";
@@ -112,7 +127,6 @@ internal class SpidCieHandler : OpenIdConnectHandler
         Options.CorrelationCookie.Path = $"{new Uri(relyingParty!.Id).AbsolutePath.RemoveTrailingSlash()}/{SpidCieConst.CallbackPath.RemoveLeadingSlash()}";
 
         GenerateCorrelationId(properties);
-
         var redirectContext = new RedirectContext(Context, Scheme, Options, properties)
         {
             ProtocolMessage = message
@@ -229,7 +243,7 @@ internal class SpidCieHandler : OpenIdConnectHandler
 
         Throw<Exception>.If(rp!.OpenIdCoreCertificates is null || rp!.OpenIdCoreCertificates.Count() == 0,
                 "No OpenIdCore certificates were found in the currently selected RelyingParty");
-        var certificate = rp!.OpenIdCoreCertificates!.FirstOrDefault()!;
+        var certificate = rp!.OpenIdCoreCertificates!.FirstOrDefault(occ => occ.KeyUsage == Enums.KeyUsageTypes.Signature)!;
 
         var revocationEndpoint = idp!.EntityConfiguration.Metadata.OpenIdProvider!.AdditionalData[SpidCieConst.RevocationEndpoint] as string;
         Throw<InvalidOperationException>.If(string.IsNullOrWhiteSpace(revocationEndpoint),
@@ -243,7 +257,7 @@ internal class SpidCieHandler : OpenIdConnectHandler
             ClientAssertion = new ClientAssertion()
             {
                 Type = SpidCieConst.ClientAssertionTypeValue,
-                Value = _cryptoService.CreateClientAssertion(idp!.EntityConfiguration.Metadata.OpenIdProvider!.AdditionalData["revocation_endpoint"] as string, clientId!, certificate)
+                Value = _cryptoService.CreateClientAssertion(idp!.EntityConfiguration.Metadata.OpenIdProvider!.AdditionalData["revocation_endpoint"] as string, clientId!, certificate.Certificate!)
             },
             Token = accessToken
         };

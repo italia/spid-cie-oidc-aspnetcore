@@ -7,10 +7,10 @@ using System.Threading.Tasks;
 
 namespace Spid.Cie.OIDC.AspNetCore.Services;
 
-internal class AggregatorsHandler : IAggregatorsHandler
+class AggregatorsHandler : IAggregatorsHandler
 {
-    private readonly IOptionsMonitor<SpidCieOptions> _options;
-    private readonly IAggregatorsRetriever _aggRetriever;
+    readonly IOptionsMonitor<SpidCieOptions> _options;
+    readonly IAggregatorsRetriever _aggRetriever;
 
     public AggregatorsHandler(IOptionsMonitor<SpidCieOptions> options,
         IAggregatorsRetriever aggRetriever)

@@ -21,7 +21,7 @@ public class CustomHttpClientHandlerTests
     {
         var handler = new CustomHttpClientHandler(new MockRelyingPartySelector(),
             new DefaultLogPersister(Mock.Of<ILogger<DefaultLogPersister>>()),
-            new MockCryptoService());
+            new MockCryptoService(), new MockAggregatorsHandler(), new MockHttpContextAccessor(false));
 
         var resourceName = "Spid.Cie.OIDC.AspNetCore.Tests.IntegrationTests.userInfoResponse.jose";
         using var stream = typeof(MockBackchannel).Assembly.GetManifestResourceStream(resourceName);
@@ -38,7 +38,7 @@ public class CustomHttpClientHandlerTests
     {
         var handler = new CustomHttpClientHandler(new MockRelyingPartySelector(),
             new DefaultLogPersister(Mock.Of<ILogger<DefaultLogPersister>>()),
-            new MockCryptoService());
+            new MockCryptoService(), new MockAggregatorsHandler(), new MockHttpContextAccessor(false));
         var response = new HttpResponseMessage();
         await Assert.ThrowsAnyAsync<Exception>(() => handler.DecodeJoseResponse(response));
     }
@@ -48,7 +48,7 @@ public class CustomHttpClientHandlerTests
     {
         var handler = new CustomHttpClientHandler(new MockRelyingPartySelector(true),
             new DefaultLogPersister(Mock.Of<ILogger<DefaultLogPersister>>()),
-            new MockCryptoService());
+            new MockCryptoService(), new MockAggregatorsHandler(), new MockHttpContextAccessor(false));
         var resourceName = "Spid.Cie.OIDC.AspNetCore.Tests.IntegrationTests.userInfoResponse.jose";
         using var stream = typeof(MockBackchannel).Assembly.GetManifestResourceStream(resourceName);
         using var reader = new StreamReader(stream);
@@ -64,7 +64,7 @@ public class CustomHttpClientHandlerTests
     {
         var handler = new CustomHttpClientHandler(new MockRelyingPartySelector(),
             new DefaultLogPersister(Mock.Of<ILogger<DefaultLogPersister>>()),
-            new MockCryptoService());
+            new MockCryptoService(), new MockAggregatorsHandler(), new MockHttpContextAccessor(false));
         var response = new HttpResponseMessage();
         response.Content = new StringContent(String.Empty, Encoding.UTF8, "application/jose");
         await Assert.ThrowsAnyAsync<Exception>(() => handler.DecodeJoseResponse(response));
@@ -75,7 +75,7 @@ public class CustomHttpClientHandlerTests
     {
         var handler = new CustomHttpClientHandler(new MockRelyingPartySelector(false, true),
             new DefaultLogPersister(Mock.Of<ILogger<DefaultLogPersister>>()),
-            new MockCryptoService());
+            new MockCryptoService(), new MockAggregatorsHandler(), new MockHttpContextAccessor(false));
         var resourceName = "Spid.Cie.OIDC.AspNetCore.Tests.IntegrationTests.userInfoResponse.jose";
         using var stream = typeof(MockBackchannel).Assembly.GetManifestResourceStream(resourceName);
         using var reader = new StreamReader(stream);
@@ -91,7 +91,7 @@ public class CustomHttpClientHandlerTests
     {
         var handler = new CustomHttpClientHandler(new MockRelyingPartySelector(),
             new DefaultLogPersister(Mock.Of<ILogger<DefaultLogPersister>>()),
-            new MockCryptoService());
+            new MockCryptoService(), new MockAggregatorsHandler(), new MockHttpContextAccessor(false));
         var resourceName = "Spid.Cie.OIDC.AspNetCore.Tests.IntegrationTests.jwtOP.json";
         using var stream = typeof(MockBackchannel).Assembly.GetManifestResourceStream(resourceName);
         using var reader = new StreamReader(stream);
@@ -107,7 +107,7 @@ public class CustomHttpClientHandlerTests
     {
         var handler = new CustomHttpClientHandler(new MockRelyingPartySelector(),
             new DefaultLogPersister(Mock.Of<ILogger<DefaultLogPersister>>()),
-            new MockCryptoService());
+            new MockCryptoService(), new MockAggregatorsHandler(), new MockHttpContextAccessor(false));
 
         var resourceName = "Spid.Cie.OIDC.AspNetCore.Tests.IntegrationTests.jwtOP.json";
         using var stream = typeof(MockBackchannel).Assembly.GetManifestResourceStream(resourceName);
@@ -124,7 +124,7 @@ public class CustomHttpClientHandlerTests
     {
         var handler = new CustomHttpClientHandler(new MockRelyingPartySelector(true),
             new DefaultLogPersister(Mock.Of<ILogger<DefaultLogPersister>>()),
-            new MockCryptoService());
+            new MockCryptoService(), new MockAggregatorsHandler(), new MockHttpContextAccessor(false));
         var request = new HttpRequestMessage();
         request.Content = new StringContent(string.Empty);
         request.RequestUri = new Uri("http://127.0.0.1");

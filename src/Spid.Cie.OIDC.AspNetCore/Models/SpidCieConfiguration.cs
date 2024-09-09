@@ -4,7 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 namespace Spid.Cie.OIDC.AspNetCore.Models;
 
 [ExcludeFromCodeCoverage]
-internal sealed class SpidCieConfiguration
+sealed class SpidCieConfiguration
 {
     public bool RequestRefreshToken { get; set; } = false;
 
@@ -15,5 +15,4 @@ internal sealed class SpidCieConfiguration
     public List<string> SpidOPs { get; set; } = new();
 
     public List<string> CieOPs { get; set; } = new();
-
 }

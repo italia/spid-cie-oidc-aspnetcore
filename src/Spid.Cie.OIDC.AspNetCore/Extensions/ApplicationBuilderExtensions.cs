@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
@@ -46,9 +47,13 @@ public static class ApplicationBuilderExtensions
                 options.GetClaimsFromUserInfoEndpoint = true;
                 options.AuthenticationMethod = OpenIdConnectRedirectBehavior.RedirectGet;
 
+                options.RequireHttpsMetadata = true;
                 options.Scope.Clear();
                 options.Scope.Add(SpidCieConst.OpenIdScope);
 
+                options.SignInScheme = IdentityConstants.ExternalScheme;
+
+                options.Events.OnRedirectToIdentityProvider = context => context.HttpContext.RequestServices.GetRequiredService<SpidCieEvents>().RedirectToIdentityProvider(context);
                 options.Events.OnMessageReceived = context => context.HttpContext.RequestServices.GetRequiredService<SpidCieEvents>().MessageReceived(context);
                 options.Events.OnAuthorizationCodeReceived = context => context.HttpContext.RequestServices.GetRequiredService<SpidCieEvents>().AuthorizationCodeReceived(context);
 

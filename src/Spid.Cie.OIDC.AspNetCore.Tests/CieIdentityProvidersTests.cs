@@ -15,9 +15,9 @@ public class CieIdentityProvidersTests
 
         var idp = new CieIdentityProvider()
         {
-            EntityConfiguration = new IdPEntityConfiguration()
+            EntityConfiguration = new OPEntityConfiguration()
             {
-                Metadata = new IdPMetadata_SpidCieOIDCConfiguration()
+                Metadata = new OPMetadata_SpidCieOIDCConfiguration()
                 {
                     OpenIdProvider = new Microsoft.IdentityModel.Protocols.OpenIdConnect.OpenIdConnectConfiguration()
                 }

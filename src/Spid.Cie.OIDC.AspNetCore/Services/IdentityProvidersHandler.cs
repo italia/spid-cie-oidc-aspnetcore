@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Spid.Cie.OIDC.AspNetCore.Configuration;
+using Spid.Cie.OIDC.AspNetCore.Enums;
 using Spid.Cie.OIDC.AspNetCore.Models;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,74 +9,69 @@ using System.Threading.Tasks;
 
 namespace Spid.Cie.OIDC.AspNetCore.Services;
 
-internal class IdentityProvidersHandler : IIdentityProvidersHandler
+class IdentityProvidersHandler : IIdentityProvidersHandler
 {
-    private readonly IOptionsMonitor<SpidCieOptions> _options;
-    private readonly IIdentityProvidersRetriever _idpRetriever;
-    private readonly ITrustChainManager _trustChainManager;
-    private readonly ILogger<IdentityProvidersHandler> _logger;
+    readonly ITrustChainManager _trustChainManager;
+    readonly IOptionsMonitor<SpidCieOptions> _options;
+    readonly IIdentityProvidersRetriever _idpRetriever;
+    readonly ILogger<IdentityProvidersHandler> _logger;
 
-    public IdentityProvidersHandler(IOptionsMonitor<SpidCieOptions> options,
-        IIdentityProvidersRetriever idpRetriever,
-        ITrustChainManager trustChainManager,
-        ILogger<IdentityProvidersHandler> logger)
+    public IdentityProvidersHandler(IOptionsMonitor<SpidCieOptions> options, IIdentityProvidersRetriever idpRetriever,
+                                    ITrustChainManager trustChainManager, ILogger<IdentityProvidersHandler> logger)
     {
+        _logger = logger;
         _options = options;
         _idpRetriever = idpRetriever;
         _trustChainManager = trustChainManager;
-        _logger = logger;
     }
 
     public async Task<IEnumerable<IdentityProvider>> GetIdentityProviders()
     {
-        List<IdentityProvider> result = new();
+        List<IdentityProvider?> result = new();
 
-        var spidIdP = _options.CurrentValue.SpidOPs
-            .Union(await _idpRetriever.GetSpidIdentityProviders())
-            .ToList();
-        foreach (var url in spidIdP)
+        var idpUrls = _options.CurrentValue.CieOPs.Union(await _idpRetriever.GetCieIdentityProviders()).Select(ip => new
         {
-            var idpConf = await _trustChainManager.BuildTrustChain(url);
+            Type = IdentityProviderTypes.CIE,
+            Url = ip
+        }).Union(_options.CurrentValue.SpidOPs.Union(await _idpRetriever.GetSpidIdentityProviders()).Select(ip => new
+        {
+            Type = IdentityProviderTypes.SPID,
+            Url = ip
+        })).ToList();
 
-            if (idpConf is not null)
-            {
-                result.Add(CreateSpidIdentityProvider(idpConf));
-            }
+        foreach (var idp in idpUrls)
+        {
+            var idpConf = await _trustChainManager.BuildTrustChain(idp.Url);
+
+            if (idpConf != null)
+                result.Add(idp.Type == IdentityProviderTypes.CIE ? CreateIdentityProvider<CieIdentityProvider>(idpConf) :
+                            CreateIdentityProvider<SpidIdentityProvider>(idpConf));
         }
 
-        var cieIdP = _options.CurrentValue.CieOPs
-            .Union(await _idpRetriever.GetCieIdentityProviders())
-            .ToList();
-        foreach (var url in cieIdP)
-        {
-            var idpConf = await _trustChainManager.BuildTrustChain(url);
-
-            if (idpConf is not null)
-            {
-                result.Add(CreateCieIdentityProvider(idpConf));
-            }
-        }
-
-        return result;
+        return result.Where(r => r != default).ToList()!;
     }
 
-	private static IdentityProvider CreateSpidIdentityProvider(IdPEntityConfiguration conf)
-		=> new SpidIdentityProvider()
-		{
-			EntityConfiguration = conf,
-			Uri = conf.Subject ?? string.Empty,
-			OrganizationLogoUrl = conf.Metadata.OpenIdProvider.AdditionalData.TryGetValue("logo_uri", out object? logoUri) ? logoUri as string ?? string.Empty : string.Empty,
-			OrganizationName = conf.Metadata.OpenIdProvider.AdditionalData.TryGetValue("organization_name", out object? organizationName) ? organizationName as string ?? string.Empty : string.Empty,
-			SupportedAcrValues = conf.Metadata.OpenIdProvider.AcrValuesSupported.ToList(),
-		};
-
-	private static IdentityProvider CreateCieIdentityProvider(IdPEntityConfiguration conf)
-		=> new CieIdentityProvider()
-		{
-			EntityConfiguration = conf,
-			Uri = conf.Subject ?? string.Empty,
-			OrganizationLogoUrl = conf.Metadata.OpenIdProvider.AdditionalData.TryGetValue("logo_uri", out object? logoUri) ? logoUri as string ?? string.Empty : string.Empty,
-			OrganizationName = conf.Metadata.OpenIdProvider.AdditionalData.TryGetValue("organization_name", out object? organizationName) ? organizationName as string ?? string.Empty : string.Empty,
-			SupportedAcrValues = conf.Metadata.OpenIdProvider.AcrValuesSupported.ToList(),
-		};
+    static T? CreateIdentityProvider<T>(OPEntityConfiguration conf)
+        where T : IdentityProvider
+    {
+        return conf == default ? default :
+            typeof(T).Equals(typeof(SpidIdentityProvider)) ?
+            new SpidIdentityProvider()
+            {
+                EntityConfiguration = conf,
+                Uri = conf.Subject ?? string.Empty,
+                OrganizationLogoUrl = conf.Metadata.OpenIdProvider.AdditionalData.TryGetValue("logo_uri", out object? spidLogoUri) ? spidLogoUri as string ?? string.Empty : string.Empty,
+                OrganizationName = conf.Metadata.OpenIdProvider.AdditionalData.TryGetValue("organization_name", out object? spidOrganizationName) ? spidOrganizationName as string ?? string.Empty : string.Empty,
+                SupportedAcrValues = conf.Metadata.OpenIdProvider.AcrValuesSupported.ToList(),
+            } as T :
+            typeof(T).Equals(typeof(CieIdentityProvider)) ?
+            new CieIdentityProvider()
+            {
+                EntityConfiguration = conf,
+                Uri = conf.Subject ?? string.Empty,
+                OrganizationLogoUrl = conf.Metadata.OpenIdProvider.AdditionalData.TryGetValue("logo_uri", out object? cieLogoUri) ? cieLogoUri as string ?? string.Empty : string.Empty,
+                OrganizationName = conf.Metadata.OpenIdProvider.AdditionalData.TryGetValue("organization_name", out object? cieOrganizationName) ? cieOrganizationName as string ?? string.Empty : string.Empty,
+                SupportedAcrValues = conf.Metadata.OpenIdProvider.AcrValuesSupported.ToList(),
+            } as T : default;
+    }
 }

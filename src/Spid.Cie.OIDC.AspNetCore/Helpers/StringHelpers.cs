@@ -1,13 +1,11 @@
 ﻿namespace Spid.Cie.OIDC.AspNetCore.Helpers;
 
-internal static class StringHelpers
+static class StringHelpers
 {
     public static string EnsureTrailingSlash(this string url)
     {
         if (!url.EndsWith("/"))
-        {
             return url + "/";
-        }
 
         return url;
     }
@@ -15,9 +13,7 @@ internal static class StringHelpers
     public static string RemoveLeadingSlash(this string url)
     {
         if (url.StartsWith("/"))
-        {
             url = url.Substring(1);
-        }
 
         return url;
     }
@@ -25,12 +21,8 @@ internal static class StringHelpers
     public static string RemoveTrailingSlash(this string url)
     {
         if (url.EndsWith("/"))
-        {
             url = url.Substring(0, url.Length - 1);
-        }
 
         return url;
     }
-
-
 }

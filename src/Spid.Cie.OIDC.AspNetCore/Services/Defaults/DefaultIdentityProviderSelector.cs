@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Spid.Cie.OIDC.AspNetCore.Services.Defaults;
 
-internal class DefaultIdentityProviderSelector : IIdentityProviderSelector
+class DefaultIdentityProviderSelector : IIdentityProviderSelector
 {
     private readonly IIdentityProvidersHandler _idpHandler;
     private readonly IHttpContextAccessor _httpContextAccessor;
@@ -21,10 +21,10 @@ internal class DefaultIdentityProviderSelector : IIdentityProviderSelector
         var identityProviders = await _idpHandler.GetIdentityProviders();
         var provider = (string?)_httpContextAccessor.HttpContext!.Request.Query[SpidCieConst.IdPSelectorKey]
             ?? (string?)_httpContextAccessor.HttpContext!.Items[SpidCieConst.IdPSelectorKey];
+
         if (!string.IsNullOrWhiteSpace(provider))
-        {
             return identityProviders.FirstOrDefault(idp => idp.Uri.Equals(provider, System.StringComparison.InvariantCultureIgnoreCase));
-        }
+
         return default;
     }
 }
