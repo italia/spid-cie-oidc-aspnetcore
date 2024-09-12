@@ -4,9 +4,9 @@ using System.Security.Cryptography.X509Certificates;
 
 namespace Spid.Cie.OIDC.AspNetCore.Models
 {
-	[ExcludeFromCodeCoverage]
-	public class RPOpenIdCoreCertificate
-	{
+    [ExcludeFromCodeCoverage]
+    public class RPOpenIdCoreCertificate
+    {
         public string? Algorithm { get; set; }
 
         public KeyUsageTypes KeyUsage { get; set; }

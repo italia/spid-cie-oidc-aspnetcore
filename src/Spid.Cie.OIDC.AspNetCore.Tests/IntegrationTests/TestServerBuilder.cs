@@ -13,7 +13,6 @@ using Microsoft.IdentityModel.Protocols;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Spid.Cie.OIDC.AspNetCore.Configuration;
 using Spid.Cie.OIDC.AspNetCore.Extensions;
-using Spid.Cie.OIDC.AspNetCore.Models;
 using Spid.Cie.OIDC.AspNetCore.Services;
 using Spid.Cie.OIDC.AspNetCore.Tests.Mocks;
 using System;
@@ -121,9 +120,14 @@ internal class TestServerBuilder
                     .ConfigureServices(services =>
                     {
                         SpidCieConst.TrustChainExpirationGracePeriod = TimeSpan.FromDays(3650);
-                        services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-                            .AddCookie()
-                            .AddSpidCieOIDC(options);
+                        services.AddAuthentication(o =>
+                        {
+                            o.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                            o.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                            o.DefaultChallengeScheme = SpidCieConst.AuthenticationScheme;
+                        })
+                        .AddCookie()
+                        .AddSpidCieOIDC(options);
                         services.AddScoped<MockBackchannel>();
                         services.AddHttpClient("SpidCieBackchannel")
                             .ConfigurePrimaryHttpMessageHandler(srv => (srv.GetService(typeof(MockBackchannel)) as MockBackchannel)!);

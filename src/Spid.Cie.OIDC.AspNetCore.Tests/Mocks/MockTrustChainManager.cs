@@ -39,11 +39,11 @@ class MockTrustChainManager : ITrustChainManager
             {
                 FederationEntity = new RP_SpidCieOIDCFederationEntity
                 {
-                    
+
                 },
                 OpenIdRelyingParty = new RP_SpidCieOIDCConfiguration
                 {
-                    
+
                 }
             }
         };

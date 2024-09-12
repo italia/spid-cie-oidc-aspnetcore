@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc.Routing;
-using Microsoft.AspNetCore.Razor.TagHelpers;
+﻿using Microsoft.AspNetCore.Razor.TagHelpers;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -26,7 +25,7 @@ public class CieButtonTests
             return Task.FromResult<TagHelperContent>(tagHelperContent);
         });
 
-        var tagHelper = new Mvc.CieButtonTagHelper(new UrlHelper(new Microsoft.AspNetCore.Mvc.ActionContext())/*new Mocks.MockIdentityProvidersHandler(false)*/);
+        var tagHelper = new Mvc.CieButtonTagHelper();
         tagHelper.ChallengeUrl = "http://127.0.0.1:8002/";
         await tagHelper.ProcessAsync(context, tagHelperOutput);
     }
@@ -48,7 +47,7 @@ public class CieButtonTests
             return Task.FromResult<TagHelperContent>(tagHelperContent);
         });
 
-        var tagHelper = new Mvc.CieButtonTagHelper(new UrlHelper(new Microsoft.AspNetCore.Mvc.ActionContext())/*new Mocks.MockIdentityProvidersHandler(true)*/);
+        var tagHelper = new Mvc.CieButtonTagHelper();
         tagHelper.ChallengeUrl = "http://127.0.0.1:8002/";
         await tagHelper.ProcessAsync(context, tagHelperOutput);
     }

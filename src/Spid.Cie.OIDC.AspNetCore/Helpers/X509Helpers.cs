@@ -32,9 +32,9 @@ static class X509Helpers
     {
         Throw<Exception>.If(string.IsNullOrWhiteSpace(certificateString64), ErrorLocalization.CertificateRawStringNullOrEmpty);
         Throw<Exception>.If(string.IsNullOrWhiteSpace(certPassword), ErrorLocalization.CertificatePasswordNullOrEmpty);
-        
+
         var certificateBytes = Convert.FromBase64String(certificateString64);
-        
+
         return new X509Certificate2(certificateBytes, certPassword,
             X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable);
     }

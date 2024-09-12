@@ -365,4 +365,12 @@ __automatic_client_registration__ and the adoption of the trust marks as mandato
 
 This software is released under the Apache 2 License by:
 
-- Daniele Giallonardo <danielegiallonardo83@gmail.com>.
+- Daniele Giallonardo
+- Giulio Maffei (A Software Factory s.r.l.)
+
+
+
+## Acknowledgments
+A special thank to "A Software Factory s.r.l." for their valuable support and contributions to this project. Their technical assistance and resources have been instrumental in advancing and optimizing our work.
+
+We appreciate their expertise and commitment, which have significantly enhanced the quality and innovation of the project.

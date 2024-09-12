@@ -6,6 +6,6 @@ namespace Spid.Cie.OIDC.AspNetCore.Models;
 [ExcludeFromCodeCoverage]
 class SAJWKSValue
 {
-	[JsonPropertyName("value")]
-	public JWKS? JWKS { get; set; }
+    [JsonPropertyName("value")]
+    public JWKS? JWKS { get; set; }
 }

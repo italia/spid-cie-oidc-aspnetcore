@@ -33,7 +33,7 @@ public class SignoutTests
 
         var queryString = QueryHelpers.ParseQuery(location.OriginalString);
 
-        var response = await GetAsync(server, $"{TestServerBuilder.TestHost}/signin-spidcie?state={queryString["state"]}&iss={UrlEncoder.Default.Encode("http://127.0.0.1:8000/oidc/op/")}&code=test_code", cookies);
+        var response = await GetAsync(server, $"{TestServerBuilder.TestHost}{SpidCieConst.CallbackPath}?state={queryString["state"]}&iss={UrlEncoder.Default.Encode("http://127.0.0.1:8000/oidc/op/")}&code=test_code", cookies);
         Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
         Assert.NotNull(res.Headers.Location);
 

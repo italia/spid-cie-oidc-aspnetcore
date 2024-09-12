@@ -6,6 +6,6 @@ namespace Spid.Cie.OIDC.AspNetCore.Models;
 [ExcludeFromCodeCoverage]
 class SA_SpidCieOIDCConfiguration
 {
-	[JsonPropertyName("jwks")]
-	public SAJWKSValue? Value { get; set; }
+    [JsonPropertyName("jwks")]
+    public SAJWKSValue? Value { get; set; }
 }

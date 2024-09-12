@@ -47,7 +47,7 @@ public class OpenIdConnectTests
         Assert.NotNull(res.Headers.Location);
         var setCookie = Assert.Single(res.Headers, h => h.Key == "Set-Cookie");
         var nonce = Assert.Single(setCookie.Value, v => v.StartsWith(OpenIdConnectDefaults.CookieNoncePrefix, StringComparison.Ordinal));
-        Assert.Contains("path=/signin-spidcie", nonce);
+        Assert.Contains($"path={SpidCieConst.CallbackPath}", nonce);
     }
 
     [Fact]
@@ -64,7 +64,7 @@ public class OpenIdConnectTests
         Assert.NotNull(res.Headers.Location);
         var setCookie = Assert.Single(res.Headers, h => h.Key == "Set-Cookie");
         var correlation = Assert.Single(setCookie.Value, v => v.StartsWith(".AspNetCore.Correlation.", StringComparison.Ordinal));
-        Assert.Contains("path=/signin-spidcie", correlation);
+        Assert.Contains($"path={SpidCieConst.CallbackPath}", correlation);
     }
 
     [Fact]

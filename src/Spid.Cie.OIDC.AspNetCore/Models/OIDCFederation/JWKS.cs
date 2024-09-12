@@ -7,6 +7,6 @@ namespace Spid.Cie.OIDC.AspNetCore.Models;
 [ExcludeFromCodeCoverage]
 sealed class JWKS
 {
-	[JsonPropertyName("keys")]
-	public List<JsonWebKey> Keys { get; set; } = new();
+    [JsonPropertyName("keys")]
+    public List<JsonWebKey> Keys { get; set; } = new();
 }

@@ -6,6 +6,6 @@ namespace Spid.Cie.OIDC.AspNetCore.Models;
 [ExcludeFromCodeCoverage]
 sealed class TAMetadata_SpidCieOIDCConfiguration
 {
-	[JsonPropertyName("federation_entity")]
-	public TAFederationEntity? FederationEntity { get; set; }
+    [JsonPropertyName("federation_entity")]
+    public TAFederationEntity? FederationEntity { get; set; }
 }

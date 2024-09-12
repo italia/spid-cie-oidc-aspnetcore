@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net8.0;net7.0;net6.0;net5.0;netcoreapp3.1</TargetFrameworks>
-		<LangVersion>latest</LangVersion>
+    <TargetFrameworks>net8.0;net7.0;net6.0;net5.0;netcoreapp3.1</TargetFrameworks>
+    <LangVersion>latest</LangVersion>
 		<Nullable>enable</Nullable>
 		<Description>Spid/Cie OIDC Federation AspNetCore SDK</Description>
 		<Authors>Daniele Giallonardo</Authors>
@@ -13,7 +13,7 @@
 		<PackageProjectUrl>https://github.com/italia/spid-cie-oidc-aspnetcore</PackageProjectUrl>
 		<PackageIcon>spid-nuget.png</PackageIcon>
 		<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-		<PackageVersion>1.2.0</PackageVersion>
+		<PackageVersion>2.0.0</PackageVersion>
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <PackageReadmeFile>README.md</PackageReadmeFile>
 	</PropertyGroup>
@@ -44,7 +44,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="IdentityModel.AspNetCore" Version="4.3.0" />
+		<PackageReference Include="IdentityModel" Version="7.0.0" />
 		<PackageReference Include="jose-jwt" Version="5.0.0" />
 		<PackageReference Include="JWT" Version="10.1.1" />
 	</ItemGroup>
@@ -60,15 +60,15 @@
   <ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="6.0.3" />
 	</ItemGroup>
+  
+  <ItemGroup Condition="'$(TargetFramework)' == 'net5.0'">
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="5.0.14" />
+  </ItemGroup>
 
-	<ItemGroup Condition="'$(TargetFramework)' == 'net5.0'">
-		<PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="5.0.14" />
-	</ItemGroup>
-
-	<ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp3.1'">
-		<PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="3.1.22" />
-	</ItemGroup>
-
+  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp3.1'">
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="3.1.22" />
+  </ItemGroup>
+  
 	<ItemGroup>
 		<Compile Update="Resources\ErrorLocalization.Designer.cs">
 			<DesignTime>True</DesignTime>

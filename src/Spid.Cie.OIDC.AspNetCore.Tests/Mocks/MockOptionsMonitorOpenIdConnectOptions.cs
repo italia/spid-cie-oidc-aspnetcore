@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.Extensions.Options;
-using Spid.Cie.OIDC.AspNetCore.Models;
 using System;
 using static Spid.Cie.OIDC.AspNetCore.Tests.Mocks.TestSettings;
 

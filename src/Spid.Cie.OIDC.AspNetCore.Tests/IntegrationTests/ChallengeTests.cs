@@ -2,7 +2,6 @@
 using Microsoft.Extensions.Primitives;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.Net.Http.Headers;
-using Spid.Cie.OIDC.AspNetCore.Models;
 using System;
 using System.Linq;
 using System.Net;
@@ -68,7 +67,7 @@ public class ChallengeTests
         Assert.True(nonceCookie.Expires.HasValue);
         Assert.True(nonceCookie.Expires > DateTime.UtcNow);
         Assert.True(nonceCookie.HttpOnly);
-        Assert.Equal("/signin-spidcie", nonceCookie.Path);
+        Assert.Equal($"{SpidCieConst.CallbackPath}", nonceCookie.Path);
         Assert.Equal("N", nonceCookie.Value);
         Assert.Equal(SameSiteMode.None, nonceCookie.SameSite);
 
@@ -76,7 +75,7 @@ public class ChallengeTests
         Assert.True(correlationCookie.Expires.HasValue);
         Assert.True(nonceCookie.Expires > DateTime.UtcNow);
         Assert.True(correlationCookie.HttpOnly);
-        Assert.Equal("/signin-spidcie", correlationCookie.Path);
+        Assert.Equal($"{SpidCieConst.CallbackPath}", correlationCookie.Path);
         Assert.False(StringSegment.IsNullOrEmpty(correlationCookie.Value));
         Assert.Equal(SameSiteMode.None, correlationCookie.SameSite);
 

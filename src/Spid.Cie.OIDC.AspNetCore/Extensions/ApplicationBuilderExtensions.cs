@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
@@ -11,7 +10,6 @@ using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Spid.Cie.OIDC.AspNetCore.Configuration;
 using Spid.Cie.OIDC.AspNetCore.Events;
 using Spid.Cie.OIDC.AspNetCore.Middlewares;
-using Spid.Cie.OIDC.AspNetCore.Models;
 using Spid.Cie.OIDC.AspNetCore.Services;
 using Spid.Cie.OIDC.AspNetCore.Services.Defaults;
 using System;
@@ -50,8 +48,6 @@ public static class ApplicationBuilderExtensions
                 options.RequireHttpsMetadata = true;
                 options.Scope.Clear();
                 options.Scope.Add(SpidCieConst.OpenIdScope);
-
-                options.SignInScheme = IdentityConstants.ExternalScheme;
 
                 options.Events.OnRedirectToIdentityProvider = context => context.HttpContext.RequestServices.GetRequiredService<SpidCieEvents>().RedirectToIdentityProvider(context);
                 options.Events.OnMessageReceived = context => context.HttpContext.RequestServices.GetRequiredService<SpidCieEvents>().MessageReceived(context);

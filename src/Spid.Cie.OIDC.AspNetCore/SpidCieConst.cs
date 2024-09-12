@@ -73,5 +73,5 @@ public sealed class SpidCieConst
     public static TimeSpan TrustChainExpirationGracePeriod = TimeSpan.FromHours(24);
     public const string JsonEntityConfigurationPath = ".well-known/openid-federation/json";
     public const string EntityConfigurationContentType = "application/entity-statement+jwt";
-	public const string ClientAssertionTypeValue = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer";
+    public const string ClientAssertionTypeValue = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer";
 }

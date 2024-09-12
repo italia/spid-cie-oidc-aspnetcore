@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
+﻿using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Razor.TagHelpers;
 using System;
 using System.Collections.Generic;
@@ -18,16 +17,8 @@ public class CieButtonTagHelper : TagHelper
             { CieButtonSize.Large, "280" },
             { CieButtonSize.ExtraLarge, "340" }
         };
-    IUrlHelper _urlHelper;
-
-    public CieButtonTagHelper(IUrlHelper urlHelper)
-    {
-        _urlHelper = urlHelper;
-    }
 
     public CieButtonSize Size { get; set; }
-
-    public string CircleImagePath { get; set; }
 
     public string ChallengeUrl { get; set; }
 
@@ -42,7 +33,7 @@ public class CieButtonTagHelper : TagHelper
         var spanIcon = new TagBuilder("span");
 
         var imgIcon = new TagBuilder("img");
-        imgIcon.Attributes.Add("src", String.IsNullOrWhiteSpace(CircleImagePath) ? GetSerializedButtonImage() : _urlHelper.Content(CircleImagePath));
+        imgIcon.Attributes.Add("src", GetSerializedButtonImage());
         imgIcon.Attributes.Add("alt", "Entra con CIE");
         imgIcon.Attributes.Add("style", $"width: {_classNames[Size]}px;");
         spanIcon.InnerHtml.AppendHtml(imgIcon);
@@ -63,15 +54,11 @@ public class CieButtonTagHelper : TagHelper
                 if (_buttonImage == null)
                 {
 
-                    using (var resourceStream = GetType().Assembly.GetManifestResourceStream("Spid.Cie.OIDC.AspNetCore.Mvc.Resources.cie-button.png"))
-                    {
-                        using (var writer = new MemoryStream())
-                        {
-                            resourceStream.CopyTo(writer);
-                            writer.Seek(0, SeekOrigin.Begin);
-                            _buttonImage = $"data:image/png;base64,{Convert.ToBase64String(writer.ToArray())}";
-                        }
-                    }
+                    using var resourceStream = GetType().Assembly.GetManifestResourceStream("Spid.Cie.OIDC.AspNetCore.Mvc.Resources.cie-button.png");
+                    using var writer = new MemoryStream();
+                    resourceStream.CopyTo(writer);
+                    writer.Seek(0, SeekOrigin.Begin);
+                    _buttonImage = $"data:image/png;base64,{Convert.ToBase64String(writer.ToArray())}";
                 }
             }
         }

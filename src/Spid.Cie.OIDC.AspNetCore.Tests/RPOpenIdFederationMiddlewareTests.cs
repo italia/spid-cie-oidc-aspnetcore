@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Spid.Cie.OIDC.AspNetCore.Middlewares;
-using Spid.Cie.OIDC.AspNetCore.Models;
 using Spid.Cie.OIDC.AspNetCore.Services;
 using Spid.Cie.OIDC.AspNetCore.Services.Defaults;
 using Spid.Cie.OIDC.AspNetCore.Tests.Mocks;

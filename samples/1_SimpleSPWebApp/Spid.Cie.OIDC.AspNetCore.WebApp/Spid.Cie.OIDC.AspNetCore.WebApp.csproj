@@ -2,8 +2,11 @@
 
 	<PropertyGroup>
 		<TargetFramework>net8.0</TargetFramework>
-		<CopyRefAssembliesToPublishDirectory>false</CopyRefAssembliesToPublishDirectory>
-		<UserSecretsId>4ed0da3d-4a93-4f8b-ae96-a1d393405202</UserSecretsId>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Microsoft.eShopWeb.Web</RootNamespace>
+    <UserSecretsId>aspnet-Web2-1FA3F72E-E7E3-4360-9E49-1CCCD7FE85F7</UserSecretsId>
+    <LangVersion>latest</LangVersion>
 		<DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
 	</PropertyGroup>
 
@@ -22,16 +25,19 @@
 
 	<ItemGroup>
 		<PackageReference Include="IdentityModel" Version="7.0.0" />
-		<PackageReference Include="IdentityModel.AspNetCore" Version="4.3.0" />
-		<PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="8.0.6" />
-		<PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="8.0.6" />
-		<PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.20.1" />
-		<PackageReference Include="Spid.Cie.OIDC.AspNetCore" Version="1.2.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="8.0.8" />
+		<PackageReference Include="Microsoft.IdentityModel.Logging" Version="8.0.2" />
+
+    <PackageReference Include="Spid.Cie.OIDC.AspNetCore" Version="2.0.0" />
+
+    <!--<PackageReference Include="jose-jwt" Version="5.0.0" />
+    <PackageReference Include="JWT" Version="10.1.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="8.0.8" />-->
   </ItemGroup>
 
 	<!--<ItemGroup>
 	  <Reference Include="Spid.Cie.OIDC.AspNetCore">
-	    <HintPath>..\..\..\src\Spid.Cie.OIDC.AspNetCore\bin\Debug\net7.0\Spid.Cie.OIDC.AspNetCore.dll</HintPath>
+	    <HintPath>..\..\..\src\Spid.Cie.OIDC.AspNetCore\bin\Debug\net8.0\Spid.Cie.OIDC.AspNetCore.dll</HintPath>
 	  </Reference>
 	</ItemGroup>-->
 

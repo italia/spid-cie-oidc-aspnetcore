@@ -47,7 +47,7 @@ internal partial class TestSettings
                 PolicyUri = "http://127.0.0.1:5000/",
                 Contacts = new() { "info@rptest.it" },
                 AuthorityHints = new() { "http://127.0.0.1:8000/oidc/op/" },
-                RedirectUris = new() { "http://127.0.0.1:5000/signin-spidcie" },
+                RedirectUris = new() { $"http://127.0.0.1:5000{SpidCieConst.CallbackPath}" },
                 SecurityLevel = SecurityLevels.L2,
                 LongSessionsEnabled = false,
                 TrustMarks = new()

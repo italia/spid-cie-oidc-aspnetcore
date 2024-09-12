@@ -72,7 +72,7 @@ public class AuthenticateTests
 
         var queryString = QueryHelpers.ParseQuery(location.OriginalString);
 
-        var response = await GetAsync(server, $"{TestServerBuilder.TestHost}/signin-spidcie?state={queryString["state"]}&iss={UrlEncoder.Default.Encode("http://127.0.0.1:8000/oidc/op/")}&code=test_code", cookies);
+        var response = await GetAsync(server, $"{TestServerBuilder.TestHost}{SpidCieConst.CallbackPath}?state={queryString["state"]}&iss={UrlEncoder.Default.Encode("http://127.0.0.1:8000/oidc/op/")}&code=test_code", cookies);
         Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
         Assert.NotNull(res.Headers.Location);
     }
@@ -94,7 +94,7 @@ public class AuthenticateTests
 
         var queryString = QueryHelpers.ParseQuery(location.OriginalString);
 
-        await Assert.ThrowsAnyAsync<Exception>(async () => await GetAsync(server, $"signin-spidcie?state={queryString["state"]}&error=test_error&error_description=error_description", cookies));
+        await Assert.ThrowsAnyAsync<Exception>(async () => await GetAsync(server, $"{SpidCieConst.CallbackPath}?state={queryString["state"]}&error=test_error&error_description=error_description", cookies));
     }
 
     private Task<HttpResponseMessage> GetAsync(TestServer server, string path, IEnumerable<SetCookieHeaderValue> cookies)

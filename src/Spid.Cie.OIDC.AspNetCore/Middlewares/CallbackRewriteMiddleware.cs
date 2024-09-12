@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Primitives;
-using Spid.Cie.OIDC.AspNetCore.Models;
 using System;
 using System.Threading.Tasks;
 

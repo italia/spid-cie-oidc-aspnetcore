@@ -1,6 +1,5 @@
 ﻿using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
-using Spid.Cie.OIDC.AspNetCore.Models;
 using System;
 using System.Threading.Tasks;
 

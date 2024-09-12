@@ -6,6 +6,6 @@ namespace Spid.Cie.OIDC.AspNetCore.Models.OIDCFederation.TrustMarks;
 [ExcludeFromCodeCoverage]
 class TrustMarkGovernmentIndex
 {
-	[JsonProperty("ipa_code")]
-	public string? Code { get; set; }
+    [JsonProperty("ipa_code")]
+    public string? Code { get; set; }
 }

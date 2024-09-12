@@ -7,6 +7,6 @@ namespace Spid.Cie.OIDC.AspNetCore.Models;
 [ExcludeFromCodeCoverage]
 sealed class OPMetadata_SpidCieOIDCConfiguration
 {
-	[JsonPropertyName("openid_provider")]
-	public OpenIdConnectConfiguration? OpenIdProvider { get; set; }
+    [JsonPropertyName("openid_provider")]
+    public OpenIdConnectConfiguration? OpenIdProvider { get; set; }
 }
