@@ -27,6 +27,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<None Remove="Mvc\Resources\cie-button.png" />
 		<None Remove="Mvc\Resources\cie-ico-circle-bb.svg" />
 		<None Remove="Mvc\Resources\spid-ico-circle-bb.svg" />
 		<None Remove="Mvc\Resources\spid.css" />
@@ -34,6 +35,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<EmbeddedResource Include="Mvc\Resources\cie-button.png" />
 		<EmbeddedResource Include="Mvc\Resources\cie-ico-circle-bb.svg" />
 		<EmbeddedResource Include="Mvc\Resources\spid-ico-circle-bb.svg" />
 		<EmbeddedResource Include="Mvc\Resources\spid-nuget.png" />
@@ -48,7 +50,7 @@
 	</ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net8.0'">
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="8.0.4" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="8.0.8" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net7.0'">
@@ -79,5 +81,13 @@
 			<Generator>ResXFileCodeGenerator</Generator>
 			<LastGenOutput>ErrorLocalization.Designer.cs</LastGenOutput>
 		</EmbeddedResource>
+	</ItemGroup>
+	<ItemGroup>
+	  <Folder Include="Enums\" />
+	  <Folder Include="Models\OIDCFederation\EntityConfigurations\" />
+	  <Folder Include="Models\OIDCFederation\EntityStatements\" />
+	  <Folder Include="Models\OIDCFederation\Metadata\" />
+	  <Folder Include="Models\OIDCFederation\TrustMarks\" />
+	  <Folder Include="Models\OIDCFederation\Resolves\" />
 	</ItemGroup>
 </Project>

@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace Spid.Cie.OIDC.AspNetCore.Services;
 
-internal interface IAggregatorsHandler
+interface IAggregatorsHandler
 {
     Task<IEnumerable<Aggregator>> GetAggregators();
 }

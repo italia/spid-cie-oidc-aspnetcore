@@ -13,7 +13,8 @@ public class TokenValidationRetrieverTests
     {
         var _idpSelector = new MockIdentityProviderSelector(false);
         var _rpSelector = new MockRelyingPartySelector();
-        var _retriever = new TokenValidationParametersRetriever(_idpSelector, _rpSelector);
+        var _retriever = new TokenValidationParametersRetriever(_idpSelector,
+            _rpSelector, new MockAggregatorsHandler(), new MockHttpContextAccessor(false));
         var rp = await _retriever.RetrieveTokenValidationParameter();
         Assert.NotNull(rp);
     }
@@ -23,7 +24,7 @@ public class TokenValidationRetrieverTests
     {
         var _idpSelector = new MockIdentityProviderSelector(false);
         var _rpSelector = new MockRelyingPartySelector(true);
-        var _retriever = new TokenValidationParametersRetriever(_idpSelector, _rpSelector);
+        var _retriever = new TokenValidationParametersRetriever(_idpSelector, _rpSelector, new MockAggregatorsHandler(), new MockHttpContextAccessor(false));
         await Assert.ThrowsAnyAsync<Exception>(async () => await _retriever.RetrieveTokenValidationParameter());
     }
 
@@ -32,7 +33,7 @@ public class TokenValidationRetrieverTests
     {
         var _idpSelector = new MockIdentityProviderSelector(true);
         var _rpSelector = new MockRelyingPartySelector(false);
-        var _retriever = new TokenValidationParametersRetriever(_idpSelector, _rpSelector);
+        var _retriever = new TokenValidationParametersRetriever(_idpSelector, _rpSelector, new MockAggregatorsHandler(), new MockHttpContextAccessor(false));
         await Assert.ThrowsAnyAsync<Exception>(async () => await _retriever.RetrieveTokenValidationParameter());
     }
 }

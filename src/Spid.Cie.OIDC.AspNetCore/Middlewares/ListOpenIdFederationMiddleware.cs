@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
+using Spid.Cie.OIDC.AspNetCore.Enums;
 using Spid.Cie.OIDC.AspNetCore.Helpers;
 using Spid.Cie.OIDC.AspNetCore.Models;
 using Spid.Cie.OIDC.AspNetCore.Services;
@@ -11,9 +12,9 @@ using System.Threading.Tasks;
 
 namespace Spid.Cie.OIDC.AspNetCore.Middlewares;
 
-internal class ListOpenIdFederationMiddleware
+class ListOpenIdFederationMiddleware
 {
-    private readonly RequestDelegate _next;
+    readonly RequestDelegate _next;
 
     public ListOpenIdFederationMiddleware(RequestDelegate next)
     {
@@ -46,7 +47,7 @@ internal class ListOpenIdFederationMiddleware
             context.Response.ContentType = SpidCieConst.JsonContentType;
             await context.Response.WriteAsync(JsonSerializer.Serialize(new GenericError()
             {
-                ErrorCode = ErrorCode.invalid_request,
+                ErrorCode = ErrorCodes.invalid_request,
                 ErrorDescription = "Aggregator not found"
             }));
             await context.Response.Body.FlushAsync();

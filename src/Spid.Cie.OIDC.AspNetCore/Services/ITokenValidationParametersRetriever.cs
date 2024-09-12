@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace Spid.Cie.OIDC.AspNetCore.Services;
 
-internal interface ITokenValidationParametersRetriever
+interface ITokenValidationParametersRetriever
 {
     Task<TokenValidationParameters> RetrieveTokenValidationParameter();
 }

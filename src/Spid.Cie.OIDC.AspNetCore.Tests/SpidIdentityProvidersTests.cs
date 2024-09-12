@@ -1,3 +1,4 @@
+using Spid.Cie.OIDC.AspNetCore.Enums;
 using Spid.Cie.OIDC.AspNetCore.Models;
 using System.Linq;
 using System.Threading.Tasks;
@@ -14,9 +15,9 @@ public class SpidIdentityProvidersTests
 
         var idp = new SpidIdentityProvider()
         {
-            EntityConfiguration = new IdPEntityConfiguration()
+            EntityConfiguration = new OPEntityConfiguration()
             {
-                Metadata = new IdPMetadata_SpidCieOIDCConfiguration()
+                Metadata = new OPMetadata_SpidCieOIDCConfiguration()
                 {
                     OpenIdProvider = new Microsoft.IdentityModel.Protocols.OpenIdConnect.OpenIdConnectConfiguration()
                 }
@@ -66,9 +67,9 @@ public class SpidIdentityProvidersTests
 
         var idp = new SpidIdentityProvider()
         {
-            EntityConfiguration = new IdPEntityConfiguration()
+            EntityConfiguration = new OPEntityConfiguration()
             {
-                Metadata = new IdPMetadata_SpidCieOIDCConfiguration()
+                Metadata = new OPMetadata_SpidCieOIDCConfiguration()
                 {
                     OpenIdProvider = new Microsoft.IdentityModel.Protocols.OpenIdConnect.OpenIdConnectConfiguration()
                 }
@@ -77,15 +78,15 @@ public class SpidIdentityProvidersTests
 
         idp.SupportedAcrValues = new() { SpidCieConst.SpidL2, SpidCieConst.SpidL1, SpidCieConst.SpidL3 };
 
-        var acr = idp.GetAcrValue(SecurityLevel.L2);
+        var acr = idp.GetAcrValue(SecurityLevels.L2);
 
         Assert.Contains(SpidCieConst.SpidL2, acr);
 
-        acr = idp.GetAcrValue(SecurityLevel.L1);
+        acr = idp.GetAcrValue(SecurityLevels.L1);
 
         Assert.Contains(SpidCieConst.SpidL1, acr);
 
-        acr = idp.GetAcrValue(SecurityLevel.L3);
+        acr = idp.GetAcrValue(SecurityLevels.L3);
 
         Assert.Contains(SpidCieConst.SpidL3, acr);
     }

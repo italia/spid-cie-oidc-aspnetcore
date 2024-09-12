@@ -11,9 +11,9 @@ using System.Threading.Tasks;
 
 namespace Spid.Cie.OIDC.AspNetCore.Middlewares;
 
-internal class RPOpenIdFederationMiddleware
+class RPOpenIdFederationMiddleware
 {
-    private readonly RequestDelegate _next;
+    readonly RequestDelegate _next;
 
     public RPOpenIdFederationMiddleware(RequestDelegate next)
     {
@@ -35,14 +35,16 @@ internal class RPOpenIdFederationMiddleware
             .Replace(SpidCieConst.JsonEntityConfigurationPath, "")
             .Replace(SpidCieConst.EntityConfigurationPath, "")
             .EnsureTrailingSlash();
+        var rp = rps.FirstOrDefault(r => uri.EnsureTrailingSlash().Equals(r.Id.EnsureTrailingSlash(), StringComparison.OrdinalIgnoreCase));
 
-        var rp = rps.FirstOrDefault(r => uri.Equals(r.Id.EnsureTrailingSlash(), StringComparison.OrdinalIgnoreCase));
         if (rp != null)
         {
             var certificate = rp.OpenIdFederationCertificates?.FirstOrDefault();
+
             if (certificate is not null)
             {
                 var entityConfiguration = GetEntityConfiguration(rp, cryptoService);
+
                 if (context.Request.Path.Value!.EndsWith(SpidCieConst.EntityConfigurationPath))
                 {
                     string token = cryptoService.CreateJWT(certificate, entityConfiguration);
@@ -50,6 +52,7 @@ internal class RPOpenIdFederationMiddleware
                     context.Response.ContentType = SpidCieConst.EntityConfigurationContentType;
                     await context.Response.WriteAsync(token);
                     await context.Response.Body.FlushAsync();
+
                     return;
                 }
                 else
@@ -57,6 +60,7 @@ internal class RPOpenIdFederationMiddleware
                     context.Response.ContentType = SpidCieConst.JsonContentType;
                     await context.Response.WriteAsync(JsonSerializer.Serialize(entityConfiguration));
                     await context.Response.Body.FlushAsync();
+
                     return;
                 }
             }
@@ -64,13 +68,16 @@ internal class RPOpenIdFederationMiddleware
         else
         {
             var aggs = await aggregatorsHandler.GetAggregators();
-            var aggregate = aggs.FirstOrDefault(r => uri.Equals(r.Id.EnsureTrailingSlash(), StringComparison.OrdinalIgnoreCase));
+            var aggregate = aggs.FirstOrDefault(r => uri.EnsureTrailingSlash().Equals(r.Id.EnsureTrailingSlash(), StringComparison.OrdinalIgnoreCase));
+
             if (aggregate is not null)
             {
                 var certificate = aggregate.OpenIdFederationCertificates?.FirstOrDefault();
+
                 if (certificate is not null)
                 {
                     var entityConfiguration = GetEntityConfiguration(aggregate, cryptoService);
+
                     if (context.Request.Path.Value!.EndsWith(SpidCieConst.EntityConfigurationPath))
                     {
                         string token = cryptoService.CreateJWT(certificate, entityConfiguration);
@@ -78,6 +85,7 @@ internal class RPOpenIdFederationMiddleware
                         context.Response.ContentType = SpidCieConst.EntityConfigurationContentType;
                         await context.Response.WriteAsync(token);
                         await context.Response.Body.FlushAsync();
+
                         return;
                     }
                     else
@@ -85,13 +93,14 @@ internal class RPOpenIdFederationMiddleware
                         context.Response.ContentType = SpidCieConst.JsonContentType;
                         await context.Response.WriteAsync(JsonSerializer.Serialize(entityConfiguration));
                         await context.Response.Body.FlushAsync();
+
                         return;
                     }
                 }
             }
         }
-        context.Response.StatusCode = (int)HttpStatusCode.NotFound;
 
+        context.Response.StatusCode = (int)HttpStatusCode.NotFound;
     }
 
     private RPEntityConfiguration GetEntityConfiguration(RelyingParty rp, ICryptoService cryptoService)
@@ -132,35 +141,31 @@ internal class RPOpenIdFederationMiddleware
     }
 
     private SAEntityConfiguration GetEntityConfiguration(Aggregator agg, ICryptoService cryptoService)
-	{
-		return new SAEntityConfiguration()
-		{
-			ExpiresOn = DateTimeOffset.UtcNow.AddMinutes(SpidCieConst.EntityConfigurationExpirationInMinutes),
-			IssuedAt = DateTimeOffset.UtcNow,
-			AuthorityHints = agg.AuthorityHints,
-			Issuer = agg.Id,
-			Subject = agg.Id,
-			TrustMarks = agg.TrustMarks,
-			JWKS = cryptoService.GetJWKS(agg.OpenIdFederationCertificates),
-			Metadata = new SAMetadata_SpidCieOIDCConfiguration()
-			{
-				FederationEntity = new SA_SpidCieOIDCFederationEntity()
-				{
-					Contacts = agg.Contacts,
-					HomepageUri = agg.HomepageUri,
-					LogoUri = agg.LogoUri,
-					OrganizationName = agg.OrganizationName,
-					PolicyUri = agg.PolicyUri,
-					FederationResolveEndpoint = $"{agg.Id.EnsureTrailingSlash()}{SpidCieConst.ResolveEndpointPath}",
-					FederationFetchEndpoint = $"{agg.Id.EnsureTrailingSlash()}{SpidCieConst.FetchEndpointPath}",
-					FederationListEndpoint = $"{agg.Id.EnsureTrailingSlash()}{SpidCieConst.ListEndpointPath}",
-					FederationTrustMarkStatusEndpoint = $"{agg.Id.EnsureTrailingSlash()}{SpidCieConst.TrustMarkStatusEndpointPath}"
-				}//,
-				//TrustMarkIssuer = new SA_TrustMarkIssuer()
-				//{
-				//    FederationStatusEndpoint = $"{agg.Id.EnsureTrailingSlash()}{SpidCieConst.TrustMarkStatusEndpointPath}"
-				//}
-			}
-		};
-	}
+    {
+        return new SAEntityConfiguration()
+        {
+            ExpiresOn = DateTimeOffset.UtcNow.AddMinutes(SpidCieConst.EntityConfigurationExpirationInMinutes),
+            IssuedAt = DateTimeOffset.UtcNow,
+            AuthorityHints = agg.AuthorityHints,
+            Issuer = agg.Id,
+            Subject = agg.Id,
+            TrustMarks = agg.TrustMarks,
+            JWKS = cryptoService.GetJWKS(agg.OpenIdFederationCertificates),
+            Metadata = new SAMetadata_SpidCieOIDCConfiguration()
+            {
+                FederationEntity = new SA_SpidCieOIDCFederationEntity()
+                {
+                    Contacts = agg.Contacts,
+                    HomepageUri = agg.HomepageUri,
+                    LogoUri = agg.LogoUri,
+                    OrganizationName = agg.OrganizationName,
+                    PolicyUri = agg.PolicyUri,
+                    FederationResolveEndpoint = $"{agg.Id.EnsureTrailingSlash()}{SpidCieConst.ResolveEndpointPath}",
+                    FederationFetchEndpoint = $"{agg.Id.EnsureTrailingSlash()}{SpidCieConst.FetchEndpointPath}",
+                    FederationListEndpoint = $"{agg.Id.EnsureTrailingSlash()}{SpidCieConst.ListEndpointPath}",
+                    FederationTrustMarkStatusEndpoint = $"{agg.Id.EnsureTrailingSlash()}{SpidCieConst.TrustMarkStatusEndpointPath}"
+                }
+            }
+        };
+    }
 }

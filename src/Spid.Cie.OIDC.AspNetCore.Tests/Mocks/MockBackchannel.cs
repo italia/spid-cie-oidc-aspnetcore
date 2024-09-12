@@ -1,4 +1,5 @@
-﻿using Spid.Cie.OIDC.AspNetCore.Configuration;
+﻿using Microsoft.AspNetCore.Http;
+using Spid.Cie.OIDC.AspNetCore.Configuration;
 using Spid.Cie.OIDC.AspNetCore.Services;
 using System;
 using System.IO;
@@ -13,10 +14,10 @@ internal partial class TestSettings
 {
     internal class MockBackchannel : CustomHttpClientHandler
     {
-        public MockBackchannel(IRelyingPartySelector rpSelector,
-            ILogPersister logPersister,
-            ICryptoService cryptoService)
-            : base(rpSelector, logPersister, cryptoService)
+        public MockBackchannel(IRelyingPartySelector rpSelector, ILogPersister logPersister,
+            ICryptoService cryptoService, IAggregatorsHandler aggregatorsHandler,
+            IHttpContextAccessor contextAccessor)
+            : base(rpSelector, logPersister, cryptoService, aggregatorsHandler, contextAccessor)
         {
         }
 

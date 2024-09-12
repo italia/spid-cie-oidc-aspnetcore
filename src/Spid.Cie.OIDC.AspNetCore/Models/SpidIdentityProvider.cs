@@ -1,9 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using Spid.Cie.OIDC.AspNetCore.Enums;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Spid.Cie.OIDC.AspNetCore.Models;
 
-internal sealed class SpidIdentityProvider : IdentityProvider
+sealed class SpidIdentityProvider : IdentityProvider
 {
     private static readonly Dictionary<string, string> _claimsMapping = new Dictionary<string, string> {
         {nameof(ClaimTypes.Name) , SpidConst.given_name},
@@ -28,7 +29,7 @@ internal sealed class SpidIdentityProvider : IdentityProvider
         {nameof(ClaimTypes.PhoneNumber) , SpidConst.phone_number},
     };
 
-    internal override IdentityProviderType Type { get => IdentityProviderType.SPID; }
+    internal override IdentityProviderTypes Type { get => IdentityProviderTypes.SPID; }
 
     public override IEnumerable<string> FilterRequestedClaims(List<ClaimTypes> requestedClaims)
         => requestedClaims

@@ -2,8 +2,7 @@
 
 namespace Spid.Cie.OIDC.AspNetCore.Helpers;
 
-internal static class Throw<T>
-    where T : Exception
+static class Throw<T> where T : Exception
 {
     public static void If(bool condition, string message)
     {
@@ -11,7 +10,3 @@ internal static class Throw<T>
             throw (Exception)Activator.CreateInstance(typeof(T), message)!;
     }
 }
-
-
-
-

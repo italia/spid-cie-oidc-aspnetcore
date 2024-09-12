@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace Spid.Cie.OIDC.AspNetCore.Services;
 
-internal class MetadataPolicyHandler : IMetadataPolicyHandler
+class MetadataPolicyHandler : IMetadataPolicyHandler
 {
     private readonly ILogger<MetadataPolicyHandler> _logger;
 
@@ -197,5 +197,3 @@ internal class MetadataPolicyHandler : IMetadataPolicyHandler
         return token.FirstOrDefault(p => ((JProperty)p).Name.Equals(name, System.StringComparison.OrdinalIgnoreCase)) as JProperty;
     }
 }
-
-

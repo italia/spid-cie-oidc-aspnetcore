@@ -15,57 +15,182 @@ using System.Threading.Tasks;
 
 namespace Spid.Cie.OIDC.AspNetCore.Services;
 
-internal class TrustChainManager : ITrustChainManager
+class TrustChainManager : ITrustChainManager
 {
-    private readonly HttpClient _httpClient;
-    private readonly ICryptoService _cryptoService;
-    private readonly ILogPersister _logPersister;
-    private readonly ILogger<TrustChainManager> _logger;
-    private readonly IMetadataPolicyHandler _metadataPolicyHandler;
-    private static readonly ConcurrentDictionary<string, TrustChain> _trustChainCache = new();
-    private static readonly SemaphoreSlim _syncLock = new SemaphoreSlim(1, 1);
+    readonly HttpClient _httpClient;
+    readonly ILogPersister _logPersister;
+    readonly ICryptoService _cryptoService;
+    readonly ILogger<TrustChainManager> _logger;
+    static readonly SemaphoreSlim _syncLock = new(1, 1);
+    readonly IMetadataPolicyHandler _metadataPolicyHandler;
+    static readonly ConcurrentDictionary<string, TrustChain<RPEntityConfiguration>> _rpTrustChainCache = new();
+    static readonly ConcurrentDictionary<string, TrustChain<OPEntityConfiguration>> _idpTrustChainCache = new();
 
-    public TrustChainManager(IHttpClientFactory httpClientFactory,
-        ICryptoService cryptoService,
-        IMetadataPolicyHandler metadataPolicyHandler,
-        ILogPersister logPersister,
-        ILogger<TrustChainManager> logger)
+    public TrustChainManager(IHttpClientFactory httpClientFactory, ICryptoService cryptoService, IMetadataPolicyHandler metadataPolicyHandler,
+                                ILogPersister logPersister, ILogger<TrustChainManager> logger)
     {
-        _httpClient = httpClientFactory.CreateClient(SpidCieConst.BackchannelClientName);
-        _cryptoService = cryptoService;
-        _logPersister = logPersister;
         _logger = logger;
+        _logPersister = logPersister;
+        _cryptoService = cryptoService;
         _metadataPolicyHandler = metadataPolicyHandler;
+        _httpClient = httpClientFactory.CreateClient(SpidCieConst.BackchannelClientName);
     }
 
-    public TrustChain? GetResolvedTrustChain(string sub, string anchor)
+    public TrustChain<T>? GetResolvedTrustChain<T>(string sub, string anchor) where T : EntityConfiguration
     {
-        if (_trustChainCache.ContainsKey(sub)
-            && _trustChainCache[sub].TrustAnchorUsed.Equals(anchor, StringComparison.OrdinalIgnoreCase)
-            && _trustChainCache[sub].ExpiresOn >= DateTimeOffset.UtcNow)
-        {
-            return _trustChainCache[sub];
-        }
-        return null;
+        return typeof(T).Equals(typeof(OPEntityConfiguration)) && _idpTrustChainCache.ContainsKey(sub) &&
+            _idpTrustChainCache[sub].TrustAnchorUsed.Equals(anchor, StringComparison.OrdinalIgnoreCase) && _idpTrustChainCache[sub].ExpiresOn >= DateTimeOffset.UtcNow ?
+            _idpTrustChainCache[sub] as TrustChain<T> :
+            typeof(T).Equals(typeof(RPEntityConfiguration)) && _rpTrustChainCache.ContainsKey(sub) &&
+            _rpTrustChainCache[sub].TrustAnchorUsed.Equals(anchor, StringComparison.OrdinalIgnoreCase) && _rpTrustChainCache[sub].ExpiresOn >= DateTimeOffset.UtcNow ?
+            _rpTrustChainCache[sub] as TrustChain<T> : default;
     }
 
-    public async Task<IdPEntityConfiguration?> BuildTrustChain(string url)
+    public async Task<RPEntityConfiguration?> BuildRPTrustChain(string url)
     {
-        if (!_trustChainCache.ContainsKey(url) || _trustChainCache[url].ExpiresOn < DateTimeOffset.UtcNow)
+        if (!_idpTrustChainCache.ContainsKey(url) || _idpTrustChainCache[url].ExpiresOn < DateTimeOffset.UtcNow)
         {
             if (!await _syncLock.WaitAsync(TimeSpan.FromSeconds(10)))
             {
                 _logger.LogWarning("TrustChain cache Sync Lock expired.");
                 return default;
             }
-            if (!_trustChainCache.ContainsKey(url) || _trustChainCache[url].ExpiresOn < DateTimeOffset.UtcNow)
+
+            if (!_idpTrustChainCache.ContainsKey(url) || _idpTrustChainCache[url].ExpiresOn < DateTimeOffset.UtcNow)
+            {
+                List<string> trustChain = new();
+                string? trustAnchorUsed = default;
+
+                try
+                {
+                    (RPEntityConfiguration rpConf, string? decodedRPJwt, string? rpJwt) = await ValidateAndDecodeEntityConfiguration<RPEntityConfiguration>(url);
+
+                    if (rpConf is null || rpJwt is null || rpConf.ExpiresOn < DateTime.UtcNow)
+                    {
+                        _logger.LogWarning($"EntityConfiguration not retrieved for RP {url}");
+
+                        return default;
+                    }
+
+                    bool rpValidated = false;
+                    DateTimeOffset expiresOn = rpConf.ExpiresOn;
+
+                    foreach (var saHint in rpConf.AuthorityHints ?? new())
+                    {
+                        trustChain.Clear();
+
+                        (SAEntityConfiguration? saConf, string? decodedSAJwt, string? saJwt) = await ValidateAndDecodeEntityConfiguration<SAEntityConfiguration>(saHint);
+
+                        if (saConf is null || saJwt is null || saConf.ExpiresOn < DateTime.UtcNow)
+                        {
+                            _logger.LogWarning($"EntityConfiguration not retrieved for SA {saHint}");
+
+                            continue;
+                        }
+
+                        trustChain.Add(saJwt);
+
+                        if (saConf.ExpiresOn < expiresOn)
+                            expiresOn = saConf.ExpiresOn;
+
+                        var saFetchUrl = $"{saConf.Metadata.FederationEntity.FederationFetchEndpoint}?sub={url}";
+                        (EntityStatement? rpEntityStatement, string? decodedRPEsJwt, string? esRPJwt) = await GetAndValidateEntityStatement(saFetchUrl, rpJwt);
+
+                        if (rpEntityStatement is null || esRPJwt is null || rpEntityStatement.ExpiresOn < DateTime.UtcNow)
+                        {
+                            _logger.LogWarning($"EntityStatement not retrieved for RP {url}");
+                            continue;
+                        }
+
+                        trustChain.Add(esRPJwt);
+
+                        if (rpEntityStatement.ExpiresOn < expiresOn)
+                            expiresOn = rpEntityStatement.ExpiresOn;
+
+                        foreach (var taHint in saConf.AuthorityHints ?? new())
+                        {
+                            (TAEntityConfiguration? taConf, string? decodedTAJwt, string? taJwt) = await ValidateAndDecodeEntityConfiguration<TAEntityConfiguration>(taHint);
+
+                            if (taConf is null || taJwt is null || taConf.ExpiresOn < DateTime.UtcNow)
+                            {
+                                _logger.LogWarning($"EntityConfiguration not retrieved for TA {taHint}");
+
+                                continue;
+                            }
+
+                            trustChain.Add(taJwt);
+
+                            if (taConf.ExpiresOn < expiresOn)
+                                expiresOn = taConf.ExpiresOn;
+
+                            var taFetchUrl = $"{taConf.Metadata.FederationEntity.FederationFetchEndpoint}?sub={saConf.Subject}";
+                            (EntityStatement? saEntityStatement, string? decodedSAEsJwt, string? esSAJwt) = await GetAndValidateEntityStatement(taFetchUrl, saJwt);
+
+                            if (saEntityStatement is null || esSAJwt is null || saEntityStatement.ExpiresOn < DateTime.UtcNow)
+                            {
+                                _logger.LogWarning($"EntityStatement not retrieved for SA {saConf.Subject}");
+                                continue;
+                            }
+
+                            trustChain.Add(esSAJwt);
+                            trustChain.Add(rpJwt);
+
+                            if (saEntityStatement.ExpiresOn < expiresOn)
+                                expiresOn = saEntityStatement.ExpiresOn;
+
+                            rpValidated = true;
+                            trustAnchorUsed = taHint;
+                            break;
+                        }
+                    }
+
+                    if (rpValidated && rpConf is not null && trustAnchorUsed is not null)
+                    {
+                        _rpTrustChainCache.AddOrUpdate(url, new TrustChain<RPEntityConfiguration>()
+                        {
+                            ExpiresOn = expiresOn,
+                            EntityConfiguration = rpConf,
+                            Chain = trustChain,
+                            TrustAnchorUsed = trustAnchorUsed
+                        }, (oldValue, newValue) => newValue);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, ex.Message);
+                    throw;
+                }
+                finally
+                {
+                    _syncLock.Release();
+                }
+            }
+        }
+
+        return _rpTrustChainCache.ContainsKey(url) && _rpTrustChainCache[url].ExpiresOn.Add(SpidCieConst.TrustChainExpirationGracePeriod) > DateTimeOffset.UtcNow
+            ? _rpTrustChainCache[url].EntityConfiguration
+            : null;
+    }
+
+
+    public async Task<OPEntityConfiguration?> BuildTrustChain(string url)
+    {
+        if (!_idpTrustChainCache.ContainsKey(url) || _idpTrustChainCache[url].ExpiresOn < DateTimeOffset.UtcNow)
+        {
+            if (!await _syncLock.WaitAsync(TimeSpan.FromSeconds(10)))
+            {
+                _logger.LogWarning("TrustChain cache Sync Lock expired.");
+                return default;
+            }
+
+            if (!_idpTrustChainCache.ContainsKey(url) || _idpTrustChainCache[url].ExpiresOn < DateTimeOffset.UtcNow)
             {
                 try
                 {
                     List<string> trustChain = new();
                     string? trustAnchorUsed = default;
 
-                    (IdPEntityConfiguration? opConf, string? decodedOPJwt, string? opJwt) = await ValidateAndDecodeEntityConfiguration<IdPEntityConfiguration>(url);
+                    (OPEntityConfiguration? opConf, string? decodedOPJwt, string? opJwt) = await ValidateAndDecodeEntityConfiguration<OPEntityConfiguration>(url);
                     if (opConf is null || opJwt is null || opConf.ExpiresOn < DateTime.UtcNow)
                     {
                         _logger.LogWarning($"EntityConfiguration not retrieved for OP {url}");
@@ -105,7 +230,7 @@ internal class TrustChainManager : ITrustChainManager
                         var esExpiresOn = entityStatement.ExpiresOn;
 
                         // Apply policy
-                        opConf!.Metadata!.OpenIdProvider = _metadataPolicyHandler.ApplyMetadataPolicy(decodedOPJwt!, entityStatement.MetadataPolicy.ToJsonString());
+                        //opConf!.Metadata!.OpenIdProvider = _metadataPolicyHandler.ApplyMetadataPolicy(decodedOPJwt!, entityStatement.MetadataPolicy.ToJsonString());
 
                         if (opConf!.Metadata!.OpenIdProvider is not null)
                         {
@@ -146,10 +271,11 @@ internal class TrustChainManager : ITrustChainManager
                     }
                     if (opValidated && opConf is not null && trustAnchorUsed is not null)
                     {
-                        _trustChainCache.AddOrUpdate(url, new TrustChain()
+                        _idpTrustChainCache.AddOrUpdate(url, new TrustChain<OPEntityConfiguration>()
                         {
                             ExpiresOn = expiresOn,
-                            OpConf = opConf,
+                            EntityConfiguration = opConf,
+                            //OpConf = opConf,
                             Chain = trustChain,
                             TrustAnchorUsed = trustAnchorUsed
                         }, (oldValue, newValue) => newValue);
@@ -166,8 +292,8 @@ internal class TrustChainManager : ITrustChainManager
                 }
             }
         }
-        return _trustChainCache.ContainsKey(url) && _trustChainCache[url].ExpiresOn.Add(SpidCieConst.TrustChainExpirationGracePeriod) > DateTimeOffset.UtcNow
-            ? _trustChainCache[url].OpConf
+        return _idpTrustChainCache.ContainsKey(url) && _idpTrustChainCache[url].ExpiresOn.Add(SpidCieConst.TrustChainExpirationGracePeriod) > DateTimeOffset.UtcNow
+            ? _idpTrustChainCache[url].EntityConfiguration//_trustChainCache[url].OpConf
             : null;
     }
 
@@ -197,7 +323,7 @@ internal class TrustChainManager : ITrustChainManager
             var kid = (string)header[SpidCieConst.Kid];
             Throw<Exception>.If(string.IsNullOrWhiteSpace(kid), $"No Kid specified in the EntityConfiguration JWT Header for url {metadataAddress}: {decodedJwtHeader}");
 
-            var key = conf!.JWKS.Keys.FirstOrDefault(k => k.kid.Equals(kid, StringComparison.InvariantCultureIgnoreCase));
+            var key = conf!.JWKS.Keys.FirstOrDefault(k => k.Kid.Equals(kid, StringComparison.InvariantCultureIgnoreCase));
             Throw<Exception>.If(key is null, $"No key found with kid {kid} for url {metadataAddress}: {decodedJwtHeader}");
 
             RSA publicKey = _cryptoService.GetRSAPublicKey(key!);
@@ -237,7 +363,7 @@ internal class TrustChainManager : ITrustChainManager
             var kid = (string)opHeader[SpidCieConst.Kid];
             Throw<Exception>.If(string.IsNullOrWhiteSpace(kid), $"No Kid specified in the EntityConfiguration JWT Header: {decodedOpJwtHeader}");
 
-            var key = entityStatement!.JWKS.Keys.FirstOrDefault(k => k.kid.Equals(kid, StringComparison.InvariantCultureIgnoreCase));
+            var key = entityStatement!.JWKS.Keys.FirstOrDefault(k => k.Kid.Equals(kid, StringComparison.InvariantCultureIgnoreCase));
             Throw<Exception>.If(key is null, $"No key found with kid {kid} in the EntityStatement at url {url}: {decodedEsJwt}");
 
             RSA publicKey = _cryptoService.GetRSAPublicKey(key!);
@@ -254,4 +380,3 @@ internal class TrustChainManager : ITrustChainManager
         }
     }
 }
-

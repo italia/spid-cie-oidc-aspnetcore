@@ -7,7 +7,7 @@ using System.Diagnostics.CodeAnalysis;
 namespace Spid.Cie.OIDC.AspNetCore.Events;
 
 [ExcludeFromCodeCoverage]
-internal class PostStateCreatedContext : PropertiesContext<OpenIdConnectOptions>
+class PostStateCreatedContext : PropertiesContext<OpenIdConnectOptions>
 {
     public PostStateCreatedContext(
         HttpContext context,

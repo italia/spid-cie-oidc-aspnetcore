@@ -1,14 +1,14 @@
 ﻿using Newtonsoft.Json.Linq;
-using System;
 
 namespace Spid.Cie.OIDC.AspNetCore.Helpers;
-internal static class JsonExtensions
+
+static class JsonExtensions
 {
     public static bool IsNullOrWhiteSpace(this JToken token)
     {
         return (token == null)
             || (token.Type == JTokenType.Null)
             || (!token.HasValues)
-            || (token.ToString() == String.Empty);
+            || (token.ToString() == string.Empty);
     }
 }

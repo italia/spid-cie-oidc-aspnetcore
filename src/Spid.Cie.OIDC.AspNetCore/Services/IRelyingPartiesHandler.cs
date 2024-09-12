@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace Spid.Cie.OIDC.AspNetCore.Services;
 
-internal interface IRelyingPartiesHandler
+interface IRelyingPartiesHandler
 {
     Task<IEnumerable<RelyingParty>> GetRelyingParties();
 }

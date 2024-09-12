@@ -9,9 +9,9 @@ using System.Threading.Tasks;
 
 namespace Spid.Cie.OIDC.AspNetCore.Configuration;
 
-internal class ConfigurationManager : IConfigurationManager<OpenIdConnectConfiguration>
+class ConfigurationManager : IConfigurationManager<OpenIdConnectConfiguration>
 {
-    private readonly IIdentityProviderSelector _idpSelector;
+    readonly IIdentityProviderSelector _idpSelector;
 
     public ConfigurationManager(IIdentityProviderSelector idpSelector)
     {
@@ -21,9 +21,13 @@ internal class ConfigurationManager : IConfigurationManager<OpenIdConnectConfigu
     public async Task<OpenIdConnectConfiguration> GetConfigurationAsync(CancellationToken cancel)
     {
         var idp = await _idpSelector.GetSelectedIdentityProvider();
+
         Throw<InvalidOperationException>.If(idp is null, ErrorLocalization.IdentityProviderNotFound);
+
         var idpConf = idp!.EntityConfiguration.Metadata.OpenIdProvider;
+
         Throw<Exception>.If(idpConf is null, ErrorLocalization.IdentityProviderNotFound);
+
         return idpConf!;
     }
 

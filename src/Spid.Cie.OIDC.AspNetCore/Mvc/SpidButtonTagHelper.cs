@@ -76,7 +76,8 @@ public class SpidButtonTagHelper : TagHelper
         listContainer.AddCssClass("spid-idp-button-menu");
 
         var identityProviders = await _idpHandler.GetIdentityProviders();
-        foreach (var idp in identityProviders.Where(i => i.Type == Models.IdentityProviderType.SPID))
+
+        foreach (var idp in identityProviders.Where(i => i.Type == Enums.IdentityProviderTypes.SPID))
         {
             var itemContainer = new TagBuilder("li");
             itemContainer.AddCssClass("spid-idp-button-link");

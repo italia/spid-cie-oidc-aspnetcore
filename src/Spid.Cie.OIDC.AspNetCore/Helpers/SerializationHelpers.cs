@@ -9,20 +9,22 @@ using System.Text.Json.Nodes;
 
 namespace Spid.Cie.OIDC.AspNetCore.Helpers;
 
-internal static class SerializationHelpers
+static class SerializationHelpers
 {
     public static string ToJsonString(this JsonDocument jdoc)
     {
         using var stream = new MemoryStream();
-        Utf8JsonWriter writer = new Utf8JsonWriter(stream, new JsonWriterOptions { Indented = true });
+        var writer = new Utf8JsonWriter(stream, new JsonWriterOptions { Indented = true });
+
         jdoc.WriteTo(writer);
         writer.Flush();
+
         return Encoding.UTF8.GetString(stream.ToArray());
     }
 
     public static JsonNode? Serialize(IConfigurationSection config)
     {
-        JsonObject obj = new();
+        var obj = new JsonObject();
 
         if (config is not null)
         {
@@ -45,7 +47,7 @@ internal static class SerializationHelpers
                 }
             }
 
-            if (obj.Count() == 0 && config is IConfigurationSection section)
+            if (obj.Count == 0 && config is IConfigurationSection section)
             {
                 if (bool.TryParse(section.Value, out bool boolean))
                 {
@@ -67,9 +69,9 @@ internal static class SerializationHelpers
     }
 }
 
-internal class STJSerializer : IJsonSerializer
+class STJSerializer : IJsonSerializer
 {
-    public object Deserialize(Type type, string json)
+    public object? Deserialize(Type type, string json)
     {
         return JsonSerializer.Deserialize(json, type);
     }
