@@ -138,16 +138,23 @@ In particular, a 'SpidCie' section can be added to the configuration which has t
             "TrustMark": "eyJhbGc...."
           }
         ],
+        "RedirectUris": [
+	     "http://aspnetcore.relying-party.org:5000/signin-oidc-spidcie"
+	],
         "OpenIdCoreCertificates": [
           {
             "Source": "File", // Or "Raw"
             "File": {
               "Path": "wwwroot/certificates/ComuneVigata-SPID.pfx", // This certificate is for demo only. Don't use this certificate for production or onboarding purposes
-              "Password": "P@ssW0rd!"
+              "Password": "P@ssW0rd!",
+	      "Algorithm": "RS256", //Or RSA-OAEP-256,
+	      "KeyUsage": "Signature" //Or Encryption
             },
             "Raw": {
               "Certificate": "base64",
-              "Password": "password"
+              "Password": "password",
+	      "Algorithm": "RS256", //Or RSA-OAEP-256,
+	      "KeyUsage": "Signature" //Or Encryption
             }
           }
         ],
@@ -207,12 +214,22 @@ In particular, a 'SpidCie' section can be added to the configuration which has t
             "Id": "http://aspnetcore.aggregator.org:5000/TestRP/",
             "Name": "RP Test",
             "OpenIdCoreCertificates": [
-                {
-                    "Algorithm": "RS256", //Or RSA-OAEP-256
-                    "Certificate": "base64",
-                    "KeyUsage": "Signature" //Or Encryption
-                }
-            ],
+		    {
+		        "Source": "File", // Or "Raw"
+		         "File": {
+		            "Path": "wwwroot/certificates/ComuneVigata-SPID.pfx", // This certificate is for demo only. Don't use this certificate for production or onboarding purposes
+		            "Password": "P@ssW0rd!",
+		            "Algorithm": "RS256", //Or RSA-OAEP-256,
+		            "KeyUsage": "Signature" //Or Encryption
+		         },
+		         "Raw": {
+		            "Certificate": "base64",
+		            "Password": "password",
+		            "Algorithm": "RS256", //Or RSA-OAEP-256,
+		            "KeyUsage": "Signature" //Or Encryption
+		       }
+		   }
+	  ],
             "OrganizationName": "RP Test",
             "OrganizationType": "Public", // or Private
             "HomepageUri": "http://aspnetcore.aggregator.org:5000/TestRP/",
