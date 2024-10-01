@@ -48,7 +48,7 @@ class TrustChainManager : ITrustChainManager
 
     public async Task<RPEntityConfiguration?> BuildRPTrustChain(string url)
     {
-        if (!_idpTrustChainCache.ContainsKey(url) || _idpTrustChainCache[url].ExpiresOn < DateTimeOffset.UtcNow)
+        if (!_rpTrustChainCache.ContainsKey(url) || _rpTrustChainCache[url].ExpiresOn < DateTimeOffset.UtcNow)
         {
             if (!await _syncLock.WaitAsync(TimeSpan.FromSeconds(10)))
             {
@@ -56,7 +56,7 @@ class TrustChainManager : ITrustChainManager
                 return default;
             }
 
-            if (!_idpTrustChainCache.ContainsKey(url) || _idpTrustChainCache[url].ExpiresOn < DateTimeOffset.UtcNow)
+            if (!_rpTrustChainCache.ContainsKey(url) || _rpTrustChainCache[url].ExpiresOn < DateTimeOffset.UtcNow)
             {
                 List<string> trustChain = new();
                 string? trustAnchorUsed = default;
