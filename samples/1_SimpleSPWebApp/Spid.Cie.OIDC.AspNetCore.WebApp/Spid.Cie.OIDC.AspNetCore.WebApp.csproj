@@ -27,7 +27,7 @@
 		<PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="8.0.8" />
 		<PackageReference Include="Microsoft.IdentityModel.Logging" Version="8.0.2" />
 
-    <PackageReference Include="Spid.Cie.OIDC.AspNetCore" Version="2.0.0" />
+    <PackageReference Include="Spid.Cie.OIDC.AspNetCore" Version="2.0.1" />
 
     <!--<PackageReference Include="jose-jwt" Version="5.0.0" />
     <PackageReference Include="JWT" Version="10.1.1" />
