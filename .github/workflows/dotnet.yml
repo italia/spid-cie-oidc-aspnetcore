@@ -1,4 +1,4 @@
-name: spid_cie_oidc
+name: spid_cie_oidc_release
 
 on:
   release:
