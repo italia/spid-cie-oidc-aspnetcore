@@ -1,18 +1,8 @@
 name: spid_cie_oidc
 
 on:
-  pull_request:
-    branches: [ main ]
-    types: [ opened, synchronize, closed ]
-  push:
-    paths-ignore:
-      - README.md
-      - CHANGELOG.md  # Should never be edited anyway
-      - .gitignore
-      - .github/**
-    tags-ignore:
-      - '**'
-  workflow_dispatch:
+  release:
+    types: [ published ]
 
 jobs:
   build:
@@ -30,44 +20,11 @@ jobs:
       run: dotnet build --no-restore
       working-directory: src
     - name: Test
-      run: dotnet test --no-build --verbosity normal -p:CollectCoverage=true -p:CoverletOutput=TestResults/ -p:CoverletOutputFormat=opencover
+      run: dotnet test --no-build --verbosity normal 
       working-directory: src
-    - name: Copy the opencover.xml file
-      if: github.event_name != 'pull_request'
-      run: |
-        find ./ -type f -name "coverage.opencover.xml" | while read fname; do
-          dirname=`dirname "$fname"`
-          cp "${dirname}/coverage.opencover.xml" "./coverage.opencover.xml"
-        done
-    - name: Create Test Coverage Badge Data
-      if: github.event_name != 'pull_request'
-      uses: simon-k/dotnet-code-coverage-badge@v1.0.0
-      id: create_coverage_badge
-      with:
-        label: Unit Test Coverage
-        color: brightgreen
-        path: ./coverage.opencover.xml      
-    - name: Create the Coverage Badge Data File
-      if: github.event_name != 'pull_request'
-      uses: 1arp/create-a-file-action@0.2
-      with:
-        path: ./.github
-        file: coverage_badge.json
-        content: ${{steps.create_coverage_badge.outputs.badge}}
-    - name: Commit coverage_badge.json
-      if: github.event_name != 'pull_request'
-      run: |
-        git config --global user.name 'GitHub Action'
-        git config --global user.email 'githubaction@users.noreply.github.com'
-        git add ./.github/coverage_badge.json
-        set +e  # Grep succeeds with nonzero exit codes to show results.
-        git status | grep modified
-        if [ $? -eq 0 ]
-        then
-          set -e
-          git commit -am "Automated Code Coverage badge data push"
-          git push
-        else
-          set -e
-          echo "No changes since last run"
-        fi
+    - name: Create package
+      run: dotnet pack --no-build -c Release -p:PackageVersion=${{ github.event.release.tag_name }} --output nupkgs
+      working-directory: src
+    - name: Publish package
+      run: dotnet nuget push nupkgs/Spid.Cie.OIDC.AspNetCore.${{ github.event.release.tag_name }}.nupkg --api-key "${{ secrets.NUGET_APIKEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate
+      working-directory: src
