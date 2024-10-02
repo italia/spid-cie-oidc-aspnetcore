@@ -2,7 +2,7 @@ name: spid_cie_oidc_release
 
 on:
   release:
-    types: [ published, released ]
+    types: [ created, published, released ]
 
 jobs:
   build:
