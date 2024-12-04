@@ -28,20 +28,20 @@ public sealed class SpidCieConst
     public const string ClientId = "client_id";
     public const string AcrValues = "acr_values";
     public const string Prompt = "consent login";
-    public const string ListEndpointPath = "list";
+    public const string ListEndpointPath = "oidc/spidcie/list";
     public const string RPApplicationType = "web";
     public const string RPSubjectType = "pairwise";
     public const string PromptParameter = "prompt";
     public const string RPSelectorKey = "clientId";
     public const string IdPSelectorKey = "provider";
     public const string DisplayName = "SpidCieOIDC";// The default display name used when registering the SpidHandler.
-    public const string FetchEndpointPath = "fetch";
+    public const string FetchEndpointPath = "oidc/spidcie/fetch";
     public const string RedirectUri = "redirect_uri";
     public const string RequestParameter = "request";
     public const string DummyUrl = "https://dummy.org";
     public const string RefreshToken = "refresh_token";
     public const string OfflineScope = "offline_access";
-    public const string ResolveEndpointPath = "resolve";
+    public const string ResolveEndpointPath = "oidc/spidcie/resolve";
     public const string JWKGeneratorPath = "generatejwk";
     public const string CodeChallenge = "code_challenge";
     public const string CallbackPath = "/signin-oidc-spidcie";
@@ -54,7 +54,7 @@ public sealed class SpidCieConst
     public const string RemoteSignOutPath = "/signout-spidcie";
     public const string ResponseTypeParameter = "response_type";
     public const string AuthorizationCode = "authorization_code";
-    public const string OPListPath = "list/?type=openid_provider";
+    public const string OPListPath = "oidc/spidcie/list/?type=openid_provider";
     public const string RevocationEndpoint = "revocation_endpoint";
     public const int EntityConfigurationExpirationInMinutes = 2880;
     public const string BackchannelClientName = "SpidCieBackchannel";
@@ -66,7 +66,7 @@ public sealed class SpidCieConst
     public const string SpidL2 = $"{SpidLevelBaseURI}{nameof(SpidL2)}";
     public const string SpidL3 = $"{SpidLevelBaseURI}{nameof(SpidL3)}";
     public const string UserstatePropertiesKey = "SpidCieOIDC.Userstate";// Constant used to identify userstate inside AuthenticationProperties that have been serialized in the 'wctx' parameter.
-    public const string TrustMarkStatusEndpointPath = "trust_mark_status";
+    public const string TrustMarkStatusEndpointPath = "oidc/spidcie/trust_mark_status";
     public const string SignedOutCallbackPath = "/signout-callback-spidcie";
     public const string ResolveContentType = "application/resolve-response+jwt";
     public const string EntityConfigurationPath = ".well-known/openid-federation";
