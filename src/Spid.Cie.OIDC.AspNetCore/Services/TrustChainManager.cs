@@ -146,13 +146,14 @@ class TrustChainManager : ITrustChainManager
 
                     if (rpValidated && rpConf is not null && trustAnchorUsed is not null)
                     {
-                        _rpTrustChainCache.AddOrUpdate(url, new TrustChain<RPEntityConfiguration>()
+                        var updatedExpiredOn = new TrustChain<RPEntityConfiguration>()
                         {
                             ExpiresOn = expiresOn,
                             EntityConfiguration = rpConf,
                             Chain = trustChain,
                             TrustAnchorUsed = trustAnchorUsed
-                        }, (oldValue, newValue) => newValue);
+                        };
+                        _rpTrustChainCache.AddOrUpdate(url, updatedExpiredOn, (key, oldValue) => updatedExpiredOn);
                     }
                 }
                 catch (Exception ex)
@@ -271,14 +272,15 @@ class TrustChainManager : ITrustChainManager
                     }
                     if (opValidated && opConf is not null && trustAnchorUsed is not null)
                     {
-                        _idpTrustChainCache.AddOrUpdate(url, new TrustChain<OPEntityConfiguration>()
+                        var updatedExpiredOn = new TrustChain<OPEntityConfiguration>()
                         {
                             ExpiresOn = expiresOn,
                             EntityConfiguration = opConf,
                             //OpConf = opConf,
                             Chain = trustChain,
                             TrustAnchorUsed = trustAnchorUsed
-                        }, (oldValue, newValue) => newValue);
+                        };
+                        _idpTrustChainCache.AddOrUpdate(url, updatedExpiredOn, (key, oldValue) => updatedExpiredOn);
                     }
                 }
                 catch (Exception ex)
