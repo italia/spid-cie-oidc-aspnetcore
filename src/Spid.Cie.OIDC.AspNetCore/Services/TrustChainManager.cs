@@ -50,10 +50,10 @@ class TrustChainManager : ITrustChainManager
     {
         if (!_rpTrustChainCache.ContainsKey(url) || _rpTrustChainCache[url].ExpiresOn < DateTimeOffset.UtcNow)
         {
-            if (!await _syncLock.WaitAsync(TimeSpan.FromSeconds(10)))
+            while (!await _syncLock.WaitAsync(TimeSpan.FromSeconds(10)))
             {
-                _logger.LogWarning("TrustChain cache Sync Lock expired.");
-                return default;
+                _logger.LogWarning("TrustChain cache Sync Lock expired. Release It!");
+                _syncLock.Release();
             }
 
             if (!_rpTrustChainCache.ContainsKey(url) || _rpTrustChainCache[url].ExpiresOn < DateTimeOffset.UtcNow)
@@ -178,10 +178,10 @@ class TrustChainManager : ITrustChainManager
     {
         if (!_idpTrustChainCache.ContainsKey(url) || _idpTrustChainCache[url].ExpiresOn < DateTimeOffset.UtcNow)
         {
-            if (!await _syncLock.WaitAsync(TimeSpan.FromSeconds(10)))
+            while (!await _syncLock.WaitAsync(TimeSpan.FromSeconds(10)))
             {
-                _logger.LogWarning("TrustChain cache Sync Lock expired.");
-                return default;
+                _logger.LogWarning("TrustChain cache Sync Lock expired. Release it!");
+                _syncLock.Release();
             }
 
             if (!_idpTrustChainCache.ContainsKey(url) || _idpTrustChainCache[url].ExpiresOn < DateTimeOffset.UtcNow)
