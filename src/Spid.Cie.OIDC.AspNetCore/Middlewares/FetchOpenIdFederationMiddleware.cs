@@ -33,15 +33,16 @@ class FetchOpenIdFederationMiddleware
             await _next(context);
             return;
         }
+        var uri = new Uri(UriHelper.GetEncodedUrl(context.Request));
 
-        var uri = new Uri(UriHelper.GetEncodedUrl(context.Request))
+        var aggrid = uri
            .GetLeftPart(UriPartial.Path)
            .Replace(SpidCieConst.FetchEndpointPath, "")
            .EnsureTrailingSlash()
            .ToString();
 
         string? sub = context.Request.Query.ContainsKey("sub") ? context.Request.Query["sub"] : default;
-        string? iss = context.Request.Query.ContainsKey("iss") ? context.Request.Query["iss"] : uri;
+        string? iss = context.Request.Query.ContainsKey("iss") ? context.Request.Query["iss"] : aggrid;
 
         if (string.IsNullOrWhiteSpace(sub) || string.IsNullOrWhiteSpace(iss))
         {
@@ -104,13 +105,49 @@ class FetchOpenIdFederationMiddleware
 
         if (relyingParty.TrustMarks is null || !relyingParty.TrustMarks.Any())
         {
-            context.Response.StatusCode = (int)HttpStatusCode.NotFound;
-            context.Response.ContentType = SpidCieConst.JsonContentType;
-            await context.Response.WriteAsync(JsonSerializer.Serialize(new GenericError()
+            var id = $"{uri.Scheme}://{uri.Host}/openid_relying_party/{relyingParty.OrganizationType?.ToLower()}";
+
+            var trustMark = new TrustMarkPayload() {
+                Subject = relyingParty.Id,
+                Issuer = aggregate.Id,
+                OrganizationType = relyingParty.OrganizationType?.ToLower(),
+                Id = id,
+                ExpiresOn = DateTimeOffset.Now.AddYears(1),
+                IssuedAt = DateTimeOffset.Now,
+            };
+
+
+            var trustMarkDef = new TrustMarkDefinition()
             {
-                ErrorCode = ErrorCodes.invalid_request,
-                ErrorDescription = "Invalid TrustMarks for 'sub'"
-            }));
+                Id =  id,
+                Issuer = aggregate.Id,
+                TrustMark = cryptoService.CreateJWT(certificate, JsonSerializer.Serialize<TrustMarkPayload>(trustMark))
+            };
+            
+            
+            var resp = new EntityStatement()
+            {
+                ExpiresOn = DateTimeOffset.UtcNow.AddMinutes(SpidCieConst.EntityConfigurationExpirationInMinutes),
+                IssuedAt = DateTimeOffset.UtcNow,
+                Issuer = iss,
+                Subject = sub,
+                JWKS = cryptoService.GetJWKS(new List<X509Certificate2>() { certificate }),
+                MetadataPolicy = aggregate.MetadataPolicy,
+                TrustMarks = new List<TrustMarkDefinition>(){ trustMarkDef },
+                AuthorityHints = relyingParty.AuthorityHints,
+                OpenIdRelyingParty = new SA_SpidCieOIDCConfiguration
+                {
+                    Value = new SAJWKSValue
+                    {
+                        JWKS = cryptoService.GetJWKS(relyingParty.OpenIdCoreCertificates)
+                    }
+                }
+            };
+
+            string tok = cryptoService.CreateJWT(certificate, resp);
+
+            context.Response.ContentType = SpidCieConst.EntityConfigurationContentType;
+            await context.Response.WriteAsync(tok);
             await context.Response.Body.FlushAsync();
             return;
         }
