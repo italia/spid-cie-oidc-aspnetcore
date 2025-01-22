@@ -121,7 +121,7 @@ class FetchOpenIdFederationMiddleware
             {
                 Id =  id,
                 Issuer = aggregate.Id,
-                TrustMark = cryptoService.CreateJWT(certificate, JsonSerializer.Serialize<TrustMarkPayload>(trustMark))
+                TrustMark = cryptoService.CreateJWT(certificate, trustMark)
             };
             
             
