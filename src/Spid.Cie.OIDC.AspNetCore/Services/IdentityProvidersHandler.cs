@@ -54,14 +54,17 @@ class IdentityProvidersHandler : IIdentityProvidersHandler
     static T? CreateIdentityProvider<T>(OPEntityConfiguration conf)
         where T : IdentityProvider
     {
+        if (conf.Metadata?.OpenIdProvider == null)
+            return default;
+
         return conf == default ? default :
             typeof(T).Equals(typeof(SpidIdentityProvider)) ?
             new SpidIdentityProvider()
             {
                 EntityConfiguration = conf,
                 Uri = conf.Subject ?? string.Empty,
-                OrganizationLogoUrl = conf.Metadata.OpenIdProvider.AdditionalData.TryGetValue("logo_uri", out object? spidLogoUri) ? spidLogoUri as string ?? string.Empty : string.Empty,
-                OrganizationName = conf.Metadata.OpenIdProvider.AdditionalData.TryGetValue("organization_name", out object? spidOrganizationName) ? spidOrganizationName as string ?? string.Empty : string.Empty,
+                OrganizationLogoUrl = conf.Metadata.OpenIdProvider.LogoUri,
+                OrganizationName = conf.Metadata.OpenIdProvider.OrganizationName,
                 SupportedAcrValues = conf.Metadata.OpenIdProvider.AcrValuesSupported.ToList(),
             } as T :
             typeof(T).Equals(typeof(CieIdentityProvider)) ?
@@ -69,8 +72,8 @@ class IdentityProvidersHandler : IIdentityProvidersHandler
             {
                 EntityConfiguration = conf,
                 Uri = conf.Subject ?? string.Empty,
-                OrganizationLogoUrl = conf.Metadata.OpenIdProvider.AdditionalData.TryGetValue("logo_uri", out object? cieLogoUri) ? cieLogoUri as string ?? string.Empty : string.Empty,
-                OrganizationName = conf.Metadata.OpenIdProvider.AdditionalData.TryGetValue("organization_name", out object? cieOrganizationName) ? cieOrganizationName as string ?? string.Empty : string.Empty,
+                OrganizationLogoUrl = conf.Metadata.OpenIdProvider.LogoUri,
+                OrganizationName = conf.Metadata.OpenIdProvider.OrganizationName,
                 SupportedAcrValues = conf.Metadata.OpenIdProvider.AcrValuesSupported.ToList(),
             } as T : default;
     }

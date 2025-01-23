@@ -244,13 +244,11 @@ class SpidCieHandler : OpenIdConnectHandler
                 "No OpenIdCore certificates were found in the currently selected RelyingParty");
         var certificate = rp!.OpenIdCoreCertificates!.FirstOrDefault(occ => occ.KeyUsage == Enums.KeyUsageTypes.Signature)!;
 
-        if (!(idp!.EntityConfiguration?.Metadata?.OpenIdProvider!.AdditionalData.ContainsKey(SpidCieConst.RevocationEndpoint) ?? false))
-        {
-            Logger.LogWarning($"No RevocationEndpoint specified in the EntityConfiguration of the IdentityProvider {issuer}");
-            return;
-        }
-
-        var revocationEndpoint = idp!.EntityConfiguration?.Metadata?.OpenIdProvider!.AdditionalData[SpidCieConst.RevocationEndpoint] as string ?? "";
+        //TODO: wait to understand issue https://github.com/italia/spid-cie-oidc-aspnetcore/issues/41#issuecomment-2610523997
+        //TODO: var revocationEndpoint = (idp!.EntityConfiguration?.Metadata?.OpenIdProvider!.AdditionalData.TryGetValue(SpidCieConst.RevocationEndpoint, out object? pivot) ?? false) ? pivot as string ?? string.Empty : string.Empty;
+        var revocationEndpoint = idp!.EntityConfiguration?.Metadata?.OpenIdProvider!.RevocationEndpoint ?? string.Empty;
+        Throw<InvalidOperationException>.If(string.IsNullOrWhiteSpace(revocationEndpoint),
+            $"No RevocationEndpoint specified in the EntityConfiguration of the IdentityProvider {issuer}");
 
         var request = new TokenRevocationRequest()
         {
