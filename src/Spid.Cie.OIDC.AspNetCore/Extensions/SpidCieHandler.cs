@@ -227,16 +227,16 @@ class SpidCieHandler : OpenIdConnectHandler
             "Current authenticated User doesn't have a 'sub' claim.");
 
         var idps = await _idpHandler.GetIdentityProviders();
-        var idp = idps.FirstOrDefault(i => i.EntityConfiguration.Issuer.Equals(issuer));
+        var idp = idps.FirstOrDefault(i => i.EntityConfiguration?.Issuer == issuer);
         Throw<InvalidOperationException>.If(idp is null,
             $"No IdentityProvider found for the issuer {issuer}");
 
-        var clientId = Context.User.FindFirst(SpidCieConst.Aud)?.Value;
+        var clientId = Context.User.FindFirst(SpidCieConst.Aud)?.Value ?? "";
         Throw<InvalidOperationException>.If(string.IsNullOrWhiteSpace(clientId),
             "Current authenticated User doesn't have an 'aud' claim.");
 
         var rps = await _rpHandler.GetRelyingParties();
-        var rp = rps.FirstOrDefault(r => r.Id.Equals(clientId));
+        var rp = rps.FirstOrDefault(r => r.Id == clientId);
         Throw<InvalidOperationException>.If(rp is null,
             $"No RelyingParty found for the clientId {clientId}");
 
@@ -244,9 +244,13 @@ class SpidCieHandler : OpenIdConnectHandler
                 "No OpenIdCore certificates were found in the currently selected RelyingParty");
         var certificate = rp!.OpenIdCoreCertificates!.FirstOrDefault(occ => occ.KeyUsage == Enums.KeyUsageTypes.Signature)!;
 
-        var revocationEndpoint = idp!.EntityConfiguration.Metadata.OpenIdProvider!.AdditionalData[SpidCieConst.RevocationEndpoint] as string;
-        Throw<InvalidOperationException>.If(string.IsNullOrWhiteSpace(revocationEndpoint),
-            $"No RevocationEndpoint specified in the EntityConfiguration of the IdentityProvider {issuer}");
+        if (!(idp!.EntityConfiguration?.Metadata?.OpenIdProvider!.AdditionalData.ContainsKey(SpidCieConst.RevocationEndpoint) ?? false))
+        {
+            Logger.LogWarning($"No RevocationEndpoint specified in the EntityConfiguration of the IdentityProvider {issuer}");
+            return;
+        }
+
+        var revocationEndpoint = idp!.EntityConfiguration?.Metadata?.OpenIdProvider!.AdditionalData[SpidCieConst.RevocationEndpoint] as string ?? "";
 
         var request = new TokenRevocationRequest()
         {
@@ -256,7 +260,7 @@ class SpidCieHandler : OpenIdConnectHandler
             ClientAssertion = new ClientAssertion()
             {
                 Type = SpidCieConst.ClientAssertionTypeValue,
-                Value = _cryptoService.CreateClientAssertion(idp!.EntityConfiguration.Metadata.OpenIdProvider!.AdditionalData["revocation_endpoint"] as string, clientId!, certificate.Certificate!)
+                Value = _cryptoService.CreateClientAssertion(revocationEndpoint, clientId!, certificate.Certificate!)
             },
             Token = accessToken
         };
