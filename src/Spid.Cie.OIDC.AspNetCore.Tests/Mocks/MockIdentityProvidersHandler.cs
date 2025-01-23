@@ -29,7 +29,8 @@ internal class MockIdentityProvidersHandler : IIdentityProvidersHandler
         using var reader = new StreamReader(stream);
         var body = await reader.ReadToEndAsync();
         var decodedOpJwt = new Mocks.MockCryptoService().DecodeJWT(body);
-        var conf = OpenIdConnectConfiguration.Create(JObject.Parse(decodedOpJwt)["metadata"]["openid_provider"].ToString());
+        var opec = System.Text.Json.JsonSerializer.Deserialize<OPEntityConfiguration>(decodedOpJwt);
+        var conf = opec?.Metadata?.OpenIdProvider ?? new OPMetadata_OpenIdConnectConfiguration();
         conf.JsonWebKeySet = JsonWebKeySet.Create(JObject.Parse(decodedOpJwt)["metadata"]["openid_provider"]["jwks"].ToString());
         return _emptyCollection
         ? Enumerable.Empty<IdentityProvider>()

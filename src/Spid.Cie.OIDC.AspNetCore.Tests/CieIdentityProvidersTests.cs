@@ -19,7 +19,8 @@ public class CieIdentityProvidersTests
             {
                 Metadata = new OPMetadata_SpidCieOIDCConfiguration()
                 {
-                    OpenIdProvider = new Microsoft.IdentityModel.Protocols.OpenIdConnect.OpenIdConnectConfiguration()
+                    //OpenIdProvider = new Microsoft.IdentityModel.Protocols.OpenIdConnect.OpenIdConnectConfiguration()
+                    OpenIdProvider = new OPMetadata_OpenIdConnectConfiguration()
                 }
             }
         };
