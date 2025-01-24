@@ -1,3 +1,4 @@
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Spid.Cie.OIDC.AspNetCore.Models;
 using System.Linq;
 using System.Threading.Tasks;
@@ -20,7 +21,7 @@ public class CieIdentityProvidersTests
                 Metadata = new OPMetadata_SpidCieOIDCConfiguration()
                 {
                     //OpenIdProvider = new Microsoft.IdentityModel.Protocols.OpenIdConnect.OpenIdConnectConfiguration()
-                    OpenIdProvider = new OPMetadata_OpenIdConnectConfiguration()
+                    OpenIdProvider = new OpenIdConnectConfiguration()
                 }
             }
         };
