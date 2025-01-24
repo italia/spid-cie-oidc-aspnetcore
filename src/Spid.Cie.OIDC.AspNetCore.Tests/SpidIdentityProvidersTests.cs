@@ -20,7 +20,6 @@ public class SpidIdentityProvidersTests
             {
                 Metadata = new OPMetadata_SpidCieOIDCConfiguration()
                 {
-                    //OpenIdProvider = new Microsoft.IdentityModel.Protocols.OpenIdConnect.OpenIdConnectConfiguration()
                     OpenIdProvider = new OpenIdConnectConfiguration()
                 }
             }
@@ -73,7 +72,6 @@ public class SpidIdentityProvidersTests
             {
                 Metadata = new OPMetadata_SpidCieOIDCConfiguration()
                 {
-                    //OpenIdProvider = new Microsoft.IdentityModel.Protocols.OpenIdConnect.OpenIdConnectConfiguration()
                     OpenIdProvider = new OpenIdConnectConfiguration()
                 }
             }
