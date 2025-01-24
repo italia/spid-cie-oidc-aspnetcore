@@ -17,7 +17,8 @@ public class TrustChainManagerTests
             new Mocks.MockCryptoService(),
             new Mocks.MockMetadataPolicyHandler(),
             new DefaultLogPersister(Mock.Of<ILogger<DefaultLogPersister>>()),
-            Mock.Of<ILogger<TrustChainManager>>());
+            Mock.Of<ILogger<TrustChainManager>>(),
+            Mock.Of<IEntityConfigurationUtils>());
 
         var result = await tcm.BuildTrustChain("http://127.0.0.1:8003/");
 

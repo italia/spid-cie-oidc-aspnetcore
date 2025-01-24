@@ -54,6 +54,9 @@ class IdentityProvidersHandler : IIdentityProvidersHandler
     static T? CreateIdentityProvider<T>(OPEntityConfiguration conf)
         where T : IdentityProvider
     {
+        if (conf.Metadata?.OpenIdProvider == null)
+            return default;
+
         return conf == default ? default :
             typeof(T).Equals(typeof(SpidIdentityProvider)) ?
             new SpidIdentityProvider()

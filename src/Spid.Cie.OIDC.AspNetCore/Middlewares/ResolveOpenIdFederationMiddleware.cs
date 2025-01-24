@@ -70,7 +70,9 @@ class ResolveOpenIdFederationMiddleware
                     IssuedAt = DateTimeOffset.UtcNow,
                     Issuer = uri,
                     //Metadata = trustChain.OpConf.Metadata,
-                    Metadata = trustChain.EntityConfiguration.Metadata,
+                    Metadata = new OPResolveMetadata_SpidCieOIDCConfiguration() { 
+                        OpenIdProvider = trustChain?.EntityConfiguration?.Metadata?.OpenIdProvider
+                    },
                     Subject = sub,
                     //TrustMarks = trustChain.OpConf.TrustMarks?
                     //    .Where(t => JsonSerializer.Deserialize<IdPEntityConfiguration>(cryptoService.DecodeJWT(t.TrustMark)).ExpiresOn >= DateTimeOffset.UtcNow)

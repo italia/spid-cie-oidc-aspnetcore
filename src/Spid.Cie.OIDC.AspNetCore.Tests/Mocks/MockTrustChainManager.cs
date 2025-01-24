@@ -1,4 +1,5 @@
-﻿using Spid.Cie.OIDC.AspNetCore.Models;
+﻿using Microsoft.IdentityModel.Protocols.OpenIdConnect;
+using Spid.Cie.OIDC.AspNetCore.Models;
 using Spid.Cie.OIDC.AspNetCore.Services;
 using System.Threading.Tasks;
 
@@ -15,12 +16,10 @@ class MockTrustChainManager : ITrustChainManager
             Issuer = url,
             Metadata = new OPMetadata_SpidCieOIDCConfiguration()
             {
-                OpenIdProvider = new Microsoft.IdentityModel.Protocols.OpenIdConnect.OpenIdConnectConfiguration()
+                OpenIdProvider = new OpenIdConnectConfiguration()
             }
         };
 
-        result.Metadata.OpenIdProvider.AdditionalData.Add("op_uri", "test");
-        result.Metadata.OpenIdProvider.AdditionalData.Add("op_name", "test");
         result.Metadata.OpenIdProvider.AdditionalData.Add("logo_uri", "test");
         result.Metadata.OpenIdProvider.AdditionalData.Add("organization_name", "test");
         result.Metadata.OpenIdProvider.AcrValuesSupported.Add("test");
