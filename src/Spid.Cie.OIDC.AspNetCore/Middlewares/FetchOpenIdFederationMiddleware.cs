@@ -215,9 +215,9 @@ class FetchOpenIdFederationMiddleware
             return false;
         }
 
-        trustmark = rp.TrustMarks.Where(x => x.Issuer == aggregate.Id).FirstOrDefault();
+        trustmark = rp.TrustMarks.Where(x => x.Issuer == aggregate.Id).FirstOrDefault() ?? new TrustMarkDefinition();
 
-        if (trustmark == default || string.IsNullOrEmpty(trustmark.TrustMark))
+        if (string.IsNullOrEmpty(trustmark.TrustMark))
         {
             return false;
         }
