@@ -124,12 +124,13 @@ class FetchOpenIdFederationMiddleware
             var id = $"{aggrTrustMarkId.Substring(0,aggrTrustMarkId.IndexOfOccurence("/",3))}/openid_relying_party/{relyingParty.OrganizationType?.ToLower()}";
 
             var emission = DateTimeOffset.Now;
+            var expireson = new DateTimeOffset(new DateTime(emission.Year, emission.Month, emission.Day, 0, 0, 0)).AddYears(1);
             var trustMark = new TrustMarkPayload() {
                 Subject = relyingParty.Id,
                 Issuer = aggregate.Id,
                 OrganizationType = relyingParty.OrganizationType?.ToLower(),
                 Id = id,
-                ExpiresOn = new DateTimeOffset(emission.Year, emission.Month, emission.Day, 0, 0, 0, emission.TimeOfDay).AddYears(1),
+                ExpiresOn = expireson,
                 IssuedAt = emission,
             };
 
