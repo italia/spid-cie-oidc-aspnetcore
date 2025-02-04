@@ -70,6 +70,7 @@ public static class ApplicationBuilderExtensions
         internalBuilder.Services.TryAddScoped<IIdentityProvidersHandler, IdentityProvidersHandler>();
         internalBuilder.Services.TryAddScoped<IRelyingPartiesHandler, RelyingPartiesHandler>();
         internalBuilder.Services.TryAddScoped<IAggregatorsHandler, AggregatorsHandler>();
+        internalBuilder.Services.TryAddScoped<IEntityConfigurationUtils, EntityConfigurationUtils>();
         internalBuilder.Services.TryAddScoped<ITrustChainManager, TrustChainManager>();
         internalBuilder.Services.TryAddScoped<IMetadataPolicyHandler, MetadataPolicyHandler>();
 

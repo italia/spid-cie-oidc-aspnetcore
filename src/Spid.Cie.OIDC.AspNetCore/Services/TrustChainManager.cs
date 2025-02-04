@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -17,6 +18,8 @@ namespace Spid.Cie.OIDC.AspNetCore.Services;
 
 class TrustChainManager : ITrustChainManager
 {
+    private readonly IEntityConfigurationUtils _ecutils;
+
     readonly HttpClient _httpClient;
     readonly ILogPersister _logPersister;
     readonly ICryptoService _cryptoService;
@@ -27,13 +30,14 @@ class TrustChainManager : ITrustChainManager
     static readonly ConcurrentDictionary<string, TrustChain<OPEntityConfiguration>> _idpTrustChainCache = new();
 
     public TrustChainManager(IHttpClientFactory httpClientFactory, ICryptoService cryptoService, IMetadataPolicyHandler metadataPolicyHandler,
-                                ILogPersister logPersister, ILogger<TrustChainManager> logger)
+                                ILogPersister logPersister, ILogger<TrustChainManager> logger, IEntityConfigurationUtils ecutils)
     {
         _logger = logger;
         _logPersister = logPersister;
         _cryptoService = cryptoService;
         _metadataPolicyHandler = metadataPolicyHandler;
         _httpClient = httpClientFactory.CreateClient(SpidCieConst.BackchannelClientName);
+        _ecutils = ecutils;
     }
 
     public TrustChain<T>? GetResolvedTrustChain<T>(string sub, string anchor) where T : EntityConfiguration
@@ -63,7 +67,7 @@ class TrustChainManager : ITrustChainManager
 
                 try
                 {
-                    (RPEntityConfiguration rpConf, string? decodedRPJwt, string? rpJwt) = await ValidateAndDecodeEntityConfiguration<RPEntityConfiguration>(url);
+                    (RPEntityConfiguration rpConf, string? decodedRPJwt, string? rpJwt) = await _ecutils.ValidateAndDecodeEntityConfiguration<RPEntityConfiguration>(url);
 
                     if (rpConf is null || rpJwt is null || rpConf.ExpiresOn < DateTime.UtcNow)
                     {
@@ -79,7 +83,7 @@ class TrustChainManager : ITrustChainManager
                     {
                         trustChain.Clear();
 
-                        (SAEntityConfiguration? saConf, string? decodedSAJwt, string? saJwt) = await ValidateAndDecodeEntityConfiguration<SAEntityConfiguration>(saHint);
+                        (SAEntityConfiguration? saConf, string? decodedSAJwt, string? saJwt) = await _ecutils.ValidateAndDecodeEntityConfiguration<SAEntityConfiguration>(saHint);
 
                         if (saConf is null || saJwt is null || saConf.ExpiresOn < DateTime.UtcNow)
                         {
@@ -109,7 +113,7 @@ class TrustChainManager : ITrustChainManager
 
                         foreach (var taHint in saConf.AuthorityHints ?? new())
                         {
-                            (TAEntityConfiguration? taConf, string? decodedTAJwt, string? taJwt) = await ValidateAndDecodeEntityConfiguration<TAEntityConfiguration>(taHint);
+                            (TAEntityConfiguration? taConf, string? decodedTAJwt, string? taJwt) = await _ecutils.ValidateAndDecodeEntityConfiguration<TAEntityConfiguration>(taHint);
 
                             if (taConf is null || taJwt is null || taConf.ExpiresOn < DateTime.UtcNow)
                             {
@@ -191,12 +195,16 @@ class TrustChainManager : ITrustChainManager
                     List<string> trustChain = new();
                     string? trustAnchorUsed = default;
 
-                    (OPEntityConfiguration? opConf, string? decodedOPJwt, string? opJwt) = await ValidateAndDecodeEntityConfiguration<OPEntityConfiguration>(url);
-                    if (opConf is null || opJwt is null || opConf.ExpiresOn < DateTime.UtcNow)
+                    (OPEntityConfiguration? opConf, string? decodedOPJwt, string? opJwt) = await _ecutils.ValidateAndDecodeEntityConfiguration<OPEntityConfiguration>(url);
+                    if (opConf is null || opConf.Metadata is null || decodedOPJwt is null || opJwt is null || opConf.ExpiresOn < DateTime.UtcNow)
                     {
                         _logger.LogWarning($"EntityConfiguration not retrieved for OP {url}");
                         return default;
                     }
+
+                    //parse openid configuration
+                    var opJobj = JObject.Parse(decodedOPJwt);
+                    opConf.Metadata.OpenIdProvider = OpenIdConnectConfiguration.Create(opJobj["metadata"]?["openid_provider"]?.ToString() ?? "");
 
                     DateTimeOffset expiresOn = opConf.ExpiresOn;
 
@@ -205,7 +213,7 @@ class TrustChainManager : ITrustChainManager
                     {
                         trustChain.Clear();
 
-                        (TAEntityConfiguration? taConf, string? decodedTAJwt, string? taJwt) = await ValidateAndDecodeEntityConfiguration<TAEntityConfiguration>(authorityHint);
+                        (TAEntityConfiguration? taConf, string? decodedTAJwt, string? taJwt) = await _ecutils.ValidateAndDecodeEntityConfiguration<TAEntityConfiguration>(authorityHint);
                         if (taConf is null || taJwt is null || taConf.ExpiresOn < DateTime.UtcNow)
                         {
                             _logger.LogWarning($"EntityConfiguration not retrieved for TA {authorityHint}");
@@ -243,9 +251,9 @@ class TrustChainManager : ITrustChainManager
                                     opConf!.Metadata!.OpenIdProvider.JsonWebKeySet = JsonConvert.DeserializeObject<JsonWebKeySet>(keys);
                                 }
                             }
-                            else if (!string.IsNullOrWhiteSpace(JObject.Parse(decodedOPJwt)["metadata"]["openid_provider"]["jwks"].ToString()))
+                            else if (!string.IsNullOrWhiteSpace(opJobj["metadata"]["openid_provider"]["jwks"].ToString()))
                             {
-                                opConf!.Metadata!.OpenIdProvider.JsonWebKeySet = JsonWebKeySet.Create(JObject.Parse(decodedOPJwt)["metadata"]["openid_provider"]["jwks"].ToString());
+                                opConf!.Metadata!.OpenIdProvider.JsonWebKeySet = JsonWebKeySet.Create(opJobj["metadata"]["openid_provider"]["jwks"].ToString());
                             }
                             if (opConf!.Metadata!.OpenIdProvider.JsonWebKeySet is null)
                             {
@@ -297,48 +305,6 @@ class TrustChainManager : ITrustChainManager
         return _idpTrustChainCache.ContainsKey(url) && _idpTrustChainCache[url].ExpiresOn.Add(SpidCieConst.TrustChainExpirationGracePeriod) > DateTimeOffset.UtcNow
             ? _idpTrustChainCache[url].EntityConfiguration//_trustChainCache[url].OpConf
             : null;
-    }
-
-    private async Task<(T? conf, string? decodedJwt, string? jwt)> ValidateAndDecodeEntityConfiguration<T>(string? url)
-        where T : FederationEntityConfiguration
-    {
-        try
-        {
-            Throw<Exception>.If(string.IsNullOrWhiteSpace(url), "Url parameter is not defined");
-
-            var metadataAddress = $"{url.EnsureTrailingSlash()!}{SpidCieConst.EntityConfigurationPath}";
-            var jwt = await _httpClient.GetStringAsync(metadataAddress);
-            Throw<Exception>.If(string.IsNullOrWhiteSpace(jwt), $"EntityConfiguration JWT not retrieved from url {metadataAddress}");
-
-            await _logPersister.LogGetEntityConfiguration(metadataAddress, jwt);
-
-            var decodedJwt = _cryptoService.DecodeJWT(jwt);
-            Throw<Exception>.If(string.IsNullOrWhiteSpace(decodedJwt), $"Invalid EntityConfiguration JWT for url {metadataAddress}: {jwt}");
-
-            var conf = System.Text.Json.JsonSerializer.Deserialize<T>(decodedJwt);
-            Throw<Exception>.If(conf is null, $"Invalid Decoded EntityConfiguration JWT for url {metadataAddress}: {decodedJwt}");
-
-            var decodedJwtHeader = _cryptoService.DecodeJWTHeader(jwt);
-            Throw<Exception>.If(string.IsNullOrWhiteSpace(decodedJwtHeader), $"Invalid EntityConfiguration JWT Header for url {metadataAddress}: {jwt}");
-
-            var header = JObject.Parse(decodedJwtHeader);
-            var kid = (string)header[SpidCieConst.Kid];
-            Throw<Exception>.If(string.IsNullOrWhiteSpace(kid), $"No Kid specified in the EntityConfiguration JWT Header for url {metadataAddress}: {decodedJwtHeader}");
-
-            var key = conf!.JWKS.Keys.FirstOrDefault(k => k.Kid.Equals(kid, StringComparison.InvariantCultureIgnoreCase));
-            Throw<Exception>.If(key is null, $"No key found with kid {kid} for url {metadataAddress}: {decodedJwtHeader}");
-
-            RSA publicKey = _cryptoService.GetRSAPublicKey(key!);
-            Throw<Exception>.If(!decodedJwt.Equals(_cryptoService.ValidateJWTSignature(jwt, publicKey)),
-                $"Invalid Signature for the EntityConfiguration JWT retrieved at the url {metadataAddress}: {decodedJwtHeader}");
-
-            return (conf, decodedJwt, jwt);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, ex.Message);
-            return default;
-        }
     }
 
     private async Task<(EntityStatement?, string? decodedEsJwt, string esJwt)> GetAndValidateEntityStatement(string? url, string opJwt)

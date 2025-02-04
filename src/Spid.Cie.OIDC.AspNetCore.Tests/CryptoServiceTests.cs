@@ -74,6 +74,15 @@ public class CryptoServiceTests
     }
 
     [Fact]
+    public async void CheckAdditionalData()
+    {
+        var service = new CryptoService();
+        var idp = (await new Mocks.MockIdentityProvidersHandler().GetIdentityProviders()).FirstOrDefault();
+        var revocationEndpoint = idp!.EntityConfiguration.Metadata.OpenIdProvider!.AdditionalData.TryGetValue(SpidCieConst.RevocationEndpoint, out object? pivot) ? pivot as string ?? string.Empty : string.Empty;
+        Assert.NotEmpty(revocationEndpoint);
+    }
+
+    [Fact]
     public async void ValidateJWTSignature()
     {
         var service = new CryptoService();
@@ -82,4 +91,5 @@ public class CryptoServiceTests
         var result = service.ValidateJWTSignature(jwt, certificate.GetRSAPublicKey()!);
         Assert.NotNull(result);
     }
+
 }

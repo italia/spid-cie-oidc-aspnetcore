@@ -8,7 +8,7 @@ namespace Spid.Cie.OIDC.AspNetCore.Models;
 class OPResolveConfiguration : ConfigurationBaseInfo
 {
     [JsonPropertyName("metadata")]
-    public OPMetadata_SpidCieOIDCConfiguration? Metadata { get; set; }
+    public OPResolveMetadata_SpidCieOIDCConfiguration? Metadata { get; set; }
 
     [JsonPropertyName("trust_marks")]
     public List<TrustMarkDefinition> TrustMarks { get; set; } = new();

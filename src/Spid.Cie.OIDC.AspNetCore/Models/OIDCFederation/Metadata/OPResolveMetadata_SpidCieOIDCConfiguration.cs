@@ -5,8 +5,8 @@ using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 namespace Spid.Cie.OIDC.AspNetCore.Models;
 
 [ExcludeFromCodeCoverage]
-sealed class OPMetadata_SpidCieOIDCConfiguration
+sealed class OPResolveMetadata_SpidCieOIDCConfiguration
 {
-    [JsonIgnore]
+    [JsonPropertyName("openid_provider")]
     public OpenIdConnectConfiguration? OpenIdProvider { get; set; }
 }
