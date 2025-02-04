@@ -42,44 +42,48 @@ class CustomHttpClientHandler : HttpClientHandler
 
     public async Task<HttpResponseMessage> DecodeJoseResponse(HttpResponseMessage response)
     {
-        if (("application/jose").Equals(response.Content.Headers.ContentType!.MediaType, StringComparison.OrdinalIgnoreCase)
-            || ("application/jwt").Equals(response.Content.Headers.ContentType!.MediaType, StringComparison.OrdinalIgnoreCase))
+        var mediaType = response.Content.Headers.ContentType!.MediaType ?? "";
+
+        if (!("application/jose".Equals(mediaType, StringComparison.OrdinalIgnoreCase)
+            || "application/jwt".Equals(mediaType, StringComparison.OrdinalIgnoreCase)))
         {
-            var token = await response.Content.ReadAsStringAsync();
-
-            Throw<Exception>.If(string.IsNullOrWhiteSpace(token), "No Body Content found in the Jose response");
-            Throw<Exception>.If(token.Count(c => c == '.') != 2 && token.Count(c => c == '.') != 4,
-                "Invalid Jose response according to https://www.rfc-editor.org/rfc/rfc7516#section-9");
-
-            var provider = await _rpSelector.GetSelectedRelyingParty();
-
-            if (provider == default)
-            {
-                var aggregators = await _aggHandler.GetAggregators();
-                var uri = new Uri(UriHelper.GetEncodedUrl(_httpContextAccessor.HttpContext.Request))
-                                .GetLeftPart(UriPartial.Path)
-                                .Replace(SpidCieConst.JsonEntityConfigurationPath, "")
-                                .Replace(SpidCieConst.EntityConfigurationPath, "")
-                                .Replace(SpidCieConst.CallbackPath, "")
-                                .Replace(SpidCieConst.SignedOutCallbackPath, "")
-                                .Replace(SpidCieConst.RemoteSignOutPath, "")
-                                .EnsureTrailingSlash();
-
-                provider = aggregators.SelectMany(a => a.RelyingParties)
-                                .OrderByDescending(r => r.Id.Length)
-                                .FirstOrDefault(r => uri.StartsWith(r.Id.EnsureTrailingSlash(), StringComparison.OrdinalIgnoreCase));
-            }
-
-            Throw<Exception>.If(provider is null, "No currently selected RelyingParty was found");
-            Throw<Exception>.If(provider!.OpenIdCoreCertificates is null || provider!.OpenIdCoreCertificates.Count() == 0,
-                "No OpenIdCore Certificates were found in the currently selected RelyingParty");
-
-            var openIdCoreCertificate = provider!.OpenIdCoreCertificates!.FirstOrDefault(occ => occ.KeyUsage == Enums.KeyUsageTypes.Encryption)!;
-            var decodedToken = _cryptoService.DecodeJose(token, openIdCoreCertificate.Certificate!);
-
-            /* edit response to mantain detail of original request */
-            response.Content = new StringContent(decodedToken, Encoding.UTF8, "application/jwt");
+            return response;
         }
+
+        var token = await response.Content.ReadAsStringAsync();
+
+        Throw<Exception>.If(string.IsNullOrWhiteSpace(token), "No Body Content found in the Jose response");
+        Throw<Exception>.If(token.Count(c => c == '.') != 2 && token.Count(c => c == '.') != 4,
+            "Invalid Jose response according to https://www.rfc-editor.org/rfc/rfc7516#section-9");
+
+        var provider = await _rpSelector.GetSelectedRelyingParty();
+
+        if (provider == default)
+        {
+            var aggregators = await _aggHandler.GetAggregators();
+            var uri = new Uri(UriHelper.GetEncodedUrl(_httpContextAccessor.HttpContext.Request))
+                            .GetLeftPart(UriPartial.Path)
+                            .Replace(SpidCieConst.JsonEntityConfigurationPath, "")
+                            .Replace(SpidCieConst.EntityConfigurationPath, "")
+                            .Replace(SpidCieConst.CallbackPath, "")
+                            .Replace(SpidCieConst.SignedOutCallbackPath, "")
+                            .Replace(SpidCieConst.RemoteSignOutPath, "")
+                            .EnsureTrailingSlash();
+
+            provider = aggregators.SelectMany(a => a.RelyingParties)
+                            .OrderByDescending(r => r.Id.Length)
+                            .FirstOrDefault(r => uri.StartsWith(r.Id.EnsureTrailingSlash(), StringComparison.OrdinalIgnoreCase));
+        }
+
+        Throw<Exception>.If(provider is null, "No currently selected RelyingParty was found");
+        Throw<Exception>.If(provider!.OpenIdCoreCertificates is null || provider!.OpenIdCoreCertificates.Count() == 0,
+            "No OpenIdCore Certificates were found in the currently selected RelyingParty");
+
+        var openIdCoreCertificate = provider!.OpenIdCoreCertificates!.FirstOrDefault(occ => occ.KeyUsage == Enums.KeyUsageTypes.Encryption)!;
+        var decodedToken = _cryptoService.DecodeJose(token, openIdCoreCertificate.Certificate!);
+
+        /* edit response to mantain detail of original request */
+        response.Content = new StringContent(decodedToken, Encoding.UTF8, "application/jwt");
 
         return response;
     }
